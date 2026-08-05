@@ -43,8 +43,7 @@ Font: **Open Sauce One** (Regular / Medium / Bold / Black). Oldalméret: **1440 
 | `pipeline/images.py` | képletöltés, méretezés, base64, cache, placeholder |
 | `pipeline/assets.py` | font- és CSS-beágyazás |
 | `pipeline/render.py` | Jinja2 környezet, a riport összeállítása |
-| `templates/report.html.j2` | az oldalak váza |
-| `templates/sections/*.html.j2` | oldalanként egy sablon |
+| `templates/report.html.j2` | az oldalak váza, egyetlen sablonban |
 
 Elv: a `charts.py` és az `images.py` semmit nem tud a riport szerkezetéről, a `render.py` semmit nem tud a képletöltésről. Mindegyik önállóan tesztelhető.
 
