@@ -1,0 +1,30 @@
+/* Nyomtatás: minden szekció egy 16:9-es oldal, ahogy a benchmark riportban. */
+
+@page {
+  size: 1440px 810px;
+  margin: 0;
+}
+
+@media print {
+  body { background: var(--paper); }
+  .page {
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+    box-shadow: none;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .no-print { display: none !important; }
+  a { text-decoration: none; color: inherit; }
+}
+
+@media screen {
+  .page { box-shadow: 0 2px 24px rgba(0, 0, 0, .07); }
+}
+
+.pdf-button {
+  position: fixed; top: 18px; right: 18px; z-index: 10;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  padding: 11px 18px; border-radius: 999px; cursor: pointer;
+  color: var(--ink); background: var(--accent); border: none;
+}

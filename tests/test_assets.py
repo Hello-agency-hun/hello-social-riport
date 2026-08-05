@@ -30,3 +30,27 @@ def test_logo_is_vector_and_inherits_colour(name):
     assert 'fill="currentColor"' in svg
     assert "viewBox" in svg
     assert "<image" not in svg, "raszterkép nem kerülhet a logóba"
+
+
+def test_stylesheet_inlines_the_fonts_as_data_uris():
+    from pipeline.assets import stylesheet
+
+    css = stylesheet()
+    assert "__FONT_REGULAR__" not in css, "a helyőrzőket ki kell cserélni"
+    assert css.count("data:font/woff2;base64,") == 4
+    assert "@page" in css, "a print.css-nek is benne kell lennie"
+
+
+def test_stylesheet_has_no_external_reference():
+    """A kész riport offline is működik."""
+    from pipeline.assets import stylesheet
+
+    css = stylesheet()
+    assert "http://" not in css and "https://" not in css
+
+
+def test_logo_loader_returns_inline_svg():
+    from pipeline.assets import logo
+
+    assert logo("hello-mark").startswith("<svg")
+    assert 'fill="currentColor"' in logo("hello-lockup")
