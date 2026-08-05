@@ -68,7 +68,8 @@ def test_stylesheet_is_not_html_escaped(html):
 
 def test_client_supplied_text_is_still_escaped(data, tmp_path):
     """A stíluslap `| safe`, de a poszt-szövegek nem lehetnek azok."""
-    top = max(data["posts"], key=lambda post: post["reach"])
+    facebook = data["channels"]["facebook"]["posts"]
+    top = max(facebook, key=lambda post: post["reach"])
     top["caption"] = "<script>alert(1)</script>"
     html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
     assert "<script>alert(1)</script>" not in html

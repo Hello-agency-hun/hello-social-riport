@@ -95,8 +95,8 @@ def build(directory: Path, period: str) -> dict:
                 "language": config.get("report", {}).get("language", "hu"),
             },
             "content": kpi.content_summary(items),
-            "posts": joined.posts,
-            "page": kpi.page_totals(series),
+            # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
+            # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
             "channels": kpi.channel_blocks(
                 series=series, posts=joined.posts, campaigns=campaigns
             ),

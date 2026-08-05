@@ -20,7 +20,7 @@ def test_build_produces_report_data(fixture_dir):
 
 def test_build_includes_every_section(fixture_dir):
     data = build(fixture_dir, period="2026-07")
-    for key in ("content", "posts", "page", "paid", "cross"):
+    for key in ("content", "channels", "paid", "cross"):
         assert key in data, key
 
 
@@ -98,4 +98,4 @@ def test_two_ads_exports_are_rejected(fixture_dir, tmp_path):
 def test_several_daily_and_content_exports_are_allowed(fixture_dir):
     """Napi metrikából csempénként, Tartalomból csatornánként több fájl a normális."""
     data = build(fixture_dir, period="2026-07")
-    assert set(data["page"]) == {"facebook", "instagram"}
+    assert set(data["channels"]) == {"facebook", "instagram"}

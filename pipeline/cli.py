@@ -13,7 +13,7 @@ def _report_map(data: dict) -> str:
     paid = data["paid"]
     content = data["content"]
     cross = data["cross"]
-    channels = ", ".join(sorted(data["page"])) or "nincs"
+    channels = ", ".join(sorted(data["channels"])) or "nincs"
     unmatched = quality["unmatched_boosts"]
 
     return "\n".join(

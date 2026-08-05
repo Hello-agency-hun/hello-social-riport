@@ -48,20 +48,14 @@ def _environment() -> Environment:
     return env
 
 
-def _organic_reach(posts: list[dict]) -> int:
-    return sum(post["reach"] for post in posts if post.get("paid") is None)
-
-
 def render(
     data: dict,
     cache_dir: Path,
     narrative: dict | None = None,
     fetcher: Callable[[str], bytes] = images.fetch,
 ) -> str:
-    posts = sorted(data["posts"], key=lambda post: -post["reach"])
-
-    organic = _organic_reach(posts)
-    boosted = data["cross"]["post_reach_sum"] - organic
+    organic = data["cross"]["organic_reach"]
+    boosted = data["cross"]["boosted_reach"]
 
     trends = {}
     for name, block in data.get("channels", {}).items():
@@ -97,7 +91,6 @@ def render(
     template = _environment().get_template("report.html.j2")
     return template.render(
         data=data,
-        posts=posts,
         trends=trends,
         channel_posts=channel_posts,
         narrative=narrative,
@@ -106,20 +99,10 @@ def render(
         logo_mark=logo("hello-mark"),
         period_hu=_period_hu(data["meta"]["period"]),
         generated=date.today().isoformat(),
-        page_fields=sorted(
-            {field for fields in data["page"].values() for field in fields}
-        ),
         charts={
             "reach_split": charts.donut(
                 [("Boostolt posztok", boosted), ("Organikus posztok", organic)],
                 label="A poszt-elérés megoszlása",
-            ),
-            "top_posts": charts.bar_chart(
-                [
-                    (post["caption"][:34] or "(nincs szöveg)", post["reach"])
-                    for post in posts[:6]
-                ],
-                label="A hat legnagyobb elérésű poszt",
             ),
         },
         currency=data["paid"]["currency"],

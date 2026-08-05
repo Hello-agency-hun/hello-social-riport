@@ -17,15 +17,6 @@ def content_summary(items: list[ContentItem]) -> dict:
     }
 
 
-def page_totals(series: list[DailySeries]) -> dict:
-    totals: dict[str, dict[str, float]] = defaultdict(dict)
-    for entry in series:
-        totals[entry.channel][entry.field] = sum_additive(
-            [value for _, value in entry.points], field=entry.field
-        )
-    return {channel: dict(fields) for channel, fields in totals.items()}
-
-
 def paid_totals(campaigns: list[Campaign]) -> dict:
     always_on = [c for c in campaigns if not c.is_boost]
     boosted = [c for c in campaigns if c.is_boost]
@@ -87,6 +78,8 @@ def cross_channel(posts: list[Post]) -> dict:
         "posts_boosted": len(boosted),
         "posts_organic": len(organic),
         "post_reach_sum": total_reach,
+        "organic_reach": organic_reach,
+        "boosted_reach": boosted_reach,
         "avg_reach_organic_post": avg_organic,
         "avg_reach_boosted_post": avg_boosted,
         "boosted_share_of_post_reach": (
