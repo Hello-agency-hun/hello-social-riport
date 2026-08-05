@@ -1,0 +1,473 @@
+{
+  "meta": {
+    "client": "Larus Étterem",
+    "period": "2026-07",
+    "currency": "EUR",
+    "language": "hu"
+  },
+  "content": {
+    "total": 29,
+    "by_type": {
+      "image": 14,
+      "story": 14,
+      "reel": 1
+    },
+    "stories_by_channel": {
+      "instagram": 7,
+      "facebook": 7
+    }
+  },
+  "posts": [
+    {
+      "channel": "facebook",
+      "post_id": "1496832432487575",
+      "published": "2026-07-04",
+      "caption": "Nálunk így néz ki a nyár. 🌸🌱🌶️",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0311GP2Een8SdVvDiUBuRwpuVBgT4DW85ufhA3Kc8eLZ1NwvRkCMBMX78MCYaACQQZl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/01ca2186-f45f-46bd-97bf-0e8d41353e5d.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/c8f5a387-5bc1-4567-83e7-905ac72c60c4.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/e8bbb683-843e-4cc1-a9b8-6524f69fff35.jpg"
+      ],
+      "reach": 150,
+      "views": 221,
+      "reactions": 2,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 6,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1490635643107254",
+      "published": "2026-07-01",
+      "caption": "Ebben a melegben már csak egy hideg ital segíthet… Tudunk egy jó helyet! 😉",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0kysRMzHX4pcubEQENGnxoMYHg25Vvt1wT7SydmSna5binvkkKZPP8gMX7MEyMCu9l",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/58e6f1ad-67c8-4ce4-b724-3c1e34f231b1.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/62552ae9-9516-42bb-92d7-9182297962f2.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/4a951d84-3891-45ef-9383-176030f2f513.jpg"
+      ],
+      "reach": 1990,
+      "views": 3469,
+      "reactions": 22,
+      "comments": 2,
+      "shares": 0,
+      "clicks": 54,
+      "link_clicks": 11,
+      "paid": {
+        "name": "Bejegyzés: „Ebben a melegben már csak egy hideg ital...”",
+        "spend": 13.9,
+        "currency": "EUR",
+        "reach": 2008,
+        "impressions": 3392,
+        "frequency": 1.689243,
+        "link_clicks": 13,
+        "results": 4,
+        "result_type": "actions:click_to_call_native_call_placed",
+        "cost_per_result": 3.475,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true
+      }
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1508309508006534",
+      "published": "2026-07-31",
+      "caption": "Láttatok már ilyen szépet? 🐟 Süllőpofa, szőlő, bébi római saláta, fondant póréhagyma. Érdemes megkóstolni! Ígérjük, nem okoz csalódást. ☺️",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0rbkdekR1KPg92K8VS6e3Jc8wtiNTwVKtuYfe9UhmCs9dyT32cBMCQXEv2a6VuDdZl",
+      "post_type": "Fényképek",
+      "creatives": [],
+      "reach": 109,
+      "views": 153,
+      "reactions": 2,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 3,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1508309238006561",
+      "published": "2026-07-29",
+      "caption": "A meleg nyári estékre! 🥂",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0k33fCFQf2DCS5kYS5Qa7d1TdBru6Wb9B68XPcC714DVPUrcvTFJwUx9E4jBVnNdAl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/publisher/d4277d56-b5ad-462f-b0f0-902bf1b95287.png"
+      ],
+      "reach": 64,
+      "views": 92,
+      "reactions": 1,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 2,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1515041563999995",
+      "published": "2026-07-26",
+      "caption": "Séfünk ajánlata! 😎",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid02xCm7Qfc8iXi3KLcaUhRMaLntJzjMQMmRUg6iAU8b91U6R7KoyXvjQ5vTc6ZGp8iYl",
+      "post_type": "Hivatkozások",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/b04459f8-1c46-44ea-9a30-ccb4f28f4e1e.png"
+      ],
+      "reach": 9046,
+      "views": 11810,
+      "reactions": 22,
+      "comments": 1,
+      "shares": 1,
+      "clicks": 1186,
+      "link_clicks": 1027,
+      "paid": {
+        "name": "Bejegyzés: „Séfünk ajánlata! 😎”",
+        "spend": 15.95,
+        "currency": "EUR",
+        "reach": 8398,
+        "impressions": 11480,
+        "frequency": 1.366992,
+        "link_clicks": 1018,
+        "results": 1043,
+        "result_type": "actions:post_engagement",
+        "cost_per_result": 0.01529243,
+        "status": "recently_completed",
+        "channel": "facebook",
+        "is_boost": true
+      }
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1511562171014601",
+      "published": "2026-07-23",
+      "caption": "Kacsamell, almás zellerpüré, pirított répák. Egy igazi klasszikus, Larus módra. 🌸 És utána jöhet a desszert! 😉",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0oVtEAxNCHzV3X5jgraMRGYDQvSF5LCUm4232cU4vizVdyyykgsfz64vXKyXukFfWl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/50c5eea1-5c5c-448e-8c28-ec342484f6dc.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/0a773938-fa6b-4292-8b90-422d601911bd.jpg"
+      ],
+      "reach": 115,
+      "views": 163,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 1,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1508308731339945",
+      "published": "2026-07-21",
+      "caption": "Mert közösen a legjobb! ❤️",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid02P9MpwfN7Avn6bhb9i8V4dQmaGTewgqYk8jj5U8JjL2epHhgG44d18BS2kvbnRDC3l",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/46e40508-3893-4318-b4d9-804f01011f88.jpg"
+      ],
+      "reach": 200,
+      "views": 285,
+      "reactions": 4,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 5,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1511607901010028",
+      "published": "2026-07-21",
+      "caption": "Csak egy hétvégét kell kibírni Larus nélkül. 😉",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0Np953DRwD7xvFKtNye25bo969evezUG8GjqCgdxTPFYweRD1xdB784CNTsCFwoAnl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/160c3087-669d-4f9e-9d57-a238d3a618c1.png"
+      ],
+      "reach": 119,
+      "views": 169,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 1,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1509166374587514",
+      "published": "2026-07-19",
+      "caption": "Nehéz lesz választani! 🍽️",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0NbgwxskXXwZBeEBfhaD44tG1xP3YRE9PrK8PcDD4sU1o34Dy9PVLsUfBxEqZ8cMMl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/9ea01a4c-b4fe-40c2-b361-61773429381e.png"
+      ],
+      "reach": 136,
+      "views": 212,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 4,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1508308564673295",
+      "published": "2026-07-18",
+      "caption": "Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬",
+      "permalink": "https://www.facebook.com/reel/2911204535885548/",
+      "post_type": "Videók",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/d4ac45d6-f925-458f-b690-f5552afa1ce7.mp4"
+      ],
+      "reach": 2068,
+      "views": 2777,
+      "reactions": 10,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 51,
+      "link_clicks": 12,
+      "paid": {
+        "name": "Bejegyzés: „Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬”",
+        "spend": 13.95,
+        "currency": "EUR",
+        "reach": 1847,
+        "impressions": 2626,
+        "frequency": 1.421765,
+        "link_clicks": 13,
+        "results": 13,
+        "result_type": "actions:link_click",
+        "cost_per_result": 1.07307692,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true
+      }
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1508308341339984",
+      "published": "2026-07-16",
+      "caption": "Ennyi! 😉🥂",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0etuL8xyvaKkTAwND9FcU35ipsT2QxLzc9jXJmEAFS6zm4wfXpnm86na7ef4AUWE7l",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/ad06316d-1dc2-4a6f-b26b-870e0b504b16.jpg"
+      ],
+      "reach": 97,
+      "views": 150,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 1,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1505612194942932",
+      "published": "2026-07-13",
+      "caption": "Újabb heti menünk érkezik! 🍽️😉",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid02SFECzDmpMYrgFLierPnszPouTkzFCCQSNGctCvCMYiNxMMNkf7uNFh3wUG6fVw7ul",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/8545344a-edd1-49e7-bbbd-770678d9bf6c.png"
+      ],
+      "reach": 141,
+      "views": 209,
+      "reactions": 1,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1496969109140574",
+      "published": "2026-07-10",
+      "caption": "Kedvenc kérdésünk: Pohárral vagy üveggel? 🍷",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid02pAsVoKYg8TAvBJPa7dThf4rEGJ16rV9kPbRkHSd7yrd59d5G49c45byVTehGQYK4l",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/e615491d-3ca6-495f-b876-163a7ca21cde.jpg"
+      ],
+      "reach": 109,
+      "views": 177,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1496968869140598",
+      "published": "2026-07-08",
+      "caption": "Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid02YEWvJhq8a2AzTxeD9jtXEPCXFczxj8xa6yqCwZmNhJTtDvmEAurQ5HoAMvfVvXYUl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/64abce1a-5dac-4254-bea9-1fefdff94dde.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/8e4c3a9c-2f6a-4a4f-8f05-0381cd9efae5.jpg"
+      ],
+      "reach": 4142,
+      "views": 7367,
+      "reactions": 222,
+      "comments": 5,
+      "shares": 3,
+      "clicks": 328,
+      "link_clicks": 10,
+      "paid": {
+        "name": "Bejegyzés: „Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐”",
+        "spend": 13.82,
+        "currency": "EUR",
+        "reach": 4251,
+        "impressions": 6885,
+        "frequency": 1.619619,
+        "link_clicks": 10,
+        "results": 428,
+        "result_type": "actions:post_engagement",
+        "cost_per_result": 0.03228972,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true
+      }
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1499594062211412",
+      "published": "2026-07-06",
+      "caption": "Kedves Vendégeink! ☀️\nEzen a héten egy kicsit változik a nyitvatartásunk:\nJúlius 7-én, kedden 12:00–17:00 óra között zárva tartunk.\nA többi napon a megszokott nyitvatartással várunk benneteket Budán, finom falatokkal és jó hangulattal.\nKöszönjük a megértéseteket! ❤️",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0ywEd4LrxFPSV8TYVGzfTVbtz7MqWwKjLXH7jgokdYvaL1uSVXVrKFwv36CaFgUMvl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/0d1807cd-6a41-4fd1-ab0e-110117b525fe.png"
+      ],
+      "reach": 150,
+      "views": 243,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 3,
+      "link_clicks": 0,
+      "paid": null
+    },
+    {
+      "channel": "facebook",
+      "post_id": "1496834252487393",
+      "published": "2026-07-05",
+      "caption": "Heti menünkre most sem lehet panasz👀\n\nKóstoljátok végig!",
+      "permalink": "https://www.facebook.com/larusetterem/posts/pfbid0ehKvzicv1KzHBKReuw58C3Bp6FVbQeKQT2EpARr8XSx5xZ9mm3pSPW7DQF4S7DDMl",
+      "post_type": "Fényképek",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/7fbf7ddf-3aa9-47c2-a1da-379273cad576.png"
+      ],
+      "reach": 175,
+      "views": 263,
+      "reactions": 2,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 4,
+      "link_clicks": 0,
+      "paid": null
+    }
+  ],
+  "page": {
+    "instagram": {
+      "visits": 634,
+      "link_clicks": 389,
+      "interactions": 255,
+      "views": 22483
+    },
+    "facebook": {
+      "visits": 1525,
+      "link_clicks": 1227,
+      "interactions": 345,
+      "follows": 5
+    }
+  },
+  "paid": {
+    "spend": 472.71,
+    "currency": "EUR",
+    "always_on": {
+      "campaigns": 5,
+      "spend": 362.24,
+      "impressions": 400299,
+      "link_clicks": 4588
+    },
+    "boosted": {
+      "campaigns": 8,
+      "spend": 110.47,
+      "impressions": 40535,
+      "link_clicks": 1437
+    },
+    "by_result_type": {
+      "actions:omni_landing_page_view": {
+        "campaigns": 4,
+        "spend": 297.25,
+        "results": 3320
+      },
+      "reach": {
+        "campaigns": 1,
+        "spend": 64.99,
+        "results": 123568
+      },
+      "profile_visit_view": {
+        "campaigns": 4,
+        "spend": 52.85,
+        "results": 385
+      },
+      "actions:post_engagement": {
+        "campaigns": 2,
+        "spend": 29.77,
+        "results": 1471
+      },
+      "actions:click_to_call_native_call_placed": {
+        "campaigns": 1,
+        "spend": 13.9,
+        "results": 4
+      },
+      "actions:link_click": {
+        "campaigns": 1,
+        "spend": 13.95,
+        "results": 13
+      }
+    }
+  },
+  "cross": {
+    "posts_total": 16,
+    "posts_boosted": 4,
+    "posts_organic": 12,
+    "post_reach_sum": 18811,
+    "avg_reach_organic_post": 130,
+    "avg_reach_boosted_post": 4312,
+    "boosted_share_of_post_reach": 0.917,
+    "reach_multiplier": 33.2,
+    "boost_spend": 57.62
+  },
+  "quality": {
+    "posts_with_creative": 15,
+    "posts_total": 16,
+    "unmatched_boosts": [
+      "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
+      "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
+      "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
+      "Instagram-bejegyzés: Kacsamell, almás zellerpüré,..."
+    ],
+    "unmatched_content": [
+      "1508309508006534"
+    ],
+    "dropped_zero_campaign_rows": 16
+  }
+}
