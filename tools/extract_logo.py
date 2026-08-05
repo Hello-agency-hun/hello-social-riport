@@ -15,6 +15,10 @@ Használat:
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from pipeline.textio import force_utf8_output  # noqa: E402
+
 TARGET = Path(__file__).resolve().parent.parent / "assets" / "logo"
 
 PAGE = 3  # 0-alapú: "1.0 - Our logo"
@@ -132,6 +136,7 @@ def extract(pdf_path: Path) -> int:
 
 
 if __name__ == "__main__":
+    force_utf8_output()
     if len(sys.argv) != 2:
         print(__doc__)
         raise SystemExit(2)

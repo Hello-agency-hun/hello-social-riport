@@ -6,8 +6,13 @@ az utóbbi az irányadó.
 """
 
 import io
+import sys
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from pipeline.textio import force_utf8_output  # noqa: E402
 
 RAW = "https://raw.githubusercontent.com/marcologous/Open-Sauce-Fonts/master"
 WEIGHTS = ["Regular", "Medium", "Bold", "Black"]
@@ -41,4 +46,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    force_utf8_output()
     raise SystemExit(main())

@@ -17,6 +17,20 @@ def detect_encoding(raw: bytes) -> str:
     return "utf-8"
 
 
+def force_utf8_output() -> None:
+    """A magyar Windows konzol alapértelmezése cp1250, ami sem az `⚠` jelet,
+    sem több ékezetes karaktert nem tud kódolni. Enélkül minden parancssori
+    eszközünk a kiírásnál elszállna — a CLI még azelőtt, hogy a riportadat
+    megíródna. Ezért minden belépési pont ezzel kezd.
+    """
+    import sys
+
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def read_text(path: Path) -> str:
     """A fájl teljes szövege, kódolástól függetlenül, változtatás nélkül."""
     raw = Path(path).read_bytes()
