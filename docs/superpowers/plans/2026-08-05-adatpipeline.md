@@ -251,7 +251,7 @@ class UnmatchedBoostError(PipelineError):
 `tests/test_textio.py`:
 
 ```python
-from pipeline.textio import read_lines
+from pipeline.textio import read_csv_rows, read_lines
 
 
 def test_utf16_daily_csv_is_decoded(input_file):
@@ -268,6 +268,27 @@ def test_utf8_csv_is_decoded(input_file):
 def test_blank_lines_are_dropped(input_file):
     lines = read_lines(input_file("Követők.csv"))
     assert all(line.strip() for line in lines)
+
+
+def test_multiline_campaign_name_keeps_its_blank_line(input_file):
+    """A kampánynév bekezdéshatára nem tűnhet el a beolvasás során."""
+    names = [row["Kampány neve"] for row in read_csv_rows(input_file("Kampányok"))]
+    assert any("💫
+
+Te kit" in name for name in names)
+
+
+def test_multiline_caption_paragraphs_are_not_glued(input_file):
+    """Enélkül a riportban `tartunk.A többi napon` jelenne meg."""
+    captions = [row["Cím"] for row in read_csv_rows(input_file("Jul-01-2026"))]
+    opening = next(c for c in captions if c.startswith("Kedves Vendégeink"))
+    assert "zárva tartunk.
+A többi napon" in opening
+
+
+def test_csv_row_count_is_unaffected_by_embedded_newlines(input_file):
+    assert len(read_csv_rows(input_file("Kampányok"))) == 29
+    assert len(read_csv_rows(input_file("Jul-01-2026"))) == 16
 ```
 
 - [ ] **Step 3: Futtasd, hogy elbukjon**
@@ -280,6 +301,8 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'pipeline.textio'`
 `pipeline/textio.py`:
 
 ```python
+import csv
+import io
 from pathlib import Path
 
 BOMS = {
@@ -297,25 +320,41 @@ def detect_encoding(raw: bytes) -> str:
     return "utf-8"
 
 
-def read_lines(path: Path) -> list[str]:
-    """Nem üres sorok listája, kódolástól függetlenül."""
+def read_text(path: Path) -> str:
+    """A fájl teljes szövege, kódolástól függetlenül, változtatás nélkül."""
     raw = Path(path).read_bytes()
-    text = raw.decode(detect_encoding(raw))
-    return [line for line in text.splitlines() if line.strip()]
+    return raw.decode(detect_encoding(raw))
 
 
-def read_csv_rows(path: Path, skip: int = 0) -> list[dict[str, str]]:
-    """CSV sorok szótárként. `skip` a fejléc előtti sorokat hagyja ki."""
-    import csv
+def read_lines(path: Path) -> list[str]:
+    """Nem üres sorok listája — fájlazonosításhoz és a napi CSV-k fejlécéhez.
 
-    lines = read_lines(path)[skip:]
-    return [{k: (v or "") for k, v in row.items()} for row in csv.DictReader(lines)]
+    Ne használd CSV-tartalom beolvasására: az üres sorok eldobása szétvágná az
+    idézőjeles, több bekezdésre tagolt mezőket. Arra `read_csv_rows` való.
+    """
+    return [line for line in read_text(path).splitlines() if line.strip()]
+
+
+def read_csv_rows(path: Path) -> list[dict[str, str]]:
+    """CSV sorok szótárként.
+
+    A nyers szöveget adja a parsernek, nem előszűrt sorokat — így a több sorra
+    tagolt kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak.
+    """
+    reader = csv.DictReader(io.StringIO(read_text(path), newline=""))
+    return [{k: (v or "") for k, v in row.items()} for row in reader]
 ```
+
+**Miért nem `read_lines` szolgálja ki a CSV-ket:** az üres sorok eldobása a nyers
+szöveg szintjén történne, még a CSV-parser előtt. Az idézőjeles mezőkben lévő
+bekezdéshatárok így eltűnnének, és a szöveg elválasztó nélkül összeragadna —
+a valós adatban `zárva tartunk.A többi napon`. A sorszám nem változna, tehát a
+hiba néma maradna, és a kész riportban jelenne meg az ügyfél előtt.
 
 - [ ] **Step 5: Futtasd**
 
 Run: `pytest tests/test_textio.py -q`
-Expected: `3 passed`
+Expected: `6 passed`
 
 - [ ] **Step 6: Commit**
 
@@ -831,7 +870,7 @@ def test_currency_is_read_from_the_header():
 def test_zero_rows_are_filtered_and_counted(input_file):
     source = parse(input_file("Kampányok"))
     assert len(source.payload.campaigns) == 13
-    assert source.payload.dropped_zero_rows == 18
+    assert source.payload.dropped_zero_rows == 16
 
 
 def test_boosts_and_always_on_are_separated(input_file):
@@ -1835,7 +1874,7 @@ def test_build_reports_join_quality(fixture_dir):
     data = build(fixture_dir, period="2026-07")
     quality = data["quality"]
     assert quality["posts_with_creative"] == 15
-    assert quality["dropped_zero_campaign_rows"] == 18
+    assert quality["dropped_zero_campaign_rows"] == 16
     # nincs IG Tartalom export a fixture-ben → a 4 IG boost jelentve, nem tippelve
     assert len(quality["unmatched_boosts"]) == 4
 
@@ -2123,7 +2162,7 @@ Nézd át a kiírt adat-térképet, és **ellenőrizd**, hogy ezeket az értéke
 ```
 ZoomSphere      29 tartalom — 14 image, 14 story, 1 reel
 Tartalom        16 poszt, kreatívval párosítva 15/16
-Meta Ads        5 always-on + 8 boost, 472.71 EUR (18 nullás sor kiszűrve)
+Meta Ads        5 always-on + 8 boost, 472.71 EUR (16 nullás sor kiszűrve)
 Organic poszt átlagos elérése:  130
 Boostolt poszt átlagos elérése: 4312  (33.2×)
 ⚠ nem illesztett boost: 4 db Instagram-bejegyzés
@@ -2137,9 +2176,9 @@ Ha bármi más eltér, a hiba a pipeline-ban van — **ne írd felül a golden f
 - [ ] **Step 5: Futtasd az egész tesztkészletet**
 
 Run: `pytest -q`
-Expected: `68 passed`
+Expected: `71 passed`
 
-Bontásban: smoke 2, textio 3, detect 4, schema 3, zoomsphere 6, meta_ads 7,
+Bontásban: smoke 2, textio 6, detect 4, schema 3, zoomsphere 6, meta_ads 7,
 meta_content 6, meta_daily 9, guards 8, join 7, kpi 5, build 5, cli 3.
 
 - [ ] **Step 6: Commit**
@@ -2191,7 +2230,7 @@ Időszak:  2026-07
 
 ZoomSphere      29 tartalom — 14 image, 14 story, 1 reel
 Tartalom        16 poszt, kreatívval párosítva 15/16
-Meta Ads        5 always-on + 8 boost, 472.71 EUR (18 nullás sor kiszűrve)
+Meta Ads        5 always-on + 8 boost, 472.71 EUR (16 nullás sor kiszűrve)
 Napi metrikák   facebook, instagram
 
 Organic poszt átlagos elérése:  130

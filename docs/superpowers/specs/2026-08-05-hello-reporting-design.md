@@ -106,7 +106,7 @@ Kezelendő sajátosságok:
   `reach`, `actions:omni_landing_page_view`, `profile_visit_view`,
   `actions:post_engagement`, `actions:link_click`,
   `actions:click_to_call_native_call_placed`. **Különböző típusok nem adhatók össze.**
-- **Sok a zaj.** Larus júliusban: 31 sorból 18 csupa nulla (inaktív kampány az
+- **Sok a zaj.** Larus júliusban: 29 sorból 16 csupa nulla (inaktív kampány az
   időablakban). Szűrendő, de a szűrt darabszám logolandó.
 - **Két kampány-archetípus van egy fájlban:**
   - *always-on kampányok* — `larus_event_b2b_nyár`, `Lóvasút_B2B_*` (100-300 EUR keret, lead cél)
@@ -689,7 +689,7 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 | Parser — kódolás | UTF-16 BOM felismerés, `sep=,` sor kezelése |
 | Parser — azonosítás | metrika a 2. sorból, nem fájlnévből |
 | Parser — pénznem | `Elköltött összeg (EUR)` → EUR; HUF-os változat is |
-| Parser — zajszűrés | 31 sorból 18 nullás kiesik, a darabszám logolva |
+| Parser — zajszűrés | 29 sorból 16 nullás kiesik, a darabszám logolva |
 | Join | 15/16, 4/4, 8/8 — rögzített értékek |
 | Eredménytípus | eltérő `Eredmény jelzése` nem adódik össze |
 | Reach-őr | napi/poszt reach összegzése havi reach-ként → hiba |
