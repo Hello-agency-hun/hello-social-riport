@@ -1,0 +1,15 @@
+{
+  "name": "hello-reporting",
+  "owner": {
+    "name": "HELLO Agency",
+    "email": "agency@helloagency.hu"
+  },
+  "plugins": [
+    {
+      "name": "hello-report",
+      "source": "./",
+      "description": "Havi social media riport Meta és ZoomSphere exportokból",
+      "version": "1.0.0"
+    }
+  ]
+}
