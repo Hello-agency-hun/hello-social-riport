@@ -1,6 +1,6 @@
 import pytest
 
-from pipeline.errors import UnknownSourceError
+from pipeline.errors import PipelineError, UnknownSourceError
 from pipeline.parsers.meta_daily import parse
 
 
@@ -52,3 +52,32 @@ def test_real_overridden_metric(input_file):
     ).payload
     assert (series.channel, series.field) == ("instagram", "views")
     assert series.total == 22483
+
+
+def _write(path, body: str):
+    path.write_bytes(body.encode("utf-16"))
+    return path
+
+
+def test_truncated_file_raises_a_pipeline_error(tmp_path):
+    """A CLI csak PipelineError-t fog el — a nyers IndexError értelmezhetetlen lenne."""
+    truncated = _write(tmp_path / "Csonka.csv", 'sep=,\n"Facebook-felkeresések"\n')
+    with pytest.raises(PipelineError, match="csonka"):
+        parse(truncated)
+
+
+def test_malformed_date_row_names_the_row(tmp_path):
+    bad = _write(
+        tmp_path / "Rossz.csv",
+        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n"2026-07-01","3"\n',
+    )
+    with pytest.raises(PipelineError, match="értelmezhetetlen sor"):
+        parse(bad)
+
+
+def test_file_without_daily_rows_raises(tmp_path):
+    empty = _write(
+        tmp_path / "Ures.csv", 'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n'
+    )
+    with pytest.raises(PipelineError, match="egyetlen napi sort sem"):
+        parse(empty)

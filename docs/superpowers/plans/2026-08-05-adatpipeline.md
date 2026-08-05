@@ -1245,7 +1245,7 @@ import csv
 from datetime import datetime
 
 from pipeline.detect import DAILY_METRICS
-from pipeline.errors import UnknownSourceError
+from pipeline.errors import MissingColumnError, UnknownSourceError
 from pipeline.schema import DailySeries, ParsedSource
 from pipeline.textio import read_lines
 
@@ -1253,6 +1253,11 @@ from pipeline.textio import read_lines
 def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSource:
     """A metrika kilétét a 2. sor mondja meg, nem a fájlnév."""
     lines = read_lines(path)
+    if len(lines) < 3:
+        raise MissingColumnError(
+            f"{path}: csonka napi export — {len(lines)} sor. Várt szerkezet: "
+            "`sep=,`, metrikanév, `\"Dátum\",\"Primary\"`, majd napi sorok."
+        )
     metric = lines[1].strip().strip('"')
 
     lookup = dict(DAILY_METRICS)
@@ -1268,8 +1273,19 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
     for row in csv.reader(lines[2:]):
         if len(row) < 2 or row[0].strip().strip('"') in ("", "Dátum"):
             continue
-        day = datetime.strptime(row[0].strip().strip('"'), "%Y-%m-%dT%H:%M:%S").date()
-        points.append((day, int(float(row[1].strip().strip('"') or 0))))
+        raw_day = row[0].strip().strip('"')
+        try:
+            day = datetime.strptime(raw_day, "%Y-%m-%dT%H:%M:%S").date()
+            value = int(float(row[1].strip().strip('"') or 0))
+        except ValueError as error:
+            raise MissingColumnError(
+                f"{path}: értelmezhetetlen sor a(z) {metric!r} csempénél — "
+                f"{row!r} ({error})"
+            ) from error
+        points.append((day, value))
+
+    if not points:
+        raise MissingColumnError(f"{path}: a(z) {metric!r} csempe egyetlen napi sort sem tartalmaz")
 
     series = DailySeries(channel=channel, field=field, metric=metric, points=points)
     days = [day for day, _ in points]
@@ -1283,7 +1299,14 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
 - [ ] **Step 4: Futtasd**
 
 Run: `pytest tests/test_meta_daily.py -q`
-Expected: `9 passed`
+Expected: `13 passed`
+
+**Miért nem elég a nyers hiba:** a CLI kizárólag `PipelineError`-t fog el. Ha egy
+csonka vagy elrontott export `IndexError`-t vagy `ValueError`-t dobna, a menedzser
+értelmezhetetlen stack trace-t kapna a „melyik fájlt kell újra letölteni" üzenet
+helyett. Ezért minden ilyen eset `MissingColumnError`-rá alakul, a fájl nevével
+és a problémás sorral. A hozzá tartozó három teszt (`csonka`,
+`értelmezhetetlen sor`, `egyetlen napi sort sem`) `PipelineError`-t vár.
 
 - [ ] **Step 5: Commit**
 
@@ -2176,10 +2199,10 @@ Ha bármi más eltér, a hiba a pipeline-ban van — **ne írd felül a golden f
 - [ ] **Step 5: Futtasd az egész tesztkészletet**
 
 Run: `pytest -q`
-Expected: `71 passed`
+Expected: `78 passed`
 
 Bontásban: smoke 2, textio 6, detect 4, schema 3, zoomsphere 6, meta_ads 7,
-meta_content 6, meta_daily 9, guards 8, join 7, kpi 5, build 5, cli 3.
+meta_content 6, meta_daily 13, guards 8, join 7, kpi 5, build 6, cli 5.
 
 - [ ] **Step 6: Commit**
 

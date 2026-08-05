@@ -693,6 +693,8 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 | Join | 15/16, 4/4, 8/8 — rögzített értékek |
 | Eredménytípus | eltérő `Eredmény jelzése` nem adódik össze |
 | Reach-őr | napi/poszt reach összegzése havi reach-ként → hiba |
+| Csonka/hibás forrás | értelmezhetetlen napi CSV → `PipelineError`, nem nyers `IndexError` |
+| Többsoros mező | a kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak |
 | Narratíva | nem hivatkozott szám a szövegben → build hiba |
 | Ügyfél-keresztellenőrzés | idegen `Oldalazonosító` → stop |
 | Végigfutás | teljes pipeline → HTML renderel, nincs üres szekció |
@@ -710,6 +712,24 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 Egyik sem blokkolja az implementáció megkezdését — a parserek és a pipeline
 felépíthetők a meglévő valós adatokon, és ezek mindegyike hozzáadás, nem átépítés.
+
+### Vállalt, dokumentált kockázatok
+
+A v1 kódja a valós referencia-adaton mért viselkedésre épül. Két ponton olyan
+egyszerűsítést tartalmaz, ami ezen az adaton bizonyítottan helyes, de elvben
+elromolhat. Egyik sem javítható ma érdemben, mert nincs olyan adat, amin
+tesztelhető lenne — ezért inkább rögzítjük őket:
+
+1. **Egy munkafüzet = egy fiók.** A ZoomSphere parser az első nem üres
+   `Sources` értéket veszi oldalnévnek. Ha egy export két különböző fiók
+   tartalmát keverné, a további sorok fiókneve elveszne. A referencia-adat
+   mind a 29 sorában ugyanaz a fiók szerepel. Ha valaha felmerül vegyes export,
+   a parsernek fiókonként kell csoportosítania.
+2. **A Facebook poszt-ID nem tartalmaz alulvonást.** A `page_post` alakból az
+   utolsó `_` utáni részt vesszük. A referencia-adat mind a 29 azonosítója
+   tisztán numerikus a prefix után. Ha a Meta valaha alulvonást tenne magába
+   az azonosítóba, az illesztés csendben elromlana — ezért a join találati
+   arányát a `--validate` mindig kiírja (`15/16`), és eltérés esetén látszik.
 
 ---
 
