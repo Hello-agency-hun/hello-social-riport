@@ -45,7 +45,27 @@ Plusz egy tartalmi hiba, amit én okoztam: a négy Instagram-boostot „nem ille
 | 17 | Összefoglaló | — |
 | 18 | Záró, kontakt | — |
 
-**Maximum 18 oldal**, előző időszak nélkül 16. Minden szekció kimarad, ha nincs hozzá adat — üresen soha nem jelenik meg.
+**Maximum 18 oldal.**
+
+### Hiányzó adat: kitölthető mező, nem néma kihagyás
+
+Ha egy szekcióhoz nincs adat, **két különböző okból lehet**, és a kettőt máshogy kell kezelni:
+
+| Ok | Kezelés |
+|---|---|
+| Az adat **nem létezik** (nincs IG poszt-metrika, nincs story-teljesítmény) | a szekció kimarad |
+| Az adat **létezik, csak nincs letöltve** (havi elérés, követőszám, előző hónap) | a szekció **megjelenik kitölthető mezővel** |
+
+A második eset a fontos. Ha csendben kihagynánk, a menedzser sosem tudná meg,
+hogy egyáltalán létezik ilyen adat. Helyette a riportban ott a hely, szaggatott
+kerettel, és a mező alatt az, hogy **honnan szerezhető be**.
+
+A menedzser beleírja a böngészőben, megnyomja a Mentést, és a `manual.json`
+lekerül a hónap mappájába. A következő futásnál már kitöltve jelenik meg,
+diszkrét „kézi adat" jelöléssel.
+
+**Az üres mezők nyomtatásban nem jelennek meg** — az ügyfélhez soha nem megy ki
+üres keret. A képernyőn viszont ott vannak, hogy ne merüljön feledésbe, mi hiányzik.
 
 ### Csatornánként mit tudunk
 
@@ -712,6 +732,9 @@ def deltas(now: dict, before: dict) -> dict:
 
 - [ ] **Step 5: Írd meg a `templates/sections/comparison.html.j2`-t**
 
+Az oldal **akkor is megjelenik, ha nincs előző időszak** — ilyenkor a Task 8b-ben
+készülő kézi mezőkkel, hogy a menedzser be tudja írni a múlt havi számokat.
+
 ```jinja
 {% for name, block in data.comparison.items() %}
 {% if block %}
@@ -908,6 +931,253 @@ git commit -m "feat: elozo riport szamainak kinyerese PDF-bol, javaslatkent"
 
 ---
 
+## Task 8b: Kézi adatmezők
+
+Ez a task valósítja meg a fenti elvet: ami hiányzik, de beszerezhető, az látható
+és kitölthető marad.
+
+**Files:** Create `pipeline/manual.py`, `templates/macros.html.j2`, `templates/manual.js`; Modify `pipeline/render.py`, `pipeline/build.py`, `pipeline/cli.py`, `templates/brand.css`, `templates/print.css`; Test: `tests/test_manual.py`
+
+- [ ] **Step 1: Írd meg a failing tesztet** — `tests/test_manual.py`:
+
+```python
+import json
+from pathlib import Path
+
+import pytest
+
+from pipeline.manual import SLOTS, load_manual
+
+GOLDEN = (
+    Path(__file__).parent / "fixtures" / "larus-2026-07" / "report_data.golden.json"
+)
+
+
+def test_missing_file_yields_an_empty_mapping(tmp_path):
+    assert load_manual(tmp_path) == {}
+
+
+def test_values_are_read_from_manual_json(tmp_path):
+    (tmp_path / "manual.json").write_text(
+        json.dumps({"reach_facebook": 92400}), encoding="utf-8"
+    )
+    assert load_manual(tmp_path)["reach_facebook"] == 92400
+
+
+def test_every_slot_says_where_to_get_it():
+    """A mező önmagában semmit nem ér — meg kell mondania, honnan szerezhető be."""
+    for key, slot in SLOTS.items():
+        assert slot["label"], key
+        assert slot["hint"], f"{key}: nincs megadva, honnan szerezhető be"
+
+
+@pytest.fixture
+def data():
+    return json.loads(GOLDEN.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def empty(data, tmp_path):
+    from pipeline.render import render
+
+    return render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+
+def test_empty_slot_is_visible_on_screen(empty):
+    assert 'data-manual="reach_facebook"' in empty
+    assert "Business Suite" in empty
+
+
+def test_empty_slot_is_hidden_when_printing(empty):
+    css = empty[empty.index("<style>") : empty.index("</style>")]
+    printed = css[css.index("@media print") :]
+    assert ".manual-slot" in printed and "display: none" in printed
+
+
+def test_filled_slot_renders_as_a_value(data, tmp_path):
+    from pipeline.render import render
+
+    html = render(
+        data,
+        cache_dir=tmp_path,
+        fetcher=lambda url: b"",
+        manual={"reach_facebook": 92400},
+    )
+    assert "92 400" in html.replace("\u00a0", " ")
+    assert "kézi adat" in html
+    assert 'data-manual="reach_facebook"' not in html
+```
+
+- [ ] **Step 2: Futtasd, hogy elbukjon** — `pytest tests/test_manual.py -q`
+
+- [ ] **Step 3: Írd meg a `pipeline/manual.py`-t**
+
+```python
+"""Kézzel bevitt értékek.
+
+Vannak számok, amiket a Meta nem exportál, de a felületén ott vannak (havi
+deduplikált elérés, követő-összlétszám). Ezeket a menedzser olvassa le és írja be.
+
+Az elv: **ami hiányzik, de beszerezhető, az látható marad.** Ha csendben
+kihagynánk, a menedzser sosem tudná meg, hogy létezik ilyen adat. Ezért a
+riportban megjelenik a hely, azzal együtt, hogy honnan szerezhető be.
+"""
+
+import json
+from pathlib import Path
+
+SLOTS = {
+    "reach_facebook": {
+        "label": "Facebook havi elérés",
+        "hint": "Business Suite → Elérés csempe, havi időszakra állítva",
+    },
+    "reach_instagram": {
+        "label": "Instagram havi elérés",
+        "hint": "Business Suite → Elérés csempe, havi időszakra állítva",
+    },
+    "followers_facebook": {
+        "label": "Facebook követők",
+        "hint": "Business Suite → Közönség; a következő hónapban már automatikus",
+    },
+    "followers_instagram": {
+        "label": "Instagram követők",
+        "hint": "Business Suite → Közönség; a következő hónapban már automatikus",
+    },
+}
+
+
+def load_manual(directory: Path) -> dict:
+    path = Path(directory) / "manual.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+```
+
+- [ ] **Step 4: Írd meg a `templates/macros.html.j2`-t**
+
+```jinja
+{% macro slot(key, value, label, hint) %}
+{% if value is not none %}
+<div>
+  <div class="stat">{{ value | num }}</div>
+  <div class="stat-label">{{ label }} <span class="manual-mark">kézi adat</span></div>
+</div>
+{% else %}
+<div class="manual-slot no-print" data-manual="{{ key }}">
+  <div class="manual-input" contenteditable="true" data-placeholder="—"></div>
+  <div class="stat-label">{{ label }}</div>
+  <p class="note" style="margin-top:6px">{{ hint }}</p>
+</div>
+{% endif %}
+{% endmacro %}
+```
+
+- [ ] **Step 5: Egészítsd ki a `templates/brand.css`-t**
+
+```css
+/* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
+   Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */
+.manual-slot { border: 1.5px dashed var(--rule); border-radius: 12px; padding: 20px; }
+.manual-input { font-size: 48px; font-weight: 900; line-height: 1;
+                min-height: 50px; outline: none; color: var(--ink); }
+.manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
+.manual-input:focus { border-bottom: 2px solid var(--accent); }
+.manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }
+```
+
+és a `templates/print.css` `@media print` blokkjába:
+
+```css
+  .manual-slot { display: none !important; }
+```
+
+- [ ] **Step 6: Írd meg a `templates/manual.js`-t**
+
+```javascript
+// A kézi mezők mentése. A böngésző lokális fájlba nem tud írni, letöltést
+// viszont tud indítani — a manual.json onnan kerül a hónap mappájába.
+(function () {
+  var KEY = "hello-report-manual";
+  var fields = document.querySelectorAll("[data-manual]");
+  if (!fields.length) return;
+
+  var stored = JSON.parse(localStorage.getItem(KEY) || "{}");
+
+  function read() {
+    var out = {};
+    fields.forEach(function (field) {
+      var raw = field.querySelector(".manual-input").textContent;
+      var value = parseInt(raw.replace(/[^0-9]/g, ""), 10);
+      if (!isNaN(value)) out[field.dataset.manual] = value;
+    });
+    return out;
+  }
+
+  fields.forEach(function (field) {
+    var input = field.querySelector(".manual-input");
+    if (stored[field.dataset.manual]) {
+      input.textContent = stored[field.dataset.manual];
+    }
+    input.addEventListener("input", function () {
+      localStorage.setItem(KEY, JSON.stringify(read()));
+    });
+  });
+
+  var button = document.createElement("button");
+  button.className = "pdf-button no-print";
+  button.style.right = "190px";
+  button.textContent = "Kézi adatok mentése";
+  button.onclick = function () {
+    var blob = new Blob([JSON.stringify(read(), null, 2)], {
+      type: "application/json",
+    });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "manual.json";
+    link.click();
+  };
+  document.body.appendChild(button);
+})();
+```
+
+- [ ] **Step 7: Kösd be a `render()`-be**
+
+Vedd fel a `manual: dict | None = None` paramétert, és add át a sablonnak:
+
+```python
+        manual=manual or {},
+        manual_slots=manual_module.SLOTS,
+        manual_js=(TEMPLATES / "manual.js").read_text(encoding="utf-8"),
+```
+
+A `report.html.j2` elejére `{% from "macros.html.j2" import slot %}`, a `</body>`
+elé pedig `<script>{{ manual_js | safe }}</script>`.
+
+Az összefoglaló oldalra tedd ki a négy mezőt:
+
+```jinja
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:36px">
+    {% for key, meta in manual_slots.items() %}
+    {{ slot(key, manual.get(key), meta.label, meta.hint) }}
+    {% endfor %}
+  </div>
+```
+
+A `build.py` olvassa be a `manual.json`-t (`manual.load_manual(directory)`), tegye
+be a `report_data.json`-be `manual` kulcs alatt, a `cli.py` pedig adja át a
+`render()`-nek.
+
+- [ ] **Step 8: Futtasd** — `pytest -q`
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add pipeline/manual.py templates/ tests/test_manual.py pipeline/render.py pipeline/build.py pipeline/cli.py
+git commit -m "feat: kezi adatmezok - ami hianyzik de beszerezheto, az lathato marad"
+```
+
+---
+
 ## Task 9: Vizuális ellenőrzés
 
 **Files:** —
@@ -929,6 +1199,10 @@ python -m pipeline.cli tests/fixtures/larus-2026-07 --period 2026-07 \
 - [ ] nincs a riportban „nem illesztett", „nem becsültük", „nem közöl"
 - [ ] `Ctrl+P` → oldalanként egy szekció, nem elcsúszva
 - [ ] minden szám magyar formátumú (szóköz ezres, vessző tizedes)
+- [ ] a kézi mezők szaggatott kerettel látszanak, és **kiírják, honnan szerezhetők be**
+- [ ] beleírsz egy kézi mezőbe → „Kézi adatok mentése" → `manual.json` letöltődik
+- [ ] a `manual.json`-t a mappába téve és újrafuttatva a szám kitöltve jelenik meg
+- [ ] `Ctrl+P` előnézetben az **üres** kézi mezők nem látszanak
 
 - [ ] **Step 3: Ha bármi nem stimmel, javítsd — és írj rá tesztet**
 
