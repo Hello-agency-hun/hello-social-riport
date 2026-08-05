@@ -41,3 +41,11 @@ def test_fonts_are_embedded_by_placeholder_not_by_url():
     text = CSS.read_text(encoding="utf-8")
     assert "fonts.googleapis.com" not in text
     assert "http://" not in text and "https://" not in text
+
+
+def test_creatives_are_shown_whole_not_cropped():
+    """Álló poszt-képnél a `cover` levágná a kreatív felét."""
+    text = CSS.read_text(encoding="utf-8")
+    thumb = text[text.index(".thumb") : text.index(".thumb") + 400]
+    assert "object-fit: contain" in thumb
+    assert "cover" not in thumb
