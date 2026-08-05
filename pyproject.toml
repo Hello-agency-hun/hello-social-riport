@@ -22,3 +22,5 @@ packages = ["pipeline", "pipeline.parsers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not network'"
+markers = ["network: hálózatot igényel, alapból kihagyva"]
