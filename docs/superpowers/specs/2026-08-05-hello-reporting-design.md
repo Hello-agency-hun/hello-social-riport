@@ -307,8 +307,12 @@ Review-kör alkalmazása (10.):
 ```
 
 A skill első futáskor ellenőrzi a Python-környezetet és telepíti a függőségeket
-(`pandas`, `openpyxl`, `jinja2`, `pyyaml`, `pillow`, `requests`).
+(`openpyxl`, `jinja2`, `pyyaml`, `pillow`, `requests`).
+
 Grafikonhoz nincs külön csomag — a `charts.py` közvetlenül SVG-t generál (8.4.).
+A CSV-ket a beépített `csv` modul olvassa, mert a forrásfájlok kódolása és
+fejlécszerkezete finomabb kontrollt igényel, mint amit a `pandas` kényelmesen ad
+(UTF-16 BOM, `sep=,` sor, metrikanév a 2. sorban) — így a `pandas` sem szükséges.
 
 **Miért plugin és nem másolt skill-mappa:** git-ből frissül. Template-javítás vagy
 Meta-oldali oszlopnév-változás javítása mindenkihez eljut újratelepítés nélkül.
