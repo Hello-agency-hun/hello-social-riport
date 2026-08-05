@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "fonttools[woff]>=4.50"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
