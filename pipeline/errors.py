@@ -32,3 +32,7 @@ class ResultTypeMixError(PipelineError):
 
 class UnmatchedBoostError(PipelineError):
     """Boostolt poszt nem illeszthető egyetlen tartalomhoz sem."""
+
+
+class NarrativeError(PipelineError):
+    """A narratíva szövege leírt számot tartalmaz, vagy nem létező mezőre hivatkozik."""
