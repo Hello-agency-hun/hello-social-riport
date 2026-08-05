@@ -1,0 +1,51 @@
+# Method Statement: Omnichannel Monthly Performance Report
+**Client:** Hello Agency Client  
+**Objective:** Merge organic social media data (from ZoomSphere CSV) with paid advertising data (via Meta Ads API/MCP) into a single, unified, modern visual HTML report.
+
+---
+
+## 1. Data Sources & Integration Strategy
+
+### A. Organic Data (ZoomSphere)
+- **Source:** Local file named `zoomsphere_organic.csv` placed in the current working directory.
+- **Expected Contents:** Last month's published organic posts containing metrics (Reach/Impressions, Likes, Comments, Engagement Rate) and public media/thumbnail URLs.
+
+### B. Paid Data (Meta Ads)
+- **Source:** Live integration via the Meta Ads MCP server / Marketing API connection.
+- **Expected Contents:** Last month's campaign data (Ad Spend, Impressions, Link Clicks, Conversions) along with top performing ad creative images (`image_url` or creative preview links).
+
+---
+
+## 2. Step-by-Step Execution Plan for Claude Code
+
+### Step 1: Meta Ads Data Extraction
+Act as a data analyst and use the available Meta Ads MCP tool to fetch the performance metrics for the previous calendar month. Group the data by campaign and by ad creative. Ensure you capture:
+- Total Spend (and currency)
+- Total Impressions & Clicks
+- Visual creative URLs for top-performing ads
+
+### Step 2: Data Ingestion & Normalization
+Write and execute a Python script (`merge_data.py`) using `pandas` to:
+1. Load and parse the `zoomsphere_organic.csv` file.
+2. Ingest the live Meta Ads payload fetched via MCP.
+3. Clean and map conflicting column names into a unified schema (e.g., standardizing organic 'likes+comments' and paid 'post engagements' under a master `Total Engagement` metric).
+
+### Step 3: Executive Cross-Channel Analytics
+Calculate global cross-channel KPIs across both datasets:
+- **Total Combined Reach / Impressions** (Organic Impressions + Paid Impressions)
+- **Total Combined Engagement** (Organic Actions + Paid Engagements)
+- **Total Meta Paid Investment** (Sum of total ad spend)
+- **Top Performers:** Extract the Top 3 Organic Posts (by Engagement Rate) and Top 3 Paid Ads (by CTR / Conversions).
+
+### Step 4: HTML Report Generation
+Generate a sleek, agency-grade HTML file named `Omnichannel_Hello_Agency_Report.html` using clean tailwind CSS (embedded inline or via CDN) for styling. The report must contain:
+1. **Executive Summary Dashboard:** Big, bold grid elements highlighting the cross-channel global KPIs.
+2. **Organic Content Showcase:** A visual grid displaying the top 3 organic posts, featuring their actual image thumbnails (using URLs from ZoomSphere), captions, and performance metrics.
+3. **Paid Performance Showcase:** A visual grid displaying the top 3 paid creatives, featuring their ad images (from Meta API), spend data, and conversion/click metrics.
+4. **Performance Chart:** A simple embedded chart or visual breakdown (using Matplotlib exported to base64 or a clean Plotly canvas) showing Organic vs. Paid impressions.
+
+---
+
+## 3. Execution Prompt for Claude Code
+
+*Claude, please analyze this file (`omnichannel_hello_agency_report.md`) as your technical blueprint. Your task is to write the necessary automation scripts, pull the Meta Ads data, merge it with the local `zoomsphere_organic.csv`, and output the final `Omnichannel_Hello_Agency_Report.html` file automatically. If any column names or Meta permissions require verification, pause and ask for my input.*
