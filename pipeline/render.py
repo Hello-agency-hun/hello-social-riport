@@ -49,6 +49,19 @@ def _environment() -> Environment:
     return env
 
 
+def _balanced_chunks(items: list, per_page: int = 3) -> list[list]:
+    """Oldalankénti bontás árva kártya nélkül.
+
+    Négy poszt `batch(3)`-mal 3+1-re esne szét, és a második lapon egyetlen
+    kártya árválkodna. Kiegyenlítve 2+2 lesz belőle.
+    """
+    if not items:
+        return []
+    pages = -(-len(items) // per_page)
+    size = -(-len(items) // pages)
+    return [items[i : i + size] for i in range(0, len(items), size)]
+
+
 def render(
     data: dict,
     cache_dir: Path,
@@ -89,7 +102,7 @@ def render(
                 post["creatives"][:1], cache_dir=cache_dir, fetcher=fetcher
             )
             post["thumb"] = uris[0] if uris else images.PLACEHOLDER
-        channel_posts[name] = selected
+        channel_posts[name] = _balanced_chunks(selected)
 
     template = _environment().get_template("report.html.j2")
     return template.render(

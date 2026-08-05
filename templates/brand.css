@@ -81,8 +81,13 @@ strong { color: var(--ink); font-weight: 700; }
 /* A kreatívok álló (4:5, 9:16) és fekvő arányban is érkeznek. `cover` esetén az
    álló képek közepét vágnánk ki — a poszt fele eltűnne. `contain` mellett a
    teljes kreatív látszik, a keret pedig semleges háttérrel tölti ki a helyet. */
-.thumb { display: block; width: 100%; height: 300px;
+.thumb { display: block; width: 100%; height: 260px;
          object-fit: contain; border-radius: 8px; background: var(--rule); }
+
+/* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
+   kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+          overflow: hidden; min-height: 2.9em; }
 .stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
               text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
 

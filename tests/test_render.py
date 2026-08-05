@@ -183,3 +183,19 @@ def test_quality_block_still_records_everything(data):
 def test_summary_page_shows_the_six_key_numbers(html):
     assert "A hónap mérlege" in html
     assert "a boost szorzója" in html
+
+
+def test_pages_are_balanced_so_no_card_is_left_alone():
+    """Négy poszt 3+1 helyett 2+2 — árva kártya nem marad egy üres lapon."""
+    from pipeline.render import _balanced_chunks
+
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4])] == [2, 2]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4, 5])] == [3, 2]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4, 5, 6])] == [3, 3]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3])] == [3]
+    assert _balanced_chunks([]) == []
+
+
+def test_paid_only_posts_do_not_say_ebbol(html):
+    """`ebből fizetett` csak akkor értelmes, ha van mihez képest."""
+    assert "fizetett elérés" in html
