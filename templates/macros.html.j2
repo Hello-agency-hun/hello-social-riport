@@ -1,0 +1,14 @@
+{% macro slot(key, value, label, hint) %}
+{% if value is not none %}
+<div class="panel">
+  <div class="stat">{{ value | num }}</div>
+  <div class="stat-label">{{ label }} <span class="manual-mark">kézi adat</span></div>
+</div>
+{% else %}
+<div class="manual-slot no-print" data-manual="{{ key }}">
+  <div class="manual-input" contenteditable="true" data-placeholder="—"></div>
+  <div class="stat-label">{{ label }}</div>
+  <p class="note" style="margin-top:6px">{{ hint }}</p>
+</div>
+{% endif %}
+{% endmacro %}

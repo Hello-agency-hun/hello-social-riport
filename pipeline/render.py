@@ -7,6 +7,7 @@ from typing import Callable
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pipeline import charts, images, labels
+from pipeline import manual as manual_module
 from pipeline.assets import TEMPLATES, logo, stylesheet
 
 MONTHS_HU = [
@@ -53,6 +54,7 @@ def render(
     cache_dir: Path,
     narrative: dict | None = None,
     fetcher: Callable[[str], bytes] = images.fetch,
+    manual: dict | None = None,
 ) -> str:
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
@@ -106,4 +108,7 @@ def render(
             ),
         },
         currency=data["paid"]["currency"],
+        manual=manual or {},
+        manual_slots=manual_module.SLOTS,
+        manual_js=(TEMPLATES / "manual.js").read_text(encoding="utf-8"),
     )

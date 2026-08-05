@@ -101,3 +101,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .note { font-size: 13px; color: var(--ink-soft); }
 .flag { color: var(--brand-red); font-weight: 700; }
+
+/* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
+   Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */
+.manual-slot { border: 1.5px dashed var(--rule); border-radius: 12px; padding: 20px; }
+.manual-input { font-size: 48px; font-weight: 900; line-height: 1;
+                min-height: 50px; outline: none; color: var(--ink); }
+.manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
+.manual-input:focus { border-bottom: 2px solid var(--accent); }
+.manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }

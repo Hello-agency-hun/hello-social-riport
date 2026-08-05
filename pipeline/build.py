@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import compare, guards, kpi
+from pipeline import compare, guards, kpi, manual
 from pipeline.detect import scan
 from pipeline.errors import DuplicateSourceError, UnknownSourceError
 from pipeline.join import join_posts
@@ -122,5 +122,6 @@ def build(directory: Path, period: str) -> dict:
                     ads_payload.dropped_zero_rows if ads_payload else 0
                 ),
             },
+            "manual": manual.load_manual(directory),
         }
     )

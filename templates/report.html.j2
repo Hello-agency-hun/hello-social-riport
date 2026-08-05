@@ -1,3 +1,4 @@
+{% from "macros.html.j2" import slot %}
 <!doctype html>
 <html lang="{{ data.meta.language }}">
 <head>
@@ -142,6 +143,11 @@
       <div class="stat-label">a boost szorzója</div>
     </div>
   </div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:32px">
+    {% for key, meta in manual_slots.items() %}
+    {{ slot(key, manual.get(key), meta.label, meta.hint) }}
+    {% endfor %}
+  </div>
   <p class="note" style="margin-top:auto">
     Az adatok forrása a Meta Business Suite és a ZoomSphere hivatalos exportja.
     Készült: {{ generated }}.
@@ -155,5 +161,6 @@
   <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
 </section>
 
+<script>{{ manual_js | safe }}</script>
 </body>
 </html>

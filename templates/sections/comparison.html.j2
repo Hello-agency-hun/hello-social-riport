@@ -1,3 +1,4 @@
+{% from "macros.html.j2" import slot %}
 {% for name, block in data.comparison.items() %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
@@ -14,6 +15,12 @@
       </p>
     </div>
     {% endfor %}
+    {% if not block %}
+    <div class="panel note">
+      Az előző hónap számai még nincsenek meg. Írd be őket, vagy másold be a
+      múlt havi <code>report_data.json</code>-t <code>previous.json</code> néven.
+    </div>
+    {% endif %}
   </div>
 </section>
 {% endfor %}

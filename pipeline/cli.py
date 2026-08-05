@@ -84,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
                 data,
                 cache_dir=Path(args.directory) / ".image-cache",
                 fetcher=fetcher,
+                manual=data.get("manual"),
             ),
             encoding="utf-8",
         )
