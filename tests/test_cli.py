@@ -42,3 +42,21 @@ def test_output_matches_the_golden_file(fixture_dir, tmp_path):
         (Path(fixture_dir) / "report_data.golden.json").read_text(encoding="utf-8")
     )
     assert produced == golden
+
+
+def test_cli_survives_a_cp1250_console(fixture_dir, tmp_path, monkeypatch):
+    """Magyar Windows konzolon a cp1250 nem tudja kódolni az `⚠`-t.
+
+    Enélkül a CLI a kiírásnál elszállna, még a report_data.json megírása előtt.
+    """
+    import io as _io
+    import sys
+
+    stdout = _io.TextIOWrapper(_io.BytesIO(), encoding="cp1250", errors="strict")
+    monkeypatch.setattr(sys, "stdout", stdout)
+
+    target = tmp_path / "report_data.json"
+    exit_code = main([str(fixture_dir), "--period", "2026-07", "--out", str(target)])
+
+    assert exit_code == 0
+    assert target.exists(), "a riportadat akkor is megíródik, ha a konzol szűk"

@@ -4,7 +4,11 @@ import pytest
 import yaml
 
 from pipeline.build import build
-from pipeline.errors import ClientMismatchError, PeriodMismatchError
+from pipeline.errors import (
+    ClientMismatchError,
+    DuplicateSourceError,
+    PeriodMismatchError,
+)
 
 
 def test_build_produces_report_data(fixture_dir):
@@ -51,3 +55,28 @@ def test_foreign_client_is_rejected(fixture_dir, tmp_path):
     )
     with pytest.raises(ClientMismatchError):
         build(other, period="2026-07")
+
+
+def test_two_zoomsphere_exports_are_rejected(fixture_dir, tmp_path):
+    """Újraletöltésnél a régi fájl bennmarad — enélkül az egyikük csendben elveszne."""
+    other = tmp_path / "larus-2026-07"
+    shutil.copytree(fixture_dir, other)
+    original = next(other.glob("input/*Scheduler*.xlsx"))
+    shutil.copy(original, original.with_name("export_masolat.xlsx"))
+    with pytest.raises(DuplicateSourceError, match="ZoomSphere"):
+        build(other, period="2026-07")
+
+
+def test_two_ads_exports_are_rejected(fixture_dir, tmp_path):
+    other = tmp_path / "larus-2026-07"
+    shutil.copytree(fixture_dir, other)
+    original = next(other.glob("input/*Kampányok*.csv"))
+    shutil.copy(original, original.with_name("kampanyok_masolat.csv"))
+    with pytest.raises(DuplicateSourceError, match="Meta Ads"):
+        build(other, period="2026-07")
+
+
+def test_several_daily_and_content_exports_are_allowed(fixture_dir):
+    """Napi metrikából csempénként, Tartalomból csatornánként több fájl a normális."""
+    data = build(fixture_dir, period="2026-07")
+    assert set(data["page"]) == {"facebook", "instagram"}

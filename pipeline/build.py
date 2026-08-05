@@ -6,9 +6,17 @@ import yaml
 
 from pipeline import guards, kpi
 from pipeline.detect import scan
-from pipeline.errors import UnknownSourceError
+from pipeline.errors import DuplicateSourceError, UnknownSourceError
 from pipeline.join import join_posts
 from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere
+
+
+# Ezekből pontosan egy tartozik egy hónaphoz. A `meta_content` és a `meta_daily`
+# szándékosan nincs itt: előbbiből csatornánként, utóbbiból metrikánként jön egy.
+SINGLETON_SOURCES = {
+    "zoomsphere": "ZoomSphere export",
+    "meta_ads": "Meta Ads export",
+}
 
 
 def _serialise(value):
@@ -39,8 +47,18 @@ def build(directory: Path, period: str) -> dict:
     ads_payload = None
     hints: dict[str, str] = {}
     unknown: list[str] = []
+    seen: dict[str, str] = {}
 
     for source in scan(directory / "input"):
+        if source.kind in SINGLETON_SOURCES:
+            if source.kind in seen:
+                raise DuplicateSourceError(
+                    f"két {SINGLETON_SOURCES[source.kind]} van a mappában: "
+                    f"{seen[source.kind]} és {source.path.name}. "
+                    "Töröld a régit — különben csendben az egyikük adata veszne el."
+                )
+            seen[source.kind] = source.path.name
+
         if source.kind == "zoomsphere":
             parsed = zoomsphere.parse(source.path)
             items = parsed.payload

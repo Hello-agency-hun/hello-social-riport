@@ -6,6 +6,10 @@ class UnknownSourceError(PipelineError):
     """Nem azonosítható bemeneti fájl."""
 
 
+class DuplicateSourceError(PipelineError):
+    """Egy hónaphoz két azonos típusú forrásfájl került."""
+
+
 class MissingColumnError(PipelineError):
     """Kötelező oszlop hiányzik egy forrásból."""
 

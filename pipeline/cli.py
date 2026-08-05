@@ -41,7 +41,19 @@ def _report_map(data: dict) -> str:
     )
 
 
+def _force_utf8_output() -> None:
+    """A magyar Windows konzol alapértelmezése cp1250, ami az `⚠`-t és az
+    ékezeteket sem tudja kódolni. Enélkül a CLI a kiírásnál elszállna —
+    még azelőtt, hogy a report_data.json megíródna.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def main(argv: list[str] | None = None) -> int:
+    _force_utf8_output()
     parser = argparse.ArgumentParser(prog="hello-report")
     parser.add_argument(
         "directory", help="ügyfél-hónap mappa, pl. clients/larus/2026-07"

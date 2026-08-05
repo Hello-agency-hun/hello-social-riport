@@ -606,6 +606,8 @@ nem egyezik a `report_data.json`-nal, a build hibát dob.
 | **Hiányzó kötelező oszlop** | parserenként deklarált kötelező oszloplista; hiánynál megnevezi a fájlt és az oszlopot |
 | **Vegyes pénznem** | fejléc-detektálás; több pénznem egy exportban → stop |
 | **Nem illeszkedő boostolt poszt** | felsorolás, rákérdezés |
+| **Két azonos típusú forrásfájl** | egy hónaphoz egy ZoomSphere és egy Ads export tartozik; kettőnél az egyikük csendben elveszne |
+| **Csonka vagy hibás napi export** | sorszám- és formátum-ellenőrzés, a fájl és a rossz sor megnevezésével |
 | **Narratíva-szám nem egyezik** | build hiba |
 
 ### Nem leállító, de jelzett
@@ -629,6 +631,13 @@ A kreatívok S3/Backblaze URL-jei lejárhatnak, és PDF-nyomtatáskor offline ne
 A build **letölti, méretre csökkenti és base64-ként beágyazza** őket.
 A HTML így egyetlen önálló fájl (~3-5 MB, 30 kép mellett), e-mailben küldhető,
 és a PDF hibátlan.
+
+### Konzol-kimenet
+
+A CLI induláskor UTF-8-ra állítja a `stdout`/`stderr` streamet. A magyar Windows
+konzol alapértelmezése `cp1250`, ami sem az `⚠` jelet, sem több ékezetes karaktert
+nem tud kódolni — enélkül a parancs a kiírásnál elszállna, **még azelőtt, hogy a
+`report_data.json` megíródna.**
 
 ---
 
