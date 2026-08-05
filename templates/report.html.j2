@@ -67,24 +67,7 @@
   {% endif %}
 </section>
 
-<section class="page">
-  <div class="eyebrow">Oldal-teljesítmény</div>
-  <h2 style="margin-bottom:36px">Csatornánkénti összesítés</h2>
-  <table>
-    <tr><th>Csatorna</th>
-      {% for field in page_fields %}<th class="num">{{ field | field }}</th>{% endfor %}
-    </tr>
-    {% for channel, fields in data.page.items() %}
-    <tr><td><strong>{{ channel | channel }}</strong></td>
-      {% for field in page_fields %}<td class="num">{{ fields.get(field) | num }}</td>{% endfor %}
-    </tr>
-    {% endfor %}
-  </table>
-  <p class="note" style="margin-top:auto">
-    Ezek oldal-szintű összegek, és a fizetett aktivitás eredményét is tartalmazzák —
-    nem tisztán organikus értékek.
-  </p>
-</section>
+{% include "sections/trends.html.j2" %}
 
 <section class="page">
   <div class="eyebrow">Top posztok</div>

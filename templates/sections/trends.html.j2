@@ -1,0 +1,16 @@
+{% for name, block in data.channels.items() %}
+{% if block.daily %}
+<section class="page">
+  <div class="eyebrow">{{ name | channel }}</div>
+  <h2 style="margin-bottom:28px">Napi alakulás</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    {% for title, svg in trends[name] %}
+    <div class="panel">
+      <h3 style="font-size:15px;margin-bottom:8px">{{ title }}</h3>
+      {{ svg | safe }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endfor %}

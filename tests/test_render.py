@@ -119,3 +119,12 @@ def test_unknown_identifier_falls_back_to_the_raw_value():
     from pipeline.labels import result_type
 
     assert result_type("actions:teljesen_uj") == "actions:teljesen_uj"
+
+
+def test_each_channel_gets_daily_trend_charts(html):
+    assert html.count('class="chart"') >= 8, "csatornánként 4 metrika trendgörbéje"
+
+
+def test_trend_chart_labels_are_hungarian(html):
+    assert "Felkeresések" in html
+    assert "Interakciók" in html

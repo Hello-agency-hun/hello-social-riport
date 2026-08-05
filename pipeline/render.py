@@ -67,10 +67,27 @@ def render(
     organic = _organic_reach(posts)
     boosted = data["cross"]["post_reach_sum"] - organic
 
+    trends = {}
+    for name, block in data.get("channels", {}).items():
+        trends[name] = [
+            (
+                labels.page_field(field),
+                charts.line_chart(
+                    [
+                        (date.fromisoformat(day), value)
+                        for day, value in block["daily"][field]
+                    ],
+                    label=f"{labels.channel(name)} — {labels.page_field(field)}",
+                ),
+            )
+            for field in sorted(block["daily"])
+        ]
+
     template = _environment().get_template("report.html.j2")
     return template.render(
         data=data,
         posts=posts,
+        trends=trends,
         narrative=narrative,
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
