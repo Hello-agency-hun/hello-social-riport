@@ -56,6 +56,7 @@ def parse(path) -> ParsedSource:
                 shares=_number(row.get("Megosztások", "")),
                 clicks=_number(row.get("Összes kattintás", "")),
                 link_clicks=_number(row.get("Hivatkozáskattintások", "")),
+                organic_measured=True,
             )
         )
 

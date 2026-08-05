@@ -22,21 +22,22 @@ def joined(input_file):
 
 
 def test_zoomsphere_matches_15_of_16_posts(joined):
-    assert len(joined.posts) == 16
-    assert sum(1 for p in joined.posts if p.creatives) == 15
+    """16 Facebook-poszt a Tartalom exportból, plusz 15 Instagram-poszt a
+    ZoomSphere-ből épül fel (Task 2) — összesen 31, 30 kreatívval."""
+    assert len(joined.posts) == 31
+    assert sum(1 for p in joined.posts if p.creatives) == 30
 
 
 def test_facebook_boosts_are_matched(joined):
     boosted = [p for p in joined.posts if p.is_boosted]
-    assert len(boosted) == 4
+    assert len(boosted) == 8
 
 
 def test_instagram_boosts_are_reported_as_unmatched(joined):
-    """A referencia-készletben nincs IG Tartalom export, ezért a 4 IG boost
-    nem illeszthető. A pipeline ezt jelenti, nem találgat."""
+    """A ZoomSphere-ből épülő IG-posztoknak köszönhetően (Task 2) a 4 IG boost
+    mostantól illeszthető — a pipeline már nem jelenti unmatched-ként."""
     unmatched = [c.name for c in joined.unmatched_boosts]
-    assert len(unmatched) == 4
-    assert all(name.startswith("Instagram-bejegyzés:") for name in unmatched)
+    assert unmatched == []
 
 
 def test_boost_carries_spend_and_paid_reach(joined):
@@ -65,3 +66,41 @@ def test_unmatched_boost_is_reported_not_guessed():
 
     with pytest.raises(UnmatchedBoostError, match="nem létezik"):
         join_posts(content=[], items=[], campaigns=[orphan], strict=True)
+
+
+def test_instagram_posts_are_built_from_zoomsphere(input_file):
+    """IG Tartalom export nélkül is meg tudjuk mutatni a boostolt IG-posztokat."""
+    result = join_posts(
+        content=meta_content.parse(input_file("Jul-01-2026")).payload,
+        items=zoomsphere.parse(input_file("Scheduler")).payload,
+        campaigns=meta_ads.parse(input_file("Kampányok")).payload.campaigns,
+    )
+    instagram = [post for post in result.posts if post.channel == "instagram"]
+    boosted = [post for post in instagram if post.is_boosted]
+    assert len(boosted) == 4
+    assert result.unmatched_boosts == []
+    for post in boosted:
+        assert post.creatives, "kreatív nélkül nincs értelme megmutatni"
+        assert post.caption
+        assert post.reach == 0, "IG organikus elérés nincs mérve — nem találjuk ki"
+
+
+def test_facebook_posts_still_come_from_the_content_export(input_file):
+    result = join_posts(
+        content=meta_content.parse(input_file("Jul-01-2026")).payload,
+        items=zoomsphere.parse(input_file("Scheduler")).payload,
+        campaigns=meta_ads.parse(input_file("Kampányok")).payload.campaigns,
+    )
+    facebook = [post for post in result.posts if post.channel == "facebook"]
+    assert len(facebook) == 16
+    assert max(post.reach for post in facebook) == 9046
+
+
+def test_stories_are_not_turned_into_posts(input_file):
+    """A story külön műfaj, és nincs hozzá teljesítményadat sehol."""
+    result = join_posts(
+        content=[],
+        items=zoomsphere.parse(input_file("Scheduler")).payload,
+        campaigns=[],
+    )
+    assert all(post.post_type != "story" for post in result.posts)

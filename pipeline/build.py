@@ -105,6 +105,7 @@ def build(directory: Path, period: str) -> dict:
             "quality": {
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),
                 "posts_total": len(joined.posts),
+                "posts_measured": sum(1 for p in joined.posts if p.organic_measured),
                 "unmatched_boosts": [c.name for c in joined.unmatched_boosts],
                 "unmatched_content": [p.post_id for p in joined.unmatched_content],
                 "dropped_zero_campaign_rows": (

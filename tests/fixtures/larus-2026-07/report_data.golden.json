@@ -37,7 +37,8 @@
       "shares": 0,
       "clicks": 6,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -72,7 +73,8 @@
         "status": "completed",
         "channel": "facebook",
         "is_boost": true
-      }
+      },
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -89,7 +91,8 @@
       "shares": 0,
       "clicks": 3,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -108,7 +111,8 @@
       "shares": 0,
       "clicks": 2,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -141,7 +145,8 @@
         "status": "recently_completed",
         "channel": "facebook",
         "is_boost": true
-      }
+      },
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -161,7 +166,8 @@
       "shares": 0,
       "clicks": 1,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -180,7 +186,8 @@
       "shares": 0,
       "clicks": 5,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -199,7 +206,8 @@
       "shares": 0,
       "clicks": 1,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -218,7 +226,8 @@
       "shares": 0,
       "clicks": 4,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -252,7 +261,8 @@
         "status": "completed",
         "channel": "facebook",
         "is_boost": true
-      }
+      },
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -271,7 +281,8 @@
       "shares": 0,
       "clicks": 1,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -290,7 +301,8 @@
       "shares": 0,
       "clicks": 0,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -309,7 +321,8 @@
       "shares": 0,
       "clicks": 0,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -343,7 +356,8 @@
         "status": "completed",
         "channel": "facebook",
         "is_boost": true
-      }
+      },
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -362,7 +376,8 @@
       "shares": 0,
       "clicks": 3,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
     },
     {
       "channel": "facebook",
@@ -381,7 +396,369 @@
       "shares": 0,
       "clicks": 4,
       "link_clicks": 0,
-      "paid": null
+      "paid": null,
+      "organic_measured": true
+    },
+    {
+      "channel": "instagram",
+      "post_id": "17957904336154653",
+      "published": "2026-07-01",
+      "caption": "Ebben a melegben már csak egy hideg ital segíthet… Tudunk egy jó helyet! 😉\n\n#larus #larusetterem #menü #terasz",
+      "permalink": "https://www.instagram.com/p/DaPpXkUF0wr/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/d1110827-ba6b-4636-834d-3484893f1543.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/6cf4fc29-2bd0-4333-a7ea-dc1451c5ed72.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18100840649219833",
+      "published": "2026-07-04",
+      "caption": "Nálunk így néz ki a nyár. 🌸🌱🌶️ \n\n#larus #larusetterem #nyár #konyha",
+      "permalink": "https://www.instagram.com/p/DaXQ6ImFyXw/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/a8a1f1bb-7425-453e-b101-c6fa0ac1c08e.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/8622d50f-56c0-40ee-95c0-ebf106079ea2.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/b60c7f00-b7fa-4ef4-ba14-e417172492e6.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18105409643020458",
+      "published": "2026-07-06",
+      "caption": "Heti menünkre most sem lehet panasz👀\n\nKóstoljátok végig!\n\n#hetimenü #menü #larusetterem",
+      "permalink": "https://www.instagram.com/p/DacEKp4F03F/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/be985025-6e82-4364-be05-5a299a27aead.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "17891463309560581",
+      "published": "2026-07-06",
+      "caption": "Kedves Vendégeink! ☀️\nEzen a héten egy kicsit változik a nyitvatartásunk:\nJúlius 7-én, kedden 12:00–17:00 óra között zárva tartunk.\nJúlius 11-én, szombaton egész nap zárva leszünk.\nA többi napon a megszokott nyitvatartással várunk benneteket Budán, finom falatokkal és jó hangulattal.\nKöszönjük a megértéseteket! ❤️",
+      "permalink": "https://www.instagram.com/p/Dachzkal0Mm/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/2991782d-14e5-4054-9873-ed3181b54af1.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18105622700013819",
+      "published": "2026-07-08",
+      "caption": "Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐\n\n#larus #larusetterem #gambas #buda #terasz",
+      "permalink": "https://www.instagram.com/p/Dahv3yjl9FV/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/060618e9-67f8-408c-81f7-6cea85eb9dbd.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/69160fdc-1c80-4a70-bd18-726728fbbdda.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "17971566609095881",
+      "published": "2026-07-10",
+      "caption": "Kedvenc kérdésünk: Pohárral vagy üveggel? 🍷\n\n#larus #larusetterem #bor #nyár",
+      "permalink": "https://www.instagram.com/p/DandxMSF3IQ/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/9d830c86-8216-4267-992c-97fb9cfc1bf8.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18182703823360913",
+      "published": "2026-07-13",
+      "caption": "Újabb heti menünk érkezik! 🍽️😉",
+      "permalink": "https://www.instagram.com/p/DaujfBql7Ao/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/99362f3d-04de-4f16-b287-2baa69173e94.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18133115560609182",
+      "published": "2026-07-16",
+      "caption": "Ennyi! 😉🥂 #larus #larusetterem",
+      "permalink": "https://www.instagram.com/p/Da2khiVlxfv/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/70fc81c0-9efb-404b-b99a-c94f6536b88a.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": {
+        "name": "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
+        "spend": 13.9,
+        "currency": "EUR",
+        "reach": 2892,
+        "impressions": 4296,
+        "frequency": 1.485477,
+        "link_clicks": 108,
+        "results": 107,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.12990654,
+        "status": "completed",
+        "channel": "instagram",
+        "is_boost": true
+      },
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18098718599598925",
+      "published": "2026-07-18",
+      "caption": "Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬 #larus #larusetterem",
+      "permalink": "https://www.instagram.com/reel/Da7vQ_OknD4/",
+      "post_type": "reel",
+      "creatives": [
+        "https://zoomsphere-files.s3.eu-central-1.amazonaws.com/offset-thumbs/133057783639a0d-51b9-4582-a149-50bd122f5a6c.mp4_offset_4.051532652154598.jpg",
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/83639a0d-51b9-4582-a149-50bd122f5a6c.mp4"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": {
+        "name": "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
+        "spend": 13.91,
+        "currency": "EUR",
+        "reach": 1456,
+        "impressions": 2154,
+        "frequency": 1.479396,
+        "link_clicks": 28,
+        "results": 29,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.47965517,
+        "status": "completed",
+        "channel": "instagram",
+        "is_boost": true
+      },
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18126448828639099",
+      "published": "2026-07-20",
+      "caption": "Nehéz lesz választani! 🍽️  #larus #larusetterem #ebédmenü",
+      "permalink": "https://www.instagram.com/p/DbAPphvlycs/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/1c1ea796-8095-4590-adb6-495ea9c0ba59.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "17936279532339424",
+      "published": "2026-07-21",
+      "caption": "Csak egy hétvégét kell kibírni Larus nélkül. 😉",
+      "permalink": "https://www.instagram.com/p/DbDNRzRl5n_/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/e128c16c-2914-4fa4-9d5f-2b71faaf3c19.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18105239615033117",
+      "published": "2026-07-21",
+      "caption": "Mert közösen a legjobb! ❤️ #larus #larusetterem",
+      "permalink": "https://www.instagram.com/p/DbDyn7TF0oE/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/c69d34a2-2f6f-470c-9501-84fd5c287320.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18025443167850361",
+      "published": "2026-07-23",
+      "caption": "Kacsamell, almás zellerpüré, pirított répák. Egy igazi klasszikus, Larus módra. 🌸 #larus #larusetterem",
+      "permalink": "https://www.instagram.com/p/DbITGFzgMkm/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/7362fe58-f069-4803-8266-cc9183868815.jpg"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": {
+        "name": "Instagram-bejegyzés: Kacsamell, almás zellerpüré,...",
+        "spend": 9.05,
+        "currency": "EUR",
+        "reach": 2093,
+        "impressions": 2596,
+        "frequency": 1.240325,
+        "link_clicks": 53,
+        "results": 57,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.15877193,
+        "status": "recently_completed",
+        "channel": "instagram",
+        "is_boost": true
+      },
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18101627710900467",
+      "published": "2026-07-27",
+      "caption": "Séfünk ajánlata! 😎 #larus #larusetterem",
+      "permalink": "https://www.instagram.com/p/DbSWXNXl4bI/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/c5791c92-2f6b-4a8a-90d7-200696e20cdd.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": {
+        "name": "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
+        "spend": 15.99,
+        "currency": "EUR",
+        "reach": 5709,
+        "impressions": 7106,
+        "frequency": 1.244701,
+        "link_clicks": 194,
+        "results": 192,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.08328125,
+        "status": "recently_completed",
+        "channel": "instagram",
+        "is_boost": true
+      },
+      "organic_measured": false
+    },
+    {
+      "channel": "instagram",
+      "post_id": "18099043469626391",
+      "published": "2026-07-29",
+      "caption": "A meleg nyári estékre! 🥂 #larus #larusetterem",
+      "permalink": "https://www.instagram.com/p/DbXw5Dvl7GV/",
+      "post_type": "image",
+      "creatives": [
+        "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/publisher/f684906c-d6fc-49d5-bd52-a35bcd1bcd36.png"
+      ],
+      "reach": 0,
+      "views": 0,
+      "reactions": 0,
+      "comments": 0,
+      "shares": 0,
+      "clicks": 0,
+      "link_clicks": 0,
+      "paid": null,
+      "organic_measured": false
     }
   ],
   "page": {
@@ -912,7 +1289,369 @@
         "interactions": 255,
         "views": 22483
       },
-      "posts": [],
+      "posts": [
+        {
+          "channel": "instagram",
+          "post_id": "17957904336154653",
+          "published": "2026-07-01",
+          "caption": "Ebben a melegben már csak egy hideg ital segíthet… Tudunk egy jó helyet! 😉\n\n#larus #larusetterem #menü #terasz",
+          "permalink": "https://www.instagram.com/p/DaPpXkUF0wr/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/d1110827-ba6b-4636-834d-3484893f1543.jpg",
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/6cf4fc29-2bd0-4333-a7ea-dc1451c5ed72.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18100840649219833",
+          "published": "2026-07-04",
+          "caption": "Nálunk így néz ki a nyár. 🌸🌱🌶️ \n\n#larus #larusetterem #nyár #konyha",
+          "permalink": "https://www.instagram.com/p/DaXQ6ImFyXw/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/a8a1f1bb-7425-453e-b101-c6fa0ac1c08e.jpg",
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/8622d50f-56c0-40ee-95c0-ebf106079ea2.jpg",
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/b60c7f00-b7fa-4ef4-ba14-e417172492e6.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18105409643020458",
+          "published": "2026-07-06",
+          "caption": "Heti menünkre most sem lehet panasz👀\n\nKóstoljátok végig!\n\n#hetimenü #menü #larusetterem",
+          "permalink": "https://www.instagram.com/p/DacEKp4F03F/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/be985025-6e82-4364-be05-5a299a27aead.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "17891463309560581",
+          "published": "2026-07-06",
+          "caption": "Kedves Vendégeink! ☀️\nEzen a héten egy kicsit változik a nyitvatartásunk:\nJúlius 7-én, kedden 12:00–17:00 óra között zárva tartunk.\nJúlius 11-én, szombaton egész nap zárva leszünk.\nA többi napon a megszokott nyitvatartással várunk benneteket Budán, finom falatokkal és jó hangulattal.\nKöszönjük a megértéseteket! ❤️",
+          "permalink": "https://www.instagram.com/p/Dachzkal0Mm/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/2991782d-14e5-4054-9873-ed3181b54af1.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18105622700013819",
+          "published": "2026-07-08",
+          "caption": "Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐\n\n#larus #larusetterem #gambas #buda #terasz",
+          "permalink": "https://www.instagram.com/p/Dahv3yjl9FV/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/060618e9-67f8-408c-81f7-6cea85eb9dbd.jpg",
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/69160fdc-1c80-4a70-bd18-726728fbbdda.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "17971566609095881",
+          "published": "2026-07-10",
+          "caption": "Kedvenc kérdésünk: Pohárral vagy üveggel? 🍷\n\n#larus #larusetterem #bor #nyár",
+          "permalink": "https://www.instagram.com/p/DandxMSF3IQ/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/9d830c86-8216-4267-992c-97fb9cfc1bf8.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18182703823360913",
+          "published": "2026-07-13",
+          "caption": "Újabb heti menünk érkezik! 🍽️😉",
+          "permalink": "https://www.instagram.com/p/DaujfBql7Ao/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/99362f3d-04de-4f16-b287-2baa69173e94.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18133115560609182",
+          "published": "2026-07-16",
+          "caption": "Ennyi! 😉🥂 #larus #larusetterem",
+          "permalink": "https://www.instagram.com/p/Da2khiVlxfv/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/70fc81c0-9efb-404b-b99a-c94f6536b88a.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": {
+            "name": "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
+            "spend": 13.9,
+            "currency": "EUR",
+            "reach": 2892,
+            "impressions": 4296,
+            "frequency": 1.485477,
+            "link_clicks": 108,
+            "results": 107,
+            "result_type": "profile_visit_view",
+            "cost_per_result": 0.12990654,
+            "status": "completed",
+            "channel": "instagram",
+            "is_boost": true
+          },
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18098718599598925",
+          "published": "2026-07-18",
+          "caption": "Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬 #larus #larusetterem",
+          "permalink": "https://www.instagram.com/reel/Da7vQ_OknD4/",
+          "post_type": "reel",
+          "creatives": [
+            "https://zoomsphere-files.s3.eu-central-1.amazonaws.com/offset-thumbs/133057783639a0d-51b9-4582-a149-50bd122f5a6c.mp4_offset_4.051532652154598.jpg",
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/83639a0d-51b9-4582-a149-50bd122f5a6c.mp4"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": {
+            "name": "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
+            "spend": 13.91,
+            "currency": "EUR",
+            "reach": 1456,
+            "impressions": 2154,
+            "frequency": 1.479396,
+            "link_clicks": 28,
+            "results": 29,
+            "result_type": "profile_visit_view",
+            "cost_per_result": 0.47965517,
+            "status": "completed",
+            "channel": "instagram",
+            "is_boost": true
+          },
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18126448828639099",
+          "published": "2026-07-20",
+          "caption": "Nehéz lesz választani! 🍽️  #larus #larusetterem #ebédmenü",
+          "permalink": "https://www.instagram.com/p/DbAPphvlycs/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/1c1ea796-8095-4590-adb6-495ea9c0ba59.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "17936279532339424",
+          "published": "2026-07-21",
+          "caption": "Csak egy hétvégét kell kibírni Larus nélkül. 😉",
+          "permalink": "https://www.instagram.com/p/DbDNRzRl5n_/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/e128c16c-2914-4fa4-9d5f-2b71faaf3c19.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18105239615033117",
+          "published": "2026-07-21",
+          "caption": "Mert közösen a legjobb! ❤️ #larus #larusetterem",
+          "permalink": "https://www.instagram.com/p/DbDyn7TF0oE/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/c69d34a2-2f6f-470c-9501-84fd5c287320.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18025443167850361",
+          "published": "2026-07-23",
+          "caption": "Kacsamell, almás zellerpüré, pirított répák. Egy igazi klasszikus, Larus módra. 🌸 #larus #larusetterem",
+          "permalink": "https://www.instagram.com/p/DbITGFzgMkm/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/prod/publisher/2026/7362fe58-f069-4803-8266-cc9183868815.jpg"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": {
+            "name": "Instagram-bejegyzés: Kacsamell, almás zellerpüré,...",
+            "spend": 9.05,
+            "currency": "EUR",
+            "reach": 2093,
+            "impressions": 2596,
+            "frequency": 1.240325,
+            "link_clicks": 53,
+            "results": 57,
+            "result_type": "profile_visit_view",
+            "cost_per_result": 0.15877193,
+            "status": "recently_completed",
+            "channel": "instagram",
+            "is_boost": true
+          },
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18101627710900467",
+          "published": "2026-07-27",
+          "caption": "Séfünk ajánlata! 😎 #larus #larusetterem",
+          "permalink": "https://www.instagram.com/p/DbSWXNXl4bI/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/workspace-148236/publisher/c5791c92-2f6b-4a8a-90d7-200696e20cdd.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": {
+            "name": "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
+            "spend": 15.99,
+            "currency": "EUR",
+            "reach": 5709,
+            "impressions": 7106,
+            "frequency": 1.244701,
+            "link_clicks": 194,
+            "results": 192,
+            "result_type": "profile_visit_view",
+            "cost_per_result": 0.08328125,
+            "status": "recently_completed",
+            "channel": "instagram",
+            "is_boost": true
+          },
+          "organic_measured": false
+        },
+        {
+          "channel": "instagram",
+          "post_id": "18099043469626391",
+          "published": "2026-07-29",
+          "caption": "A meleg nyári estékre! 🥂 #larus #larusetterem",
+          "permalink": "https://www.instagram.com/p/DbXw5Dvl7GV/",
+          "post_type": "image",
+          "creatives": [
+            "https://s3.eu-central-1.amazonaws.com/zoomsphere-files/team-1328762/publisher/f684906c-d6fc-49d5-bd52-a35bcd1bcd36.png"
+          ],
+          "reach": 0,
+          "views": 0,
+          "reactions": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0,
+          "link_clicks": 0,
+          "paid": null,
+          "organic_measured": false
+        }
+      ],
       "boosts": [
         {
           "name": "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
@@ -1509,7 +2248,8 @@
           "shares": 0,
           "clicks": 6,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1544,7 +2284,8 @@
             "status": "completed",
             "channel": "facebook",
             "is_boost": true
-          }
+          },
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1561,7 +2302,8 @@
           "shares": 0,
           "clicks": 3,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1580,7 +2322,8 @@
           "shares": 0,
           "clicks": 2,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1613,7 +2356,8 @@
             "status": "recently_completed",
             "channel": "facebook",
             "is_boost": true
-          }
+          },
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1633,7 +2377,8 @@
           "shares": 0,
           "clicks": 1,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1652,7 +2397,8 @@
           "shares": 0,
           "clicks": 5,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1671,7 +2417,8 @@
           "shares": 0,
           "clicks": 1,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1690,7 +2437,8 @@
           "shares": 0,
           "clicks": 4,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1724,7 +2472,8 @@
             "status": "completed",
             "channel": "facebook",
             "is_boost": true
-          }
+          },
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1743,7 +2492,8 @@
           "shares": 0,
           "clicks": 1,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1762,7 +2512,8 @@
           "shares": 0,
           "clicks": 0,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1781,7 +2532,8 @@
           "shares": 0,
           "clicks": 0,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1815,7 +2567,8 @@
             "status": "completed",
             "channel": "facebook",
             "is_boost": true
-          }
+          },
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1834,7 +2587,8 @@
           "shares": 0,
           "clicks": 3,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         },
         {
           "channel": "facebook",
@@ -1853,7 +2607,8 @@
           "shares": 0,
           "clicks": 4,
           "link_clicks": 0,
-          "paid": null
+          "paid": null,
+          "organic_measured": true
         }
       ],
       "boosts": [
@@ -1969,7 +2724,8 @@
     }
   },
   "cross": {
-    "posts_total": 16,
+    "posts_total": 31,
+    "posts_measured": 16,
     "posts_boosted": 4,
     "posts_organic": 12,
     "post_reach_sum": 18811,
@@ -1980,14 +2736,10 @@
     "boost_spend": 57.62
   },
   "quality": {
-    "posts_with_creative": 15,
-    "posts_total": 16,
-    "unmatched_boosts": [
-      "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
-      "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
-      "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
-      "Instagram-bejegyzés: Kacsamell, almás zellerpüré,..."
-    ],
+    "posts_with_creative": 30,
+    "posts_total": 31,
+    "posts_measured": 16,
+    "unmatched_boosts": [],
     "unmatched_content": [
       "1508309508006534"
     ],

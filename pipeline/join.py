@@ -47,6 +47,28 @@ def join_posts(
         post.post_type = post.post_type or item.post_type
         post.permalink = post.permalink or item.permalinks.get(post.channel, "")
 
+    # 1b. Amelyik csatornáról nincs Tartalom export, ott a ZoomSphere-ből
+    # építünk poszt-objektumot: kreatív, szöveg, link. Organikus metrika nélkül
+    # — azt nem méri semmi, tehát nem találjuk ki.
+    measured = {post.channel for post in result.posts}
+    for item in items:
+        if item.post_type == "story":
+            continue
+        for channel, post_id in item.post_ids.items():
+            if not post_id or channel in measured:
+                continue
+            result.posts.append(
+                Post(
+                    channel=channel,
+                    post_id=post_id,
+                    published=item.published,
+                    caption=item.caption(channel),
+                    permalink=item.permalinks.get(channel, ""),
+                    post_type=item.post_type,
+                    creatives=item.creatives.get(channel, []),
+                )
+            )
+
     # 2. Meta Ads boostok → caption-prefix alapján
     for campaign in campaigns:
         if not campaign.is_boost:

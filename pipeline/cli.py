@@ -23,9 +23,9 @@ def _report_map(data: dict) -> str:
             "",
             f"ZoomSphere      {content['total']} tartalom — "
             + ", ".join(f"{count} {name}" for name, count in content["by_type"].items()),
-            f"Tartalom        {quality['posts_total']} poszt, "
-            f"kreatívval párosítva {quality['posts_with_creative']}/"
-            f"{quality['posts_total']}",
+            f"Posztok         {quality['posts_total']} összesen · "
+            f"{quality['posts_measured']} mért organikus teljesítménnyel · "
+            f"{quality['posts_with_creative']} kreatívval",
             f"Meta Ads        {paid['always_on']['campaigns']} always-on + "
             f"{paid['boosted']['campaigns']} boost, "
             f"{paid['spend']:.2f} {paid['currency']} "

@@ -56,6 +56,12 @@ class Post:
     link_clicks: int = 0
     paid: Campaign | None = None
 
+    # Igaz, ha a Meta Tartalom exportjából jött, tehát az organikus számai
+    # mértek. Hamis, ha csak a ZoomSphere-ből tudunk róla (kreatív, szöveg,
+    # link) — ilyenkor a `reach` és társai nem nullák, hanem ISMERETLENEK,
+    # és nem szerepelhetnek átlagszámításban.
+    organic_measured: bool = False
+
     @property
     def is_boosted(self) -> bool:
         return self.paid is not None

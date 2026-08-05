@@ -52,11 +52,6 @@ def test_key_numbers_appear(html):
     assert "472" in html
 
 
-def test_unmatched_boosts_are_disclosed(html):
-    """Ami nem mérhető, azt a riport kimondja — nem hallgatja el."""
-    assert "nem illesztett" in html.lower()
-
-
 def test_stylesheet_is_not_html_escaped(html):
     """Escape-elve az idézőjelek `&#34;`-re válnak, és a `@font-face` elromlik.
 

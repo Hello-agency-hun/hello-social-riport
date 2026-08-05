@@ -27,7 +27,7 @@ def test_validate_prints_data_map(fixture_dir, capsys):
     out = capsys.readouterr().out
     assert exit_code == 0
     assert "29 tartalom" in out
-    assert "15/16" in out
+    assert "16 mért organikus teljesítménnyel" in out
     assert "472.71 EUR" in out
     assert "nem illesztett boost" in out
 

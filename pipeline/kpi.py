@@ -62,11 +62,17 @@ def paid_totals(campaigns: list[Campaign]) -> dict:
 def cross_channel(posts: list[Post]) -> dict:
     """A riport csúcspontja: mennyit ér a boost.
 
+    **Csak mért posztokkal számol.** Ahol nincs Tartalom export (jelenleg az
+    Instagram), ott a posztok elérése nem nulla, hanem ismeretlen — ha
+    beleszámítanánk az átlagba, az érték csendben rossz lenne. Inkább
+    kevesebb posztra mondunk igazat, mint többre valótlant.
+
     A poszt-elérések összege szándékosan NEM havi reach — csak arányszámításra
     használjuk, és a riport is így címkézi.
     """
-    boosted = [p for p in posts if p.is_boosted]
-    organic = [p for p in posts if not p.is_boosted]
+    measured = [p for p in posts if p.organic_measured]
+    boosted = [p for p in measured if p.is_boosted]
+    organic = [p for p in measured if not p.is_boosted]
 
     boosted_reach = sum(p.reach for p in boosted)
     organic_reach = sum(p.reach for p in organic)
@@ -77,6 +83,7 @@ def cross_channel(posts: list[Post]) -> dict:
 
     return {
         "posts_total": len(posts),
+        "posts_measured": len(measured),
         "posts_boosted": len(boosted),
         "posts_organic": len(organic),
         "post_reach_sum": total_reach,
