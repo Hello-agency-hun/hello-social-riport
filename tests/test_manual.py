@@ -14,9 +14,9 @@ def test_missing_file_yields_an_empty_mapping(tmp_path):
     assert load_manual(tmp_path) == {}
 
 
-def test_values_are_read_from_manual_json(tmp_path):
-    (tmp_path / "manual.json").write_text(
-        json.dumps({"reach_facebook": 92400}), encoding="utf-8"
+def test_values_are_read_from_review_json(tmp_path):
+    (tmp_path / "review.json").write_text(
+        json.dumps({"manual": {"reach_facebook": 92400}}), encoding="utf-8"
     )
     assert load_manual(tmp_path)["reach_facebook"] == 92400
 

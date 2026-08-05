@@ -115,3 +115,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
 .manual-input:focus { border-bottom: 2px solid var(--accent); }
 .manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }
+
+/* Review-kör: a menedzser a böngészőben írja át, amit másképp mondana. */
+.editable:focus { outline: 2px solid var(--accent); outline-offset: 6px; }
+.comment-button { position: absolute; bottom: 18px; right: 18px;
+                  font-family: var(--font); font-size: 12px; font-weight: 700;
+                  padding: 7px 12px; border-radius: 999px; cursor: pointer;
+                  color: var(--ink-soft); background: var(--paper-alt);
+                  border: 1px solid var(--rule); }

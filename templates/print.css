@@ -16,6 +16,7 @@
   .page:last-child { page-break-after: auto; break-after: auto; }
   .no-print { display: none !important; }
   .manual-slot { display: none !important; }
+  .comment-button { display: none !important; }
   a { text-decoration: none; color: inherit; }
 }
 

@@ -2,7 +2,7 @@
 <section class="page">
   <div class="eyebrow">Vezetői összefoglaló</div>
   <h2 style="margin-bottom:36px">A hónap röviden</h2>
-  <p style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)">
+  <p data-narrative="executive_summary" style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)">
     {{ narrative.executive_summary }}
   </p>
 </section>
@@ -11,10 +11,10 @@
 {% if narrative and narrative.key_finding %}
 <section class="page" style="justify-content:center">
   <div class="eyebrow">A hónap kulcsmegállapítása</div>
-  <h2 style="font-size:60px;margin:18px 0 28px;max-width:1100px">
+  <h2 data-narrative="key_finding.title" style="font-size:60px;margin:18px 0 28px;max-width:1100px">
     {{ narrative.key_finding.title }}
   </h2>
-  <p style="font-size:22px;line-height:1.5;max-width:900px">
+  <p data-narrative="key_finding.body" style="font-size:22px;line-height:1.5;max-width:900px">
     {{ narrative.key_finding.body }}
   </p>
 </section>

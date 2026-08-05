@@ -8,7 +8,6 @@ kihagynánk, a menedzser sosem tudná meg, hogy létezik ilyen adat. Ezért a
 riportban megjelenik a hely, azzal együtt, hogy honnan szerezhető be.
 """
 
-import json
 from pathlib import Path
 
 SLOTS = {
@@ -32,7 +31,8 @@ SLOTS = {
 
 
 def load_manual(directory: Path) -> dict:
-    path = Path(directory) / "manual.json"
-    if not path.exists():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    """A kézi értékek a `review.json` `manual` szakaszában élnek — egy fájl,
+    egy mentés gomb."""
+    from pipeline.review import load_review
+
+    return load_review(directory)["manual"]

@@ -127,5 +127,5 @@ def render(
         currency=data["paid"]["currency"],
         manual=manual or {},
         manual_slots=manual_module.SLOTS,
-        manual_js=(TEMPLATES / "manual.js").read_text(encoding="utf-8"),
+        review_js=(TEMPLATES / "review.js").read_text(encoding="utf-8"),
     )
