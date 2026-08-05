@@ -1,3 +1,4 @@
+import json
 from dataclasses import asdict, is_dataclass
 from datetime import date
 from pathlib import Path
@@ -34,6 +35,13 @@ def _serialise(value):
 def load_config(directory: Path) -> dict:
     path = Path(directory) / "client.yaml"
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def load_narrative(directory: Path) -> dict | None:
+    path = Path(directory) / "narrative.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def build(directory: Path, period: str) -> dict:

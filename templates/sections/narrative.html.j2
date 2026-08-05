@@ -1,0 +1,58 @@
+{% if narrative and narrative.executive_summary %}
+<section class="page">
+  <div class="eyebrow">Vezetői összefoglaló</div>
+  <h2 style="margin-bottom:36px">A hónap röviden</h2>
+  <p style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)">
+    {{ narrative.executive_summary }}
+  </p>
+</section>
+{% endif %}
+
+{% if narrative and narrative.key_finding %}
+<section class="page" style="justify-content:center">
+  <div class="eyebrow">A hónap kulcsmegállapítása</div>
+  <h2 style="font-size:60px;margin:18px 0 28px;max-width:1100px">
+    {{ narrative.key_finding.title }}
+  </h2>
+  <p style="font-size:22px;line-height:1.5;max-width:900px">
+    {{ narrative.key_finding.body }}
+  </p>
+</section>
+{% endif %}
+
+{% if narrative and (narrative.what_worked or narrative.what_to_improve) %}
+<section class="page">
+  <div class="eyebrow">Értékelés</div>
+  <h2 style="margin-bottom:36px">Mi működött, min javítsunk</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="panel">
+      <h3 class="accent" style="margin-bottom:16px">Mi működött</h3>
+      <ul style="padding-left:20px">
+        {% for item in narrative.what_worked %}
+        <li style="margin-bottom:12px">{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:16px">Min javítsunk</h3>
+      <ul style="padding-left:20px">
+        {% for item in narrative.what_to_improve %}
+        <li style="margin-bottom:12px">{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if narrative and narrative.next_steps %}
+<section class="page">
+  <div class="eyebrow">Következő lépések</div>
+  <h2 style="margin-bottom:36px">Mit csinálunk a jövő hónapban</h2>
+  <ol style="padding-left:26px;font-size:20px">
+    {% for item in narrative.next_steps %}
+    <li style="margin-bottom:20px;color:var(--ink)">{{ item }}</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}

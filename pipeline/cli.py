@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-from pipeline.build import build
+from pipeline.build import build, load_narrative
 from pipeline.errors import PipelineError
 from pipeline.textio import force_utf8_output
 
@@ -85,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
                 cache_dir=Path(args.directory) / ".image-cache",
                 fetcher=fetcher,
                 manual=data.get("manual"),
+                narrative=load_narrative(Path(args.directory)),
             ),
             encoding="utf-8",
         )
