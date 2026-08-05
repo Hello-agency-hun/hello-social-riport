@@ -6,7 +6,7 @@ from typing import Callable
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline import charts, images
+from pipeline import charts, images, labels
 from pipeline.assets import TEMPLATES, logo, stylesheet
 
 MONTHS_HU = [
@@ -41,6 +41,10 @@ def _environment() -> Environment:
     )
     env.filters["num"] = _number
     env.filters["money"] = _money
+    env.filters["field"] = labels.page_field
+    env.filters["result"] = labels.result_type
+    env.filters["channel"] = labels.channel
+    env.filters["ptype"] = labels.post_type
     return env
 
 

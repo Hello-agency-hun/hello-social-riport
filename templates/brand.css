@@ -73,7 +73,15 @@ h3 { font-size: 22px; font-weight: 700; }
 p, li, td, th { font-size: 17px; line-height: 1.5; color: var(--ink-soft); }
 strong { color: var(--ink); font-weight: 700; }
 
-.stat { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+.stat { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em;
+        white-space: nowrap; }
+/* Pénznemmel a szám hosszabb — enélkül két sorba törne a csempében. */
+.stat--sm { font-size: 42px; }
+
+/* A kreatívok álló és fekvő arányban is érkeznek. Fix magasság nélkül az álló
+   képek kitolnák a kártyát a 16:9-es oldalról. */
+.thumb { display: block; width: 100%; height: 264px;
+         object-fit: cover; border-radius: 8px; background: var(--rule); }
 .stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
               text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
 

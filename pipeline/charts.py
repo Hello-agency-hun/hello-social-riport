@@ -42,7 +42,17 @@ def _empty(label: str, width: int = W, height: int = H) -> str:
 
 
 def _thousands(value: float) -> str:
-    return f"{int(value):,}".replace(",", " ")
+    return f"{int(value):,}".replace(",", " ")
+
+
+def _percent(share: float) -> str:
+    """Magyar tizedesjel. A riport szövege is vesszőt használ — egy oldalon
+    belül nem lehet kétféle jelölés.
+
+    (A riport v1-ben magyar nyelvű; ha később angol változat is lesz, ez a
+    formázás nyelvfüggő paraméterré válik.)
+    """
+    return f"{share * 100:.1f}".replace(".", ",") + "%"
 
 
 def line_chart(points: list[tuple[date, float]], label: str) -> str:
@@ -138,7 +148,7 @@ def donut(parts: list[tuple[str, float]], label: str) -> str:
             f'<rect x="18" y="{234 + index * 22}" width="11" height="11" rx="3" '
             f'fill="{token}"/>'
             f'<text x="37" y="{244 + index * 22}" font-size="13" fill="var(--ink-soft)">'
-            f"{_escape(name)} — {share * 100:.1f}%</text>"
+            f"{_escape(name)} — {_percent(share)}</text>"
         )
         offset += length
 

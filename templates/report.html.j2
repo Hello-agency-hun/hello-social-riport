@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <title>{{ data.meta.client }} — {{ period_hu }} riport</title>
-<style>{{ css }}</style>
+{# A stíluslap a saját tartalmunk, nem felhasználói adat. Escape-elve az
+   idézőjelek `&#34;`-re válnának, amitől a `@font-face src` és a `--font`
+   érvénytelen lenne — a riport néma talpas fallback fontra váltana. #}
+<style>{{ css | safe }}</style>
 </head>
 <body>
 
@@ -29,11 +32,11 @@
       <div class="stat-label">poszt-elérés összesen</div>
     </div>
     <div>
-      <div class="stat">{{ data.paid.spend | money(currency) }}</div>
+      <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
       <div class="stat-label">hirdetési költés</div>
     </div>
     <div>
-      <div class="stat accent">{{ data.cross.reach_multiplier }}×</div>
+      <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
       <div class="stat-label">boostolt / organikus elérés</div>
     </div>
   </div>
@@ -50,7 +53,7 @@
     {% for kind, count in data.content.by_type.items() %}
     <div class="panel">
       <div class="stat">{{ count }}</div>
-      <div class="stat-label">{{ kind }}</div>
+      <div class="stat-label">{{ kind | ptype }}</div>
     </div>
     {% endfor %}
   </div>
@@ -58,7 +61,7 @@
   <p style="margin-top:32px">
     Story-k csatornánként:
     {% for channel, count in data.content.stories_by_channel.items() %}
-    <strong>{{ channel }} {{ count }}</strong>{{ "" if loop.last else " · " }}
+    <strong>{{ channel | channel }} {{ count }}</strong>{{ "" if loop.last else " · " }}
     {% endfor %}
   </p>
   {% endif %}
@@ -69,10 +72,10 @@
   <h2 style="margin-bottom:36px">Csatornánkénti összesítés</h2>
   <table>
     <tr><th>Csatorna</th>
-      {% for field in page_fields %}<th class="num">{{ field }}</th>{% endfor %}
+      {% for field in page_fields %}<th class="num">{{ field | field }}</th>{% endfor %}
     </tr>
     {% for channel, fields in data.page.items() %}
-    <tr><td><strong>{{ channel }}</strong></td>
+    <tr><td><strong>{{ channel | channel }}</strong></td>
       {% for field in page_fields %}<td class="num">{{ fields.get(field) | num }}</td>{% endfor %}
     </tr>
     {% endfor %}
@@ -89,7 +92,7 @@
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in posts[:3] %}
     <div class="panel">
-      <img src="{{ post.thumb }}" alt="" style="width:100%;border-radius:8px">
+      <img class="thumb" src="{{ post.thumb }}" alt="">
       <p style="margin-top:14px;color:var(--ink)">{{ post.caption[:90] }}</p>
       <div class="rule" style="margin:14px 0"></div>
       <p><strong>{{ post.reach | num }}</strong> elérés · {{ post.reactions | num }} reakció</p>
@@ -118,7 +121,7 @@
         <th class="num">Költés</th><th class="num">Eredmény</th></tr>
     {% for kind, block in data.paid.by_result_type.items() %}
     <tr>
-      <td>{{ kind }}</td>
+      <td>{{ kind | result }}</td>
       <td class="num">{{ block.campaigns }}</td>
       <td class="num">{{ block.spend | money(currency) }}</td>
       <td class="num">{{ block.results | num }}</td>
@@ -135,7 +138,7 @@
   <div class="eyebrow">Organikus és fizetett</div>
   <h2 style="margin-bottom:24px">Mennyit ér a boost</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr;align-items:center">
-    <div>{{ charts.reach_split | safe }}</div>
+    <div style="max-width:400px">{{ charts.reach_split | safe }}</div>
     <div>
       <div class="stat">{{ data.cross.avg_reach_organic_post | num }}</div>
       <div class="stat-label">organikus poszt átlagos elérése</div>

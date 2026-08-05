@@ -76,6 +76,13 @@ def test_donut_segments_cover_the_full_circle():
     assert len(circles) == 2
 
 
+def test_donut_legend_uses_a_hungarian_decimal_comma():
+    """A riport szövege vesszőt használ; a jelmagyarázat nem térhet el tőle."""
+    svg = donut([("a", 917), ("b", 83)], label="x")
+    assert "91,7%" in svg
+    assert "91.7%" not in svg
+
+
 def test_empty_data_renders_a_placeholder_not_a_crash():
     """Hiányzó adatnál üres keret és felirat — nem nulla, nem összeomlás."""
     for svg in (line_chart([], label="x"), bar_chart([], label="x"), donut([], label="x")):
