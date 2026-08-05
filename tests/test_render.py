@@ -128,3 +128,28 @@ def test_each_channel_gets_daily_trend_charts(html):
 def test_trend_chart_labels_are_hungarian(html):
     assert "Felkeresések" in html
     assert "Interakciók" in html
+
+
+def test_report_has_a_section_per_channel(html):
+    assert ">Instagram<" in html
+    assert ">Facebook<" in html
+
+
+def test_six_posts_are_shown_for_the_measured_channel(html):
+    """Facebookon 16 mért poszt van — hatot mutatunk, két oldalon."""
+    assert html.count('class="thumb"') >= 6
+
+
+def test_post_metrics_show_measured_numbers_not_a_subtraction(html):
+    """Összes elérés és fizetett kampány-elérés — organikus becslés nélkül."""
+    assert "ebből fizetett" in html
+    assert "becsült" not in html.lower()
+
+
+def test_page_count_stays_within_the_agreed_limit(html):
+    assert 12 <= html.count('class="page') <= 20
+
+
+def test_channel_kpi_tiles_use_hungarian_labels(html):
+    assert "Hivatkozáskattintások" in html
+    assert "Új követők" in html

@@ -60,10 +60,6 @@ def render(
 ) -> str:
     posts = sorted(data["posts"], key=lambda post: -post["reach"])
 
-    for post in posts:
-        uris = images.embed(post["creatives"][:1], cache_dir=cache_dir, fetcher=fetcher)
-        post["thumb"] = uris[0] if uris else images.PLACEHOLDER
-
     organic = _organic_reach(posts)
     boosted = data["cross"]["post_reach_sum"] - organic
 
@@ -83,11 +79,27 @@ def render(
             for field in sorted(block["daily"])
         ]
 
+    channel_posts = {}
+    for name, block in data.get("channels", {}).items():
+        ranked = sorted(block["posts"], key=lambda post: -post["reach"])
+        selected = [post for post in ranked if post["reach"]][:6]
+        if not selected:
+            # Ezen a csatornán nincs mért elérés — a boostoltakat emeljük ki,
+            # mert azokról van mért fizetett adatunk.
+            selected = [post for post in ranked if post.get("paid")][:6]
+        for post in selected:
+            uris = images.embed(
+                post["creatives"][:1], cache_dir=cache_dir, fetcher=fetcher
+            )
+            post["thumb"] = uris[0] if uris else images.PLACEHOLDER
+        channel_posts[name] = selected
+
     template = _environment().get_template("report.html.j2")
     return template.render(
         data=data,
         posts=posts,
         trends=trends,
+        channel_posts=channel_posts,
         narrative=narrative,
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),

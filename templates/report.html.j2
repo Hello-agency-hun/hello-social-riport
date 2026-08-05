@@ -69,32 +69,7 @@
 
 {% include "sections/trends.html.j2" %}
 
-<section class="page">
-  <div class="eyebrow">Top posztok</div>
-  <h2 style="margin-bottom:30px">A hónap legjobban teljesítő tartalmai</h2>
-  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-    {% for post in posts[:3] %}
-    <div class="panel">
-      <img class="thumb" src="{{ post.thumb }}" alt="">
-      <p style="margin-top:14px;color:var(--ink)">{{ post.caption[:90] }}</p>
-      <div class="rule" style="margin:14px 0"></div>
-      <p><strong>{{ post.reach | num }}</strong> elérés · {{ post.reactions | num }} reakció</p>
-      {% if post.paid %}
-      <p class="accent"><strong>ebből fizetett:</strong>
-        {{ post.paid.spend | money(currency) }} → {{ post.paid.reach | num }} elérés</p>
-      {% else %}
-      <p class="note">tisztán organikus</p>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="page">
-  <div class="eyebrow">Top posztok</div>
-  <h2 style="margin-bottom:30px">Elérés szerinti sorrend</h2>
-  {{ charts.top_posts | safe }}
-</section>
+{% include "sections/channel.html.j2" %}
 
 <section class="page">
   <div class="eyebrow">Fizetett hirdetés</div>

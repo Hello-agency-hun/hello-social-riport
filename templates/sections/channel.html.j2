@@ -1,0 +1,53 @@
+{% for name, block in data.channels.items() %}
+{% set shown = channel_posts[name] %}
+
+{% if block.totals %}
+<section class="page">
+  <div class="eyebrow">{{ name | channel }}</div>
+  <h2 style="margin-bottom:44px">A hónap teljesítménye</h2>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+    {% for key, value in block.totals.items() %}
+    <div class="panel">
+      <div class="stat">{{ value | num }}</div>
+      <div class="stat-label">{{ key | field }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% for chunk in shown | batch(3) %}
+<section class="page">
+  <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
+  <h2 style="margin-bottom:24px">
+    {{ "A legnagyobb elérésű posztok" if shown[0].reach else "A hónap támogatott posztjai" }}
+  </h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    {% for post in chunk %}
+    <div class="panel">
+      <img class="thumb" src="{{ post.thumb }}" alt="">
+      <p style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption[:80] }}</p>
+      <div class="rule" style="margin:12px 0"></div>
+      <table style="font-size:14px">
+        {% if post.reach %}
+        <tr><td>Elérés</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
+        {% endif %}
+        {% if post.paid %}
+        <tr><td class="accent">ebből fizetett</td>
+            <td class="num accent"><strong>{{ post.paid.reach | num }}</strong></td></tr>
+        <tr><td class="accent">költés</td>
+            <td class="num accent">{{ post.paid.spend | money(currency) }}</td></tr>
+        {% endif %}
+        {% if post.reactions %}
+        <tr><td>Reakció</td><td class="num">{{ post.reactions | num }}</td></tr>
+        {% endif %}
+        {% if post.clicks %}
+        <tr><td>Kattintás</td><td class="num">{{ post.clicks | num }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endfor %}
