@@ -449,6 +449,11 @@ későbbi szerkesztésnél ne csússzon el.
 **Open Sauce One** — Regular, Medium, Bold, Black. *(A brand guide `Open Sauce Sans`-t
 nevez meg; a benchmark riport `Open Sauce One`-t használ. A riportban az utóbbi az irányadó.)*
 
+A font a `marcologous/Open-Sauce-Fonts` repóból származik (OFL), ahol **csak TTF**
+érhető el — a `tools/vendor_fonts.py` konvertálja woff2-vé. A `fonttools`
+fejlesztői függőség; a kész woff2 fájlok a repóban vannak, a menedzsernek nem
+kell telepítenie semmit.
+
 A woff2 fájlok a repóban (`assets/fonts/`, OFL licenc, terjeszthető), a build
 base64-ként ágyazza be a HTML-be — így offline megnyitva és PDF-be nyomtatva is helyes.
 
@@ -473,20 +478,37 @@ Indoklás:
 - **A design tokenekből színez**, nem beégetett palettából; akcentus-változás automatikusan átüt.
 - A review-körben a chart feliratai is szerkeszthetők.
 
-Charttípusok v1-ben: napi trendvonal, oszlopdiagram, halmozott sáv (organic/paid megoszlás),
-kördiagram. Mind egyszerű geometria — SVG-ben pár tucat sor.
+Charttípusok v1-ben: **napi trendvonal, vízszintes oszlopdiagram, gyűrűdiagram**.
+Halmozott sáv nem készült — nem volt rá szükség.
 
 ### 8.5 Assetek
 
 ```
 assets/
-├── fonts/          OpenSauceOne-{Regular,Medium,Bold,Black}.woff2
-├── logo/           HELLO logó SVG-ben, elsődleges palettában
-└── shapes/         geometriai díszelemek (90° / 35°) SVG-ben
+├── fonts/          OpenSauceOne-{Regular,Medium,Bold,Black}.woff2 + OFL.txt
+└── logo/           hello-mark.svg (önálló H), hello-lockup.svg (H + szóvédjegy)
 ```
 
-A logót a brand guide szerint **tilos nyújtani, átszínezni vagy átszabni** —
-a template fix méretarányban használja.
+A logót a `tools/extract_logo.py` szedi ki a brand guide PDF 4. oldaláról, a
+fekete kitöltésű vektor-útvonalak alapján — a körülötte lévő szerkesztési rács
+világosszürke, ezért kiesik a szűrőn. Nem rajzoljuk újra: a brand guide **tiltja
+a nyújtást, az átszínezést és az átszabást**, így az eredeti útvonalak kerülnek át.
+
+Mindkét változat `fill="currentColor"`, tehát a szövegszínt veszi fel — a riportban
+nem lehet véletlenül átszínezni.
+
+`assets/shapes/` nem készült: a benchmark riport nem használ geometriai
+díszelemet, és bevezetni őket ellentétes lenne a mért, visszafogott rendszerrel.
+
+### 8.6 Feliratok
+
+A pipeline végig a Meta saját kulcsait használja (`actions:omni_landing_page_view`,
+`link_clicks`), mert azok stabilak és visszavezethetők a forrásra. A `pipeline/labels.py`
+fordítja őket emberi megnevezésre a megjelenítéskor — **nyers gépi azonosító nem
+kerülhet ki az ügyfélnek szánt riportba.**
+
+Ismeretlen kulcsnál a nyers érték marad: ha a Meta új eredménytípust vezet be,
+az látható lesz a riportban (csúnyán), nem pedig eltűnik.
 
 ---
 
@@ -692,7 +714,14 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 | Teszt | Mit rögzít |
 |---|---|
-| Design tokenek | a `brand.css` az 8.1. paletta értékeit tartalmazza |
+| Design tokenek | a `brand.css` a 8.1. paletta értékeit tartalmazza |
+| Chart-színek | az SVG-kben nincs beégetett hex, csak `var(--…)` |
+| Önállóság | a kész HTML-ben nincs `http(s)://` hivatkozás |
+| Stíluslap-escape | a `<style>` tartalma nem HTML-escape-elt (különben elvész a font) |
+| Feliratok | nyers Meta-azonosító nem jelenhet meg a riportban |
+| Tizedesjel | a chartok és a szöveg egyaránt magyar vesszőt használ |
+| XSS | a poszt-szövegek escape-eltek maradnak |
+| Determinizmus | ugyanaz a bemenet → bájtazonos HTML |
 | Chart | az SVG a tokenekből színez, nem beégetett hexből |
 | Review | narratíva + kézi szám szerkeszthető, számított érték nem |
 | Parser — kódolás | UTF-16 BOM felismerés, `sep=,` sor kezelése |

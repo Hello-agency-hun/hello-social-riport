@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pipeline.build import build
 from pipeline.errors import PipelineError
+from pipeline.textio import force_utf8_output
 
 
 def _report_map(data: dict) -> str:
@@ -41,19 +42,8 @@ def _report_map(data: dict) -> str:
     )
 
 
-def _force_utf8_output() -> None:
-    """A magyar Windows konzol alapértelmezése cp1250, ami az `⚠`-t és az
-    ékezeteket sem tudja kódolni. Enélkül a CLI a kiírásnál elszállna —
-    még azelőtt, hogy a report_data.json megíródna.
-    """
-    for stream in (sys.stdout, sys.stderr):
-        reconfigure = getattr(stream, "reconfigure", None)
-        if reconfigure is not None:
-            reconfigure(encoding="utf-8", errors="replace")
-
-
 def main(argv: list[str] | None = None) -> int:
-    _force_utf8_output()
+    force_utf8_output()
     parser = argparse.ArgumentParser(prog="hello-report")
     parser.add_argument(
         "directory", help="ügyfél-hónap mappa, pl. clients/larus/2026-07"
@@ -61,6 +51,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--period", required=True, help="YYYY-MM")
     parser.add_argument("--validate", action="store_true", help="csak ellenőrzés")
     parser.add_argument("--out", default=None, help="report_data.json útvonala")
+    parser.add_argument("--html", default=None, help="Riport.html útvonala")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="ne töltsön le képet — a kreatívok helyén helyőrző jelenik meg",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -77,6 +73,21 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(f"\n→ {target}")
+
+        from pipeline import images
+        from pipeline.render import render
+
+        html_path = Path(args.html or Path(args.directory) / "Riport.html")
+        fetcher = (lambda url: b"") if args.offline else images.fetch
+        html_path.write_text(
+            render(
+                data,
+                cache_dir=Path(args.directory) / ".image-cache",
+                fetcher=fetcher,
+            ),
+            encoding="utf-8",
+        )
+        print(f"→ {html_path}")
 
     return 0
 

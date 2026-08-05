@@ -11,7 +11,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "fonttools[woff]>=4.50", "pymupdf>=1.24"]
+
+# A repo gyökerében a `pipeline` mellett `assets`, `templates`, `tools` és `docs`
+# is van. Ezek nem Python-csomagok, de a setuptools automatikus felderítése
+# annak nézné őket, és `pip install -e .` hibával állna meg. Ezért soroljuk fel
+# explicit módon, mi a csomag.
+[tool.setuptools]
+packages = ["pipeline", "pipeline.parsers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not network'"
+markers = ["network: hálózatot igényel, alapból kihagyva"]

@@ -19,20 +19,35 @@ def looks_like_zoomsphere(path: Path) -> bool:
     return all(header in sheet for header in REQUIRED_HEADERS)
 
 
+# A médiaoszlopok sorrendje számít: a riport a lista első elemét mutatja
+# thumbnailként. Videónál és reelnél a nyers fájl mp4, amiből nem lesz kép —
+# ezért a poszter-kép (`*VideoThumbnail`) előrébb áll, mint a videó URL-je.
 CHANNEL_COLUMNS = {
     "facebook": {
         "message": "FacebookMessage",
         "source": "FacebookSources",
         "ids": "FacebookPostIDs",
         "permalink": "FacebookPublicPermalinks",
-        "images": ["FacebookImages", "FacebookFileUrl", "FacebookVideoUrl"],
+        "images": [
+            "FacebookImages",
+            "FacebookFileUrl",
+            "FacebookVideoThumbnail",
+            "FacebookFileThumbnail",
+            "FacebookVideoUrl",
+        ],
     },
     "instagram": {
         "message": "InstagramMessage",
         "source": "InstagramSources",
         "ids": "InstagramPostIDs",
         "permalink": "InstagramPublicPermalinks",
-        "images": ["InstagramImages", "InstagramFileUrl", "InstagramVideoUrl"],
+        "images": [
+            "InstagramImages",
+            "InstagramFileUrl",
+            "InstagramVideoThumbnail",
+            "InstagramFileThumbnail",
+            "InstagramVideoUrl",
+        ],
     },
 }
 

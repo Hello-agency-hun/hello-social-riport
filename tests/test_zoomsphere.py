@@ -35,3 +35,18 @@ def test_creative_urls_are_split(input_file):
 
 def test_client_hint_carries_page_name(input_file):
     assert parse(input_file("Scheduler")).client_hints["page_name"] == "Larus Étterem"
+
+
+def test_video_posts_lead_with_a_still_not_the_mp4(input_file):
+    """A reel nyers fájlja mp4 — abból nem lesz thumbnail a riportban.
+
+    A ZoomSphere ad poszter-képet is; annak kell a lista élén állnia, különben
+    a Top posztok oldalon helyőrző jelenne meg a kreatív helyett.
+    """
+    items = parse(input_file("Scheduler")).payload
+    reel = next(item for item in items if item.post_type == "reel")
+    for channel, urls in reel.creatives.items():
+        assert urls, f"{channel}: a reelnek van kreatívja"
+        assert "/offset-thumbs/" in urls[0] or "thumb" in urls[0].lower() or not urls[0].endswith(
+            (".mp4", ".mov")
+        ), f"{channel}: az első kreatív nem lehet videófájl — {urls[0]}"
