@@ -380,6 +380,8 @@ Tippelés nincs.**
 
 Jelölés: 🔒 kódból • ✍️ Claude írja • ⚙️ `client.yaml`-ben kapcsolható
 
+A riport **csatornánként tagolt**, 17 oldal. Az oldalak sorrendje:
+
 | # | Oldal | Forrás |
 |---|---|---|
 | 0 | Címlap + „Letöltés PDF-ként" | 🔒 |
@@ -389,7 +391,12 @@ Jelölés: 🔒 kódból • ✍️ Claude írja • ⚙️ `client.yaml`-ben ka
 | 4 | Mit csináltunk (content calendar) | 🔒 |
 | 5 | Facebook — oldal | 🔒 |
 | 6 | Instagram — profil | 🔒 |
-| 7-8 | Top posztok (FB / IG) | 🔒 |
+| 7-8 | Instagram — KPI-csempék, napi trendek | 🔒 |
+| 9 | Instagram — változás az előző hónaphoz ⚙️ | 🔒 / ✏️ |
+| 10-11 | Instagram — kiemelt posztok, kreatívval | 🔒 |
+| 12-13 | Facebook — KPI-csempék, napi trendek | 🔒 |
+| 14 | Facebook — változás az előző hónaphoz ⚙️ | 🔒 / ✏️ |
+| 15-16 | Facebook — top posztok elérés szerint | 🔒 |
 | 9 | Story-k ⚙️ | 🔒 |
 | 10 | Paid — always-on kampányok | 🔒 |
 | 11 | Paid — boostolt posztok | 🔒 |
@@ -750,6 +757,38 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 Egyik sem blokkolja az implementáció megkezdését — a parserek és a pipeline
 felépíthetők a meglévő valós adatokon, és ezek mindegyike hozzáadás, nem átépítés.
+
+### Mért és nem mért adat
+
+A `Post` explicit `organic_measured` jelzést hordoz. Ahol nincs Meta Tartalom
+export (jelenleg az Instagram), ott a poszt elérése **nem nulla, hanem
+ismeretlen** — a ZoomSphere-ből épített posztnak van kreatívja, szövege és
+linkje, de organikus teljesítménye nincs mérve.
+
+A `cross_channel` **csak mért posztokkal számol.** Enélkül a 15 IG-poszt
+nullákkal beesne az átlagba, és az organikus átlagelérés 130 helyett 68 lenne
+— csendben, minden teszt zöldje mellett. Inkább kevesebb posztra mondunk
+igazat, mint többre valótlant.
+
+### Hiányzó adat: kitölthető mező, nem néma kihagyás
+
+Két különböző ok, két különböző kezelés:
+
+| Ok | Kezelés |
+|---|---|
+| Az adat **nem létezik** (IG poszt-metrika, story-teljesítmény) | a szekció kimarad |
+| Az adat **létezik, csak nincs letöltve** (havi elérés, követőszám, előző hónap) | **kitölthető mező**, ami kiírja, honnan szerezhető be |
+
+A menedzser a böngészőben beleír, a „Kézi adatok mentése" gomb letölti a
+`manual.json`-t, és a következő futásnál az érték kitöltve jelenik meg
+„kézi adat" jelöléssel. **Az üres mezők nyomtatásban nem látszanak** — az
+ügyfélhez soha nem megy ki üres keret.
+
+Az első hónapban a `tools/import_previous.py` a korábbi riport PDF-jéből
+javaslatot ad az előző havi számokra. A párosítás geometriai (a felirat a szám
+alatt áll), mert a szövegkinyerés a számokat és a feliratokat külön csoportban
+adja vissza — sorrend alapján minden metrika ugyanazt az értéket kapná.
+A script nem ír fájlt: a menedzser ellenőrzi és beírja.
 
 ### Vállalt, dokumentált kockázatok
 
