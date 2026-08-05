@@ -52,11 +52,6 @@ def test_key_numbers_appear(html):
     assert "472" in html
 
 
-def test_unmatched_boosts_are_disclosed(html):
-    """Ami nem mérhető, azt a riport kimondja — nem hallgatja el."""
-    assert "nem illesztett" in html.lower()
-
-
 def test_stylesheet_is_not_html_escaped(html):
     """Escape-elve az idézőjelek `&#34;`-re válnak, és a `@font-face` elromlik.
 
@@ -73,7 +68,8 @@ def test_stylesheet_is_not_html_escaped(html):
 
 def test_client_supplied_text_is_still_escaped(data, tmp_path):
     """A stíluslap `| safe`, de a poszt-szövegek nem lehetnek azok."""
-    top = max(data["posts"], key=lambda post: post["reach"])
+    facebook = data["channels"]["facebook"]["posts"]
+    top = max(facebook, key=lambda post: post["reach"])
     top["caption"] = "<script>alert(1)</script>"
     html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
     assert "<script>alert(1)</script>" not in html
@@ -101,8 +97,19 @@ def test_render_is_deterministic(data, tmp_path):
     assert first == second
 
 
+def _visible_text(html: str) -> str:
+    """Csak az, amit az olvasó lát: tagek, attribútumok és a style/script nélkül.
+
+    A gépi kulcsok legitim módon szerepelnek `data-manual` attribútumokban és a
+    beágyazott JS-ben — a tilalom a látható szövegre vonatkozik.
+    """
+    body = re.sub(r"<(style|script).*?</>", " ", html, flags=re.S)
+    return re.sub(r"<[^>]+>", " ", body)
+
+
 def test_machine_identifiers_never_reach_the_client(html):
-    """A Meta belső kulcsai nem kerülhetnek ki az ügyfélnek szánt riportba."""
+    """A Meta belső kulcsai nem kerülhetnek az ügyfél szeme elé."""
+    visible = _visible_text(html)
     for raw in (
         "actions:omni_landing_page_view",
         "actions:post_engagement",
@@ -110,7 +117,7 @@ def test_machine_identifiers_never_reach_the_client(html):
         "link_clicks",
         "LINK_CLICKS",
     ):
-        assert raw not in html, f"nyers azonosító a riportban: {raw}"
+        assert raw not in visible, f"nyers azonosító a riportban: {raw}"
 
 
 def test_labels_are_hungarian(html):
@@ -124,3 +131,71 @@ def test_unknown_identifier_falls_back_to_the_raw_value():
     from pipeline.labels import result_type
 
     assert result_type("actions:teljesen_uj") == "actions:teljesen_uj"
+
+
+def test_each_channel_gets_daily_trend_charts(html):
+    assert html.count('class="chart"') >= 8, "csatornánként 4 metrika trendgörbéje"
+
+
+def test_trend_chart_labels_are_hungarian(html):
+    assert "Felkeresések" in html
+    assert "Interakciók" in html
+
+
+def test_report_has_a_section_per_channel(html):
+    assert ">Instagram<" in html
+    assert ">Facebook<" in html
+
+
+def test_six_posts_are_shown_for_the_measured_channel(html):
+    """Facebookon 16 mért poszt van — hatot mutatunk, két oldalon."""
+    assert html.count('class="thumb"') >= 6
+
+
+def test_post_metrics_show_measured_numbers_not_a_subtraction(html):
+    """Összes elérés és fizetett kampány-elérés — organikus becslés nélkül."""
+    assert "ebből fizetett" in html
+    assert "becsült" not in html.lower()
+
+
+def test_page_count_stays_within_the_agreed_limit(html):
+    assert 12 <= html.count('class="page') <= 20
+
+
+def test_channel_kpi_tiles_use_hungarian_labels(html):
+    assert "Hivatkozáskattintások" in html
+    assert "Új követők" in html
+
+
+def test_report_does_not_apologise_to_the_client(html):
+    """A hiánylista a menedzsernek szól, nem az ügyfélnek."""
+    for phrase in ("nem illesztett", "Nem becsültük meg", "nem közöl ilyen számot"):
+        assert phrase not in html
+
+
+def test_quality_block_still_records_everything(data):
+    """A belső szigor nem lazul: a JSON-ban minden hiány rögzítve marad."""
+    for key in ("unmatched_boosts", "unmatched_content", "dropped_zero_campaign_rows",
+                "posts_measured"):
+        assert key in data["quality"]
+
+
+def test_summary_page_shows_the_six_key_numbers(html):
+    assert "A hónap mérlege" in html
+    assert "a boost szorzója" in html
+
+
+def test_pages_are_balanced_so_no_card_is_left_alone():
+    """Négy poszt 3+1 helyett 2+2 — árva kártya nem marad egy üres lapon."""
+    from pipeline.render import _balanced_chunks
+
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4])] == [2, 2]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4, 5])] == [3, 2]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3, 4, 5, 6])] == [3, 3]
+    assert [len(c) for c in _balanced_chunks([1, 2, 3])] == [3]
+    assert _balanced_chunks([]) == []
+
+
+def test_paid_only_posts_do_not_say_ebbol(html):
+    """`ebből fizetett` csak akkor értelmes, ha van mihez képest."""
+    assert "fizetett elérés" in html

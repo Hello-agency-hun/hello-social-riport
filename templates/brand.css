@@ -78,10 +78,16 @@ strong { color: var(--ink); font-weight: 700; }
 /* Pénznemmel a szám hosszabb — enélkül két sorba törne a csempében. */
 .stat--sm { font-size: 42px; }
 
-/* A kreatívok álló és fekvő arányban is érkeznek. Fix magasság nélkül az álló
-   képek kitolnák a kártyát a 16:9-es oldalról. */
-.thumb { display: block; width: 100%; height: 264px;
-         object-fit: cover; border-radius: 8px; background: var(--rule); }
+/* A kreatívok álló (4:5, 9:16) és fekvő arányban is érkeznek. `cover` esetén az
+   álló képek közepét vágnánk ki — a poszt fele eltűnne. `contain` mellett a
+   teljes kreatív látszik, a keret pedig semleges háttérrel tölti ki a helyet. */
+.thumb { display: block; width: 100%; height: 260px;
+         object-fit: contain; border-radius: 8px; background: var(--rule); }
+
+/* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
+   kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+          overflow: hidden; min-height: 2.9em; }
 .stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
               text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
 
@@ -100,3 +106,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .note { font-size: 13px; color: var(--ink-soft); }
 .flag { color: var(--brand-red); font-weight: 700; }
+
+/* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
+   Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */
+.manual-slot { border: 1.5px dashed var(--rule); border-radius: 12px; padding: 20px; }
+.manual-input { font-size: 48px; font-weight: 900; line-height: 1;
+                min-height: 50px; outline: none; color: var(--ink); }
+.manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
+.manual-input:focus { border-bottom: 2px solid var(--accent); }
+.manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }

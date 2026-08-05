@@ -55,16 +55,20 @@ def _percent(share: float) -> str:
     return f"{share * 100:.1f}".replace(".", ",") + "%"
 
 
-def line_chart(points: list[tuple[date, float]], label: str) -> str:
-    """Napi idősor. Egyetlen pontnál vízszintes vonalat rajzol, nem oszt nullával."""
+def line_chart(points: list[tuple[date, float]], label: str, height: int = H) -> str:
+    """Napi idősor. Egyetlen pontnál vízszintes vonalat rajzol, nem oszt nullával.
+
+    A `height` azért állítható, mert a trend-oldalon négy grafikon kerül egy
+    16:9-es lapra — alapmagassággal az alsó sor lelógna az oldalról.
+    """
     if not points:
-        return _empty(label)
+        return _empty(label, W, height)
 
     values = [value for _, value in points]
     top = max(values) or 1
     span = max(len(points) - 1, 1)
     inner_w = W - PAD_L - PAD_R
-    inner_h = H - PAD_T - PAD_B
+    inner_h = height - PAD_T - PAD_B
 
     coords = []
     for index, value in enumerate(values):
@@ -79,15 +83,15 @@ def line_chart(points: list[tuple[date, float]], label: str) -> str:
 
     return "".join(
         [
-            _open(label),
+            _open(label, W, height),
             f'<path d="{area}" fill="var(--accent)" opacity=".12"/>',
             f'<polyline points="{" ".join(coords)}" fill="none" '
             'stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>',
             f'<line x1="{PAD_L}" y1="{PAD_T + inner_h}" x2="{PAD_L + inner_w}" '
             f'y2="{PAD_T + inner_h}" stroke="var(--rule)"/>',
-            f'<text x="{PAD_L}" y="{H - 6}" font-size="12" fill="var(--ink-soft)">'
+            f'<text x="{PAD_L}" y="{height - 6}" font-size="12" fill="var(--ink-soft)">'
             f'{_escape(points[0][0].strftime("%m.%d."))}</text>',
-            f'<text x="{PAD_L + inner_w}" y="{H - 6}" text-anchor="end" font-size="12" '
+            f'<text x="{PAD_L + inner_w}" y="{height - 6}" text-anchor="end" font-size="12" '
             f'fill="var(--ink-soft)">{_escape(points[-1][0].strftime("%m.%d."))}</text>',
             f'<text x="{PAD_L}" y="{PAD_T - 4}" font-size="12" fill="var(--ink-soft)">'
             f"max {_thousands(top)}</text>",

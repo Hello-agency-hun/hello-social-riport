@@ -20,17 +20,36 @@ def test_build_produces_report_data(fixture_dir):
 
 def test_build_includes_every_section(fixture_dir):
     data = build(fixture_dir, period="2026-07")
-    for key in ("content", "posts", "page", "paid", "cross"):
+    for key in ("content", "channels", "paid", "cross"):
         assert key in data, key
 
 
 def test_build_reports_join_quality(fixture_dir):
     data = build(fixture_dir, period="2026-07")
     quality = data["quality"]
-    assert quality["posts_with_creative"] == 15
+    # 16 Facebook-poszt a Tartalom exportból + 15 Instagram-poszt a ZoomSphere-ből
+    assert quality["posts_total"] == 31
+    # organikus teljesítménye csak a Facebook-posztoknak van mérve
+    assert quality["posts_measured"] == 16
+    assert quality["posts_with_creative"] == 30
     assert quality["dropped_zero_campaign_rows"] == 16
-    # nincs IG Tartalom export a fixture-ben → a 4 IG boost jelentve, nem tippelve
-    assert len(quality["unmatched_boosts"]) == 4
+    # az IG-posztok felépítése után minden boost illeszthető
+    assert quality["unmatched_boosts"] == []
+
+
+def test_unmeasured_posts_stay_out_of_the_averages(fixture_dir):
+    """Az IG-posztok elérése nem nulla, hanem ismeretlen.
+
+    Ha beleszámítanának az átlagba, az organikus átlagelérés 130-ról 68-ra
+    esne — csendben, minden teszt zöldje mellett.
+    """
+    data = build(fixture_dir, period="2026-07")
+    cross = data["cross"]
+    assert cross["posts_total"] == 31
+    assert cross["posts_measured"] == 16
+    assert cross["avg_reach_organic_post"] == 130
+    assert cross["avg_reach_boosted_post"] == 4312
+    assert cross["reach_multiplier"] == 33.2
 
 
 def test_build_output_is_json_serialisable(fixture_dir):
@@ -79,4 +98,4 @@ def test_two_ads_exports_are_rejected(fixture_dir, tmp_path):
 def test_several_daily_and_content_exports_are_allowed(fixture_dir):
     """Napi metrikából csempénként, Tartalomból csatornánként több fájl a normális."""
     data = build(fixture_dir, period="2026-07")
-    assert set(data["page"]) == {"facebook", "instagram"}
+    assert set(data["channels"]) == {"facebook", "instagram"}

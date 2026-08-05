@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import guards, kpi
+from pipeline import compare, guards, kpi, manual
 from pipeline.detect import scan
 from pipeline.errors import DuplicateSourceError, UnknownSourceError
 from pipeline.join import join_posts
@@ -86,6 +86,12 @@ def build(directory: Path, period: str) -> dict:
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
 
+    channels = kpi.channel_blocks(
+        series=series, posts=joined.posts, campaigns=campaigns
+    )
+    previous = compare.load_previous(directory)
+    manual_values = manual.load_manual(directory)
+
     return _serialise(
         {
             "meta": {
@@ -95,18 +101,35 @@ def build(directory: Path, period: str) -> dict:
                 "language": config.get("report", {}).get("language", "hu"),
             },
             "content": kpi.content_summary(items),
-            "posts": joined.posts,
-            "page": kpi.page_totals(series),
+            # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
+            # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
+            "channels": channels,
+            # Az előző időszak jöhet a múlt havi report_data.json-ból
+            # (`previous.json`), vagy — az első hónapban — a menedzser kézi
+            # beviteléből. Ha egyik sincs, a blokk üres, és a riport
+            # kitölthető mezőket mutat helyette.
+            "comparison": {
+                name: compare.deltas(
+                    block["totals"],
+                    (previous or {}).get("channels", {}).get(name, {}).get("totals")
+                    or compare.previous_from_manual(
+                        manual_values, name, block["totals"]
+                    ),
+                )
+                for name, block in channels.items()
+            },
             "paid": kpi.paid_totals(campaigns),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),
                 "posts_total": len(joined.posts),
+                "posts_measured": sum(1 for p in joined.posts if p.organic_measured),
                 "unmatched_boosts": [c.name for c in joined.unmatched_boosts],
                 "unmatched_content": [p.post_id for p in joined.unmatched_content],
                 "dropped_zero_campaign_rows": (
                     ads_payload.dropped_zero_rows if ads_payload else 0
                 ),
             },
+            "manual": manual_values,
         }
     )

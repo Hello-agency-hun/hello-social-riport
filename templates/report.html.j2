@@ -1,3 +1,4 @@
+{% from "macros.html.j2" import slot %}
 <!doctype html>
 <html lang="{{ data.meta.language }}">
 <head>
@@ -67,51 +68,11 @@
   {% endif %}
 </section>
 
-<section class="page">
-  <div class="eyebrow">Oldal-teljesítmény</div>
-  <h2 style="margin-bottom:36px">Csatornánkénti összesítés</h2>
-  <table>
-    <tr><th>Csatorna</th>
-      {% for field in page_fields %}<th class="num">{{ field | field }}</th>{% endfor %}
-    </tr>
-    {% for channel, fields in data.page.items() %}
-    <tr><td><strong>{{ channel | channel }}</strong></td>
-      {% for field in page_fields %}<td class="num">{{ fields.get(field) | num }}</td>{% endfor %}
-    </tr>
-    {% endfor %}
-  </table>
-  <p class="note" style="margin-top:auto">
-    Ezek oldal-szintű összegek, és a fizetett aktivitás eredményét is tartalmazzák —
-    nem tisztán organikus értékek.
-  </p>
-</section>
+{% include "sections/trends.html.j2" %}
 
-<section class="page">
-  <div class="eyebrow">Top posztok</div>
-  <h2 style="margin-bottom:30px">A hónap legjobban teljesítő tartalmai</h2>
-  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
-    {% for post in posts[:3] %}
-    <div class="panel">
-      <img class="thumb" src="{{ post.thumb }}" alt="">
-      <p style="margin-top:14px;color:var(--ink)">{{ post.caption[:90] }}</p>
-      <div class="rule" style="margin:14px 0"></div>
-      <p><strong>{{ post.reach | num }}</strong> elérés · {{ post.reactions | num }} reakció</p>
-      {% if post.paid %}
-      <p class="accent"><strong>ebből fizetett:</strong>
-        {{ post.paid.spend | money(currency) }} → {{ post.paid.reach | num }} elérés</p>
-      {% else %}
-      <p class="note">tisztán organikus</p>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-</section>
+{% include "sections/comparison.html.j2" %}
 
-<section class="page">
-  <div class="eyebrow">Top posztok</div>
-  <h2 style="margin-bottom:30px">Elérés szerinti sorrend</h2>
-  {{ charts.top_posts | safe }}
-</section>
+{% include "sections/channel.html.j2" %}
 
 <section class="page">
   <div class="eyebrow">Fizetett hirdetés</div>
@@ -154,30 +115,42 @@
 </section>
 
 <section class="page">
-  <div class="eyebrow">Módszertan</div>
-  <h2 style="margin-bottom:30px">Mit mértünk, és mit nem</h2>
-  <p style="max-width:900px">
-    Minden szám a Meta és a ZoomSphere hivatalos exportjaiból származik, számítással,
-    becslés nélkül. A riport {{ data.quality.posts_total }} posztot dolgozott fel,
-    ebből {{ data.quality.posts_with_creative }} párosult a tartalomnaptár kreatívjával.
-  </p>
-  {% if data.quality.unmatched_boosts %}
-  <div class="panel" style="margin-top:28px">
-    <h3 class="flag">{{ data.quality.unmatched_boosts | length }} boostolt hirdetés nem illesztett</h3>
-    <p style="margin-top:10px">
-      Ezekhez nem állt rendelkezésre a megfelelő tartalom-export, ezért a költésük
-      nem jelenik meg poszt szinten. Nem becsültük meg.
-    </p>
-    <ul style="margin-top:12px;padding-left:20px">
-      {% for name in data.quality.unmatched_boosts %}
-      <li>{{ name[:90] }}</li>
-      {% endfor %}
-    </ul>
+  <div class="eyebrow">Összefoglaló</div>
+  <h2 style="margin-bottom:40px">A hónap mérlege</h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    <div>
+      <div class="stat">{{ data.content.total }}</div>
+      <div class="stat-label">kiküldött tartalom</div>
+    </div>
+    <div>
+      <div class="stat">{{ data.cross.post_reach_sum | num }}</div>
+      <div class="stat-label">poszt-elérés</div>
+    </div>
+    <div>
+      <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
+      <div class="stat-label">hirdetési költés</div>
+    </div>
+    <div>
+      <div class="stat accent">{{ data.cross.avg_reach_boosted_post | num }}</div>
+      <div class="stat-label">boostolt poszt átlagos elérése</div>
+    </div>
+    <div>
+      <div class="stat">{{ data.cross.avg_reach_organic_post | num }}</div>
+      <div class="stat-label">organikus poszt átlagos elérése</div>
+    </div>
+    <div>
+      <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
+      <div class="stat-label">a boost szorzója</div>
+    </div>
   </div>
-  {% endif %}
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:32px">
+    {% for key, meta in manual_slots.items() %}
+    {{ slot(key, manual.get(key), meta.label, meta.hint) }}
+    {% endfor %}
+  </div>
   <p class="note" style="margin-top:auto">
-    A havi egyedi elérés (reach) nem számítható részadatokból, ezért ez a riport
-    nem közöl ilyen számot. Készült: {{ generated }}.
+    Az adatok forrása a Meta Business Suite és a ZoomSphere hivatalos exportja.
+    Készült: {{ generated }}.
   </p>
 </section>
 
@@ -188,5 +161,6 @@
   <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
 </section>
 
+<script>{{ manual_js | safe }}</script>
 </body>
 </html>

@@ -13,7 +13,7 @@ def _report_map(data: dict) -> str:
     paid = data["paid"]
     content = data["content"]
     cross = data["cross"]
-    channels = ", ".join(sorted(data["page"])) or "nincs"
+    channels = ", ".join(sorted(data["channels"])) or "nincs"
     unmatched = quality["unmatched_boosts"]
 
     return "\n".join(
@@ -23,9 +23,9 @@ def _report_map(data: dict) -> str:
             "",
             f"ZoomSphere      {content['total']} tartalom — "
             + ", ".join(f"{count} {name}" for name, count in content["by_type"].items()),
-            f"Tartalom        {quality['posts_total']} poszt, "
-            f"kreatívval párosítva {quality['posts_with_creative']}/"
-            f"{quality['posts_total']}",
+            f"Posztok         {quality['posts_total']} összesen · "
+            f"{quality['posts_measured']} mért organikus teljesítménnyel · "
+            f"{quality['posts_with_creative']} kreatívval",
             f"Meta Ads        {paid['always_on']['campaigns']} always-on + "
             f"{paid['boosted']['campaigns']} boost, "
             f"{paid['spend']:.2f} {paid['currency']} "
@@ -84,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
                 data,
                 cache_dir=Path(args.directory) / ".image-cache",
                 fetcher=fetcher,
+                manual=data.get("manual"),
             ),
             encoding="utf-8",
         )
