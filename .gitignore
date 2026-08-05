@@ -3,3 +3,5 @@ __pycache__/
 .venv/
 clients/*/*/input/
 clients/*/*/Riport.html
+*.egg-info/
+.pytest_cache/
