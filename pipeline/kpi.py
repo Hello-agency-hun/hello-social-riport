@@ -88,3 +88,35 @@ def cross_channel(posts: list[Post]) -> dict:
         "reach_multiplier": round(avg_boosted / avg_organic, 1) if avg_organic else 0.0,
         "boost_spend": sum(p.paid.spend for p in boosted),
     }
+
+
+def channel_blocks(series: list, posts: list, campaigns: list) -> dict:
+    """Csatornánként egy blokk: napi idősorok, összegek, posztok, boostok.
+
+    A riport csatornánként külön szekciót kap, ezért az adat is így áll össze.
+    Ami egy csatornáról nincs, az nem szerepel benne — nem nulla, nem üres kulcs.
+    """
+    blocks: dict[str, dict] = {}
+
+    def block_for(channel: str) -> dict:
+        return blocks.setdefault(
+            channel, {"daily": {}, "totals": {}, "posts": [], "boosts": []}
+        )
+
+    for entry in series:
+        block = block_for(entry.channel)
+        block["daily"][entry.field] = [
+            [day.isoformat(), value] for day, value in entry.points
+        ]
+        block["totals"][entry.field] = sum_additive(
+            [value for _, value in entry.points], field=entry.field
+        )
+
+    for post in posts:
+        block_for(post.channel)["posts"].append(post)
+
+    for campaign in campaigns:
+        if campaign.is_boost and campaign.channel:
+            block_for(campaign.channel)["boosts"].append(campaign)
+
+    return blocks

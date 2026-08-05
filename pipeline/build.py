@@ -97,6 +97,9 @@ def build(directory: Path, period: str) -> dict:
             "content": kpi.content_summary(items),
             "posts": joined.posts,
             "page": kpi.page_totals(series),
+            "channels": kpi.channel_blocks(
+                series=series, posts=joined.posts, campaigns=campaigns
+            ),
             "paid": kpi.paid_totals(campaigns),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {

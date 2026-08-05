@@ -65,3 +65,33 @@ def test_page_totals_refuse_to_sum_reach():
     )
     with pytest.raises(ReachSummationError):
         page_totals([bad])
+
+
+def test_channel_block_groups_everything_by_channel(input_file):
+    from pipeline.kpi import channel_blocks
+    from pipeline.parsers import meta_daily
+
+    series = [
+        meta_daily.parse(input_file(name)).payload
+        for name in (
+            "Felkeresések.csv",
+            "Hivatkozáskattintások.csv",
+            "Interakciók.csv",
+            "Követők.csv",
+        )
+    ]
+    blocks = channel_blocks(series=series, posts=[], campaigns=[])
+    facebook = blocks["facebook"]
+    assert facebook["totals"]["visits"] == 1525
+    assert facebook["totals"]["follows"] == 5
+    assert len(facebook["daily"]["visits"]) == 31
+    assert facebook["daily"]["visits"][0] == ["2026-07-01", 33]
+
+
+def test_channel_block_omits_a_channel_without_data(input_file):
+    from pipeline.kpi import channel_blocks
+    from pipeline.parsers import meta_daily
+
+    series = [meta_daily.parse(input_file("Felkeresések.csv")).payload]
+    blocks = channel_blocks(series=series, posts=[], campaigns=[])
+    assert "instagram" not in blocks
