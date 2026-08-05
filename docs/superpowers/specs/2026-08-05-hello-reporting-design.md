@@ -1,7 +1,7 @@
 # HELLO Reporting — omnichannel havi riport skill
 
 **Dátum:** 2026-08-05
-**Státusz:** Design jóváhagyva, implementációra vár
+**Státusz:** v1 kész — négy terv végrehajtva, 223 teszt
 **Készítette:** Mészáros Péter + Claude (brainstorming session)
 
 ---
@@ -531,6 +531,22 @@ Nyelve a `client.yaml`-ben beállított. Részletek: `references/narrative-guide
 Ez a `SKILL.md`-ben él, és soha nem szivárog át a riportba.
 
 ### Szám-ellenőrzés
+
+**A narratíva szövegében egyetlen számjegy sem szerepelhet.** Számra csak
+hivatkozni lehet — `{cross.reach_multiplier|x}` —, amit a renderer helyettesít be.
+A `pipeline/narrative.py` elutasít minden leírt számjegyet, és megáll, ha egy
+hivatkozás nem létező mezőre mutat.
+
+Ez nem utólagos ellenőrzés, hanem a lehetőség elvétele: a hallucinált szám nem
+hibás lesz, hanem lehetetlen. Magyarul ez nem is kényelmetlen — „a hat legjobb
+poszt" kiírva természetesebb.
+
+A **review-körben kézzel átírt szöveg ugyanezen a szűrőn megy át.** Nem kiskapu.
+
+Formázók: alapértelmezés magyar ezres formátum, `|money`, `|pct`, `|x`,
+`|month`, `|raw`.
+
+#### Régi megfogalmazás
 
 A `narrative.json` minden számot forrásmező-hivatkozással ad meg:
 
