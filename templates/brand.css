@@ -1,0 +1,94 @@
+/* HELLO Reporting — design tokenek.
+ *
+ * Forrás: a HELLO_CLIENT'S Google Ads Report benchmark PDF rajzoló-utasításaiból
+ * mért paletta. Ez a riportálási rendszer: a brand guide hangos palettájának
+ * tudatosan visszafogott változata.
+ *
+ * Használati arány a benchmarkban — ettől ne térj el:
+ *   semleges tónusok  ~80%
+ *   --accent          ~13%
+ *   hangos márkaszínek ~5%, csak kiemelésre
+ *
+ * Szín kizárólag itt szerepelhet. A sablonok és a charts.py var(--…)-t használ.
+ */
+
+@font-face { font-family: "Open Sauce One"; font-weight: 400; font-style: normal;
+             src: url("__FONT_REGULAR__") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 500; font-style: normal;
+             src: url("__FONT_MEDIUM__") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 700; font-style: normal;
+             src: url("__FONT_BOLD__") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 900; font-style: normal;
+             src: url("__FONT_BLACK__") format("woff2"); font-display: block; }
+
+:root {
+  --ink: #0A0A0A;
+  --ink-soft: #6B665D;
+  --rule: #E4E0D8;
+  --paper: #FFFDF9;
+  --paper-alt: #FAFAFA;
+  --accent: #4CD892;
+
+  --brand-rose: #FF33CC;
+  --brand-sun: #FFFA8E;
+  --brand-pink: #FF91E7;
+  --brand-red: #FF321D;
+  --brand-blue: #025CC6;
+
+  --page-w: 1440px;
+  --page-h: 810px;
+  --pad: 72px;
+
+  --font: "Open Sauce One", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--rule);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  width: var(--page-w);
+  height: var(--page-h);
+  padding: var(--pad);
+  background: var(--paper);
+  margin: 24px auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+h1 { font-size: 84px; font-weight: 900; line-height: .98; letter-spacing: -.02em; }
+h2 { font-size: 46px; font-weight: 900; line-height: 1.05; letter-spacing: -.015em; }
+h3 { font-size: 22px; font-weight: 700; }
+p, li, td, th { font-size: 17px; line-height: 1.5; color: var(--ink-soft); }
+strong { color: var(--ink); font-weight: 700; }
+
+.stat { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+.stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
+              text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
+
+.grid { display: grid; gap: 28px; }
+.panel { background: var(--paper-alt); border: 1px solid var(--rule);
+         border-radius: 14px; padding: 26px; }
+.rule { height: 1px; background: var(--rule); }
+.accent { color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; font-weight: 700; letter-spacing: .1em;
+     text-transform: uppercase; color: var(--ink-soft);
+     padding: 0 12px 10px 0; border-bottom: 1px solid var(--rule); }
+td { padding: 13px 12px 13px 0; border-bottom: 1px solid var(--rule); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.note { font-size: 13px; color: var(--ink-soft); }
+.flag { color: var(--brand-red); font-weight: 700; }
