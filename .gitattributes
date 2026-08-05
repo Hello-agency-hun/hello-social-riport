@@ -1,0 +1,7 @@
+# A tesztadat a valós Meta/ZoomSphere exportok bájtpontos másolata.
+# A git sorvég-konverziója (Windows autocrlf) átírná őket, és a fixture
+# megszűnne bizonyíték lenni arról, mit ad ki valójában a Meta.
+tests/fixtures/** -text -diff
+
+# A golden file a pipeline kimenetének referenciája — szintén érintetlenül marad.
+tests/fixtures/larus-2026-07/report_data.golden.json -text
