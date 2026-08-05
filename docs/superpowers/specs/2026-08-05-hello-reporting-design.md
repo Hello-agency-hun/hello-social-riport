@@ -106,7 +106,7 @@ Kezelendő sajátosságok:
   `reach`, `actions:omni_landing_page_view`, `profile_visit_view`,
   `actions:post_engagement`, `actions:link_click`,
   `actions:click_to_call_native_call_placed`. **Különböző típusok nem adhatók össze.**
-- **Sok a zaj.** Larus júliusban: 31 sorból 18 csupa nulla (inaktív kampány az
+- **Sok a zaj.** Larus júliusban: 29 sorból 16 csupa nulla (inaktív kampány az
   időablakban). Szűrendő, de a szűrt darabszám logolandó.
 - **Két kampány-archetípus van egy fájlban:**
   - *always-on kampányok* — `larus_event_b2b_nyár`, `Lóvasút_B2B_*` (100-300 EUR keret, lead cél)
@@ -606,6 +606,8 @@ nem egyezik a `report_data.json`-nal, a build hibát dob.
 | **Hiányzó kötelező oszlop** | parserenként deklarált kötelező oszloplista; hiánynál megnevezi a fájlt és az oszlopot |
 | **Vegyes pénznem** | fejléc-detektálás; több pénznem egy exportban → stop |
 | **Nem illeszkedő boostolt poszt** | felsorolás, rákérdezés |
+| **Két azonos típusú forrásfájl** | egy hónaphoz egy ZoomSphere és egy Ads export tartozik; kettőnél az egyikük csendben elveszne |
+| **Csonka vagy hibás napi export** | sorszám- és formátum-ellenőrzés, a fájl és a rossz sor megnevezésével |
 | **Narratíva-szám nem egyezik** | build hiba |
 
 ### Nem leállító, de jelzett
@@ -629,6 +631,13 @@ A kreatívok S3/Backblaze URL-jei lejárhatnak, és PDF-nyomtatáskor offline ne
 A build **letölti, méretre csökkenti és base64-ként beágyazza** őket.
 A HTML így egyetlen önálló fájl (~3-5 MB, 30 kép mellett), e-mailben küldhető,
 és a PDF hibátlan.
+
+### Konzol-kimenet
+
+A CLI induláskor UTF-8-ra állítja a `stdout`/`stderr` streamet. A magyar Windows
+konzol alapértelmezése `cp1250`, ami sem az `⚠` jelet, sem több ékezetes karaktert
+nem tud kódolni — enélkül a parancs a kiírásnál elszállna, **még azelőtt, hogy a
+`report_data.json` megíródna.**
 
 ---
 
@@ -689,10 +698,12 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 | Parser — kódolás | UTF-16 BOM felismerés, `sep=,` sor kezelése |
 | Parser — azonosítás | metrika a 2. sorból, nem fájlnévből |
 | Parser — pénznem | `Elköltött összeg (EUR)` → EUR; HUF-os változat is |
-| Parser — zajszűrés | 31 sorból 18 nullás kiesik, a darabszám logolva |
+| Parser — zajszűrés | 29 sorból 16 nullás kiesik, a darabszám logolva |
 | Join | 15/16, 4/4, 8/8 — rögzített értékek |
 | Eredménytípus | eltérő `Eredmény jelzése` nem adódik össze |
 | Reach-őr | napi/poszt reach összegzése havi reach-ként → hiba |
+| Csonka/hibás forrás | értelmezhetetlen napi CSV → `PipelineError`, nem nyers `IndexError` |
+| Többsoros mező | a kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak |
 | Narratíva | nem hivatkozott szám a szövegben → build hiba |
 | Ügyfél-keresztellenőrzés | idegen `Oldalazonosító` → stop |
 | Végigfutás | teljes pipeline → HTML renderel, nincs üres szekció |
@@ -710,6 +721,24 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 Egyik sem blokkolja az implementáció megkezdését — a parserek és a pipeline
 felépíthetők a meglévő valós adatokon, és ezek mindegyike hozzáadás, nem átépítés.
+
+### Vállalt, dokumentált kockázatok
+
+A v1 kódja a valós referencia-adaton mért viselkedésre épül. Két ponton olyan
+egyszerűsítést tartalmaz, ami ezen az adaton bizonyítottan helyes, de elvben
+elromolhat. Egyik sem javítható ma érdemben, mert nincs olyan adat, amin
+tesztelhető lenne — ezért inkább rögzítjük őket:
+
+1. **Egy munkafüzet = egy fiók.** A ZoomSphere parser az első nem üres
+   `Sources` értéket veszi oldalnévnek. Ha egy export két különböző fiók
+   tartalmát keverné, a további sorok fiókneve elveszne. A referencia-adat
+   mind a 29 sorában ugyanaz a fiók szerepel. Ha valaha felmerül vegyes export,
+   a parsernek fiókonként kell csoportosítania.
+2. **A Facebook poszt-ID nem tartalmaz alulvonást.** A `page_post` alakból az
+   utolsó `_` utáni részt vesszük. A referencia-adat mind a 29 azonosítója
+   tisztán numerikus a prefix után. Ha a Meta valaha alulvonást tenne magába
+   az azonosítóba, az illesztés csendben elromlana — ezért a join találati
+   arányát a `--validate` mindig kiírja (`15/16`), és eltérés esetén látszik.
 
 ---
 
