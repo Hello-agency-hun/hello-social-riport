@@ -36,7 +36,9 @@ Font: **Open Sauce One** (Regular / Medium / Bold / Black). Oldalméret: **1440 
 | Fájl | Felelősség |
 |---|---|
 | `tools/vendor_fonts.py` | egyszeri: TTF letöltés → woff2, a repóba |
+| `tools/extract_logo.py` | egyszeri: logó kinyerése a brand guide PDF-ből — **kész** |
 | `assets/fonts/*.woff2` | commitolt fontfájlok + OFL licenc |
+| `assets/logo/*.svg` | `hello-mark` és `hello-lockup`, `currentColor`-ral — **kész** |
 | `templates/brand.css` | design tokenek és tipográfia — az egyetlen hely, ahol szín van |
 | `templates/print.css` | oldaltörés, 16:9 nyomtatás |
 | `pipeline/charts.py` | SVG grafikonok, tokenekből színezve |
@@ -152,12 +154,26 @@ def test_font_is_vendored(weight):
 def test_licence_is_shipped():
     """OFL: a licencszöveget együtt kell terjeszteni a fonttal."""
     assert (FONTS / "OFL.txt").exists()
+
+
+LOGO = Path(__file__).resolve().parent.parent / "assets" / "logo"
+
+
+@pytest.mark.parametrize("name", ["hello-mark", "hello-lockup"])
+def test_logo_is_vector_and_inherits_colour(name):
+    """A brand guide tiltja a logó átszínezését; a `currentColor` miatt az
+    egyetlen szín, amit felvehet, a szövegszín (--ink) — nem lehet elrontani."""
+    svg = (LOGO / f"{name}.svg").read_text(encoding="utf-8")
+    assert svg.startswith("<svg")
+    assert 'fill="currentColor"' in svg
+    assert "viewBox" in svg
+    assert "<image" not in svg, "raszterkép nem kerülhet a logóba"
 ```
 
 - [ ] **Step 5: Futtasd**
 
 Run: `pytest tests/test_assets.py -q`
-Expected: `5 passed`
+Expected: `7 passed`
 
 - [ ] **Step 6: Commit**
 
@@ -945,6 +961,13 @@ def _data_uri(path: Path) -> str:
     return f"data:font/woff2;base64,{encoded}"
 
 
+@lru_cache(maxsize=8)
+def logo(name: str) -> str:
+    """A logó SVG-je, beágyazásra. `currentColor`-t használ, tehát a
+    szövegszínt veszi fel — a brand guide tiltja az önálló átszínezést."""
+    return (ROOT / "assets" / "logo" / f"{name}.svg").read_text(encoding="utf-8")
+
+
 @lru_cache(maxsize=1)
 def stylesheet() -> str:
     """brand.css + print.css, a fontokkal beágyazva."""
@@ -1034,6 +1057,11 @@ def test_unmatched_boosts_are_disclosed(html):
     assert "nem illesztett" in html.lower() or "nem párosított" in html.lower()
 
 
+def test_logo_is_embedded_as_vector(html):
+    assert html.count("<svg") >= 3, "címlap-lockup, záró-mark és a grafikonok"
+    assert 'fill="currentColor"' in html
+
+
 def test_narrative_sections_are_omitted_without_narrative(html):
     """A 3. terv előtt nincs narratíva — helykitöltő szöveg sem lehet."""
     assert "Lorem" not in html
@@ -1067,7 +1095,7 @@ from typing import Callable
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pipeline import charts, images
-from pipeline.assets import TEMPLATES, stylesheet
+from pipeline.assets import TEMPLATES, logo, stylesheet
 
 MONTHS_HU = [
     "január", "február", "március", "április", "május", "június",
@@ -1140,6 +1168,8 @@ def render(
         ),
         narrative=narrative,
         css=stylesheet(),
+        logo_lockup=logo("hello-lockup"),
+        logo_mark=logo("hello-mark"),
         period_hu=_period_hu(data["meta"]["period"]),
         generated=date.today().isoformat(),
         charts={"reach_split": reach_split, "top_posts": top_bars},
@@ -1166,7 +1196,8 @@ def _organic_reach(posts: list[dict]) -> int:
 <button class="pdf-button no-print" onclick="window.print()">Letöltés PDF-ként</button>
 
 <section class="page" style="justify-content:flex-end">
-  <div class="eyebrow">HELLO Agency · Social media riport</div>
+  <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
+  <div class="eyebrow">Social media riport</div>
   <h1>{{ data.meta.client }}</h1>
   <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_hu }}</h2>
 </section>
@@ -1339,6 +1370,7 @@ def _organic_reach(posts: list[dict]) -> int:
 </section>
 
 <section class="page" style="justify-content:flex-end">
+  <div style="width:150px;color:var(--ink);margin-bottom:auto">{{ logo_mark | safe }}</div>
   <h2>Beszéljünk arról, mi jön ezután.</h2>
   <p style="margin-top:22px">+36 1 365 1788 · agency@helloagency.hu · helloagency.hu</p>
   <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
@@ -1351,7 +1383,7 @@ def _organic_reach(posts: list[dict]) -> int:
 - [ ] **Step 5: Futtasd**
 
 Run: `pytest tests/test_render.py -q`
-Expected: `8 passed`
+Expected: `9 passed`
 
 - [ ] **Step 6: Commit**
 
@@ -1433,9 +1465,9 @@ A `--validate` ág után, a `report_data.json` írása alá:
 - [ ] **Step 4: Futtasd a teljes készletet**
 
 Run: `pytest -q`
-Expected: `132 passed, 1 deselected`
+Expected: `135 passed, 1 deselected`
 
-*(83 az 1. tervből + 5 font + 13 token + 12 chart + 7 kép + 2 asset + 8 render + 2 CLI.
+*(83 az 1. tervből + 7 font/logó + 13 token + 12 chart + 7 kép + 2 asset + 9 render + 2 CLI.
 Ha az összeg eltér, a különbséget nevezd meg — ne igazítsd a számot a méréshez.)*
 
 - [ ] **Step 5: Generáld le a valódi riportot, képekkel**
@@ -1525,19 +1557,22 @@ azokat, amelyekhez van adat. A többi nem elmaradás, hanem függőség:
 | 9 (story-oldal) | ⚙️ nincs story-metrika; a kreatív-csík a 3. tervben, a wizarddal együtt |
 | 14 (metrika-szótár) | 3. terv — a `references/metrics-glossary.md`-ből épül |
 | 13. szekció (`client.yaml` szekció-kapcsolók) | 3. terv — a varázslóval együtt van értelme |
-| 8.5 `assets/logo/`, `assets/shapes/` | ⚠️ **nyitott, lásd alább** |
+| 8.5 `assets/logo/` | ✅ kinyerve a brand guide-ból, vektorosan |
+| 8.5 `assets/shapes/` | nem készül — a benchmark riport sem használ díszelemet |
 
-### ⚠️ Nyitott: a HELLO logó és a geometriai díszelemek
+### A logó
 
-A spec `assets/logo/` és `assets/shapes/` mappát ír elő. A logó a brand guide
-PDF-jébe van ágyazva; onnan kinyerni bizonytalan minőségű eredményt adna, a
-brand guide pedig kifejezetten tiltja a logó torzítását vagy átszabását.
+A `tools/extract_logo.py` a brand guide PDF 4. oldaláról szedi ki a logót, a
+fekete kitöltésű vektor-útvonalak alapján (a körülötte lévő szerkesztési rács
+világosszürke, így kiesik a szűrőn). Nem rajzoljuk újra: a brand guide tiltja a
+nyújtást és az átszabást, ezért az eredeti útvonalak kerülnek át bájthűen.
 
-**Ezért a 2. terv logó nélkül készül el** — a címlap és a záróoldal tipográfiával
-dolgozik. A hiány látható és szándékos, nem csendes kihagyás.
+Két változat készült: `hello-mark` (az önálló H) és `hello-lockup`
+(H + „HELLO Agency" szóvédjegy). Mindkettő `fill="currentColor"`, tehát a
+szövegszínt veszi fel — így a riportban nem lehet véletlenül átszínezni.
 
-Ahhoz, hogy bekerüljön, egy dolog kell: **az eredeti logó SVG-ben**, a
-designertől. Amint megvan, egyetlen sablonmódosítás.
+A `assets/shapes/` elmarad: a benchmark riport nem használ geometriai
+díszelemeket, és bevezetni őket ellentétes lenne a mért, visszafogott rendszerrel.
 
 ## Ami a 3. tervre marad
 
