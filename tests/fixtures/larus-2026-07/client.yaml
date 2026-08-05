@@ -1,0 +1,14 @@
+client:
+  name: "Larus Étterem"
+  fb_page_id: "100064824963030"
+  fb_page_name: "Larus Étterem"
+  ig_handle: "larusetterem"
+
+report:
+  language: hu
+  currency: EUR
+
+# A `Megtekintések` csempe neve nem hordoz csatorna-információt, ezért kézzel
+# rendeljük hozzá. A referencia-készletben csak az IG változat lett letöltve.
+daily_metric_overrides:
+  "Megtekintések": ["instagram", "views"]
