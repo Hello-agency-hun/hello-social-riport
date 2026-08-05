@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pipeline import charts, images, labels
 from pipeline import manual as manual_module
+from pipeline import narrative as narrative_module
 from pipeline.assets import TEMPLATES, logo, stylesheet
 
 MONTHS_HU = [
@@ -69,6 +70,8 @@ def render(
     fetcher: Callable[[str], bytes] = images.fetch,
     manual: dict | None = None,
 ) -> str:
+    resolved = narrative_module.resolve_all(narrative, data) if narrative else None
+
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
 
@@ -109,7 +112,7 @@ def render(
         data=data,
         trends=trends,
         channel_posts=channel_posts,
-        narrative=narrative,
+        narrative=resolved,
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
         logo_mark=logo("hello-mark"),
@@ -124,5 +127,5 @@ def render(
         currency=data["paid"]["currency"],
         manual=manual or {},
         manual_slots=manual_module.SLOTS,
-        manual_js=(TEMPLATES / "manual.js").read_text(encoding="utf-8"),
+        review_js=(TEMPLATES / "review.js").read_text(encoding="utf-8"),
     )

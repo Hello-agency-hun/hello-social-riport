@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-from pipeline.build import build
+from pipeline.build import build, load_narrative
 from pipeline.errors import PipelineError
 from pipeline.textio import force_utf8_output
 
@@ -57,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="ne töltsön le képet — a kreatívok helyén helyőrző jelenik meg",
     )
+    parser.add_argument(
+        "--apply-review",
+        action="store_true",
+        help="a review.json szövegjavításait beírja a narrative.json-be",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -66,6 +71,29 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(_report_map(data))
+
+    if args.apply_review:
+        from pipeline import review as review_module
+
+        directory = Path(args.directory)
+        stored = review_module.load_review(directory)
+        current = load_narrative(directory)
+
+        if stored["edits"] and current:
+            applied = review_module.applied_edits(current, stored["edits"])
+            updated = review_module.apply_edits(current, stored["edits"])
+            (directory / "narrative.json").write_text(
+                json.dumps(updated, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"{len(applied)} szövegjavítás alkalmazva.")
+            # Amit nem tudtunk hova tenni, azt megnevezzük — a néma elnyelés
+            # rosszabb, mint a hiba.
+            for path in stored["edits"]:
+                if path not in applied:
+                    print(f"  ⚠ nem alkalmazható javítás: {path!r} — nincs ilyen blokk")
+
+        for comment in stored["comments"]:
+            print(f"  megjegyzés — {comment['page']}. oldal: {comment['text']}")
 
     if not args.validate:
         target = Path(args.out or Path(args.directory) / "report_data.json")
@@ -85,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
                 cache_dir=Path(args.directory) / ".image-cache",
                 fetcher=fetcher,
                 manual=data.get("manual"),
+                narrative=load_narrative(Path(args.directory)),
             ),
             encoding="utf-8",
         )

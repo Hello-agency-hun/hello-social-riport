@@ -1,0 +1,23 @@
+{
+  "executive_summary": "A hónap elérésének túlnyomó részét a támogatott tartalom hozta: {cross.posts_boosted} boostolt poszt {cross.boost_spend|money} költésből a poszt-elérés {cross.boosted_share_of_post_reach|pct}-át adta. Egy organikus poszt átlagosan {cross.avg_reach_organic_post} embert ért el, boosttal {cross.avg_reach_boosted_post}-t. A teljes hirdetési költés {paid.spend|money} volt, ennek nagyobbik része az always-on kampányokra ment ({paid.always_on.spend|money}), a posztok támogatására lényegesen kevesebb ({paid.boosted.spend|money}).",
+  "key_finding": {
+    "title": "Az elérés és a rezonancia nem ugyanaz",
+    "body": "A hónap legnagyobb elérésű posztja hivatkozásos formátum volt, és a kattintásokat hozta — reakciót alig. A legtöbb reakciót ezzel szemben a Gambas Pil-Pil közeli ételfotója kapta, feleakkora elérésből. Vagyis a támogatás megmutatja a tartalmat, de hogy az embereket megszólítja-e, az a kreatíven múlik: az étel közelről fényképezve nagyságrenddel jobban működött, mint bármi más ebben a hónapban."
+  },
+  "what_worked": [
+    "A közeli ételfotók: a Gambas Pil-Pil posztja hozta a hónap legtöbb reakcióját, miközben a költése megegyezett a többi boostéval.",
+    "A hivatkozásos formátum forgalomra: a Facebook-oldal {channels.facebook.totals.link_clicks} hivatkozáskattintásának nagy részét egyetlen ilyen poszt adta.",
+    "A boost költséghatékonysága: néhány eurós támogatás {cross.reach_multiplier|x} elérést hozott az organikus átlaghoz képest."
+  ],
+  "what_to_improve": [
+    "A hónap {content.total} tartalmából mindössze {content.by_type.reel} reel készült. Ahhoz, hogy a mozgókép teljesítményéről bármit mondhassunk, többre van szükség belőle.",
+    "A kiküldött tartalom fele story volt ({content.by_type.story} darab), ezek pedig egy nap után eltűnnek. A legjobban sikerült story-kreatívokat érdemes feed-posztként is kijátszani, hogy tovább dolgozzanak.",
+    "A támogatás jelenleg a megjelenés után dől el. Ha előre kijelöljük, melyik posztot visszük ki, a kreatívot is arra lehet tervezni."
+  ],
+  "next_steps": [
+    "Vigyük tovább a közeli ételfotókat: a következő hónapban a heti ajánlatok kapjanak ilyen kreatívot, és azokat támogassuk.",
+    "Teszteljünk több mozgóképet — havi három-négy reel elég ahhoz, hogy lássuk, tartja-e az Instagram megtekintési előnyét.",
+    "A foglalásra és a menüre hivatkozó posztoknál maradjunk a hivatkozásos formátumnál, mert az hozza a kattintást.",
+    "Nézzük át együtt, hogy a hirdetési keret mostani megosztása az always-on kampányok és a poszt-támogatás között megfelel-e a következő időszak céljainak."
+  ]
+}

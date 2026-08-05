@@ -199,3 +199,45 @@ def test_pages_are_balanced_so_no_card_is_left_alone():
 def test_paid_only_posts_do_not_say_ebbol(html):
     """`ebből fizetett` csak akkor értelmes, ha van mihez képest."""
     assert "fizetett elérés" in html
+
+
+NARRATIVE = {
+    "executive_summary": "A boost {cross.reach_multiplier|x}-ra emelte az elérést.",
+    "key_finding": {
+        "title": "A boost megtérül",
+        "body": "Organikusan {cross.avg_reach_organic_post} ember, boosttal "
+        "{cross.avg_reach_boosted_post}.",
+    },
+    "what_worked": ["A séf-ajánlat vitte a legtöbb elérést."],
+    "what_to_improve": ["Az Instagram-tartalom mérése hiányos."],
+    "next_steps": ["Töltsük le az Instagram Tartalom exportot."],
+}
+
+
+def test_narrative_pages_are_absent_without_narrative(html):
+    assert "Vezetői összefoglaló" not in html
+
+
+def test_narrative_pages_appear_when_given(data, tmp_path):
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
+    assert "Vezetői összefoglaló" in out
+    assert "A boost megtérül" in out
+    assert "33,2×-ra emelte" in out
+    assert "Következő lépések" in out
+
+
+def test_narrative_references_are_substituted_not_shown_raw(data, tmp_path):
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
+    assert "{cross." not in out
+
+
+def test_narrative_with_a_written_number_stops_the_build(data, tmp_path):
+    from pipeline.errors import NarrativeError
+
+    with pytest.raises(NarrativeError):
+        render(
+            data,
+            cache_dir=tmp_path,
+            fetcher=lambda url: b"",
+            narrative={"executive_summary": "A boost 33,2-szeresére emelte."},
+        )
