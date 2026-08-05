@@ -90,6 +90,7 @@ def build(directory: Path, period: str) -> dict:
         series=series, posts=joined.posts, campaigns=campaigns
     )
     previous = compare.load_previous(directory)
+    manual_values = manual.load_manual(directory)
 
     return _serialise(
         {
@@ -103,10 +104,17 @@ def build(directory: Path, period: str) -> dict:
             # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
             # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
             "channels": channels,
+            # Az előző időszak jöhet a múlt havi report_data.json-ból
+            # (`previous.json`), vagy — az első hónapban — a menedzser kézi
+            # beviteléből. Ha egyik sincs, a blokk üres, és a riport
+            # kitölthető mezőket mutat helyette.
             "comparison": {
                 name: compare.deltas(
                     block["totals"],
-                    (previous or {}).get("channels", {}).get(name, {}).get("totals", {}),
+                    (previous or {}).get("channels", {}).get(name, {}).get("totals")
+                    or compare.previous_from_manual(
+                        manual_values, name, block["totals"]
+                    ),
                 )
                 for name, block in channels.items()
             },
@@ -122,6 +130,6 @@ def build(directory: Path, period: str) -> dict:
                     ads_payload.dropped_zero_rows if ads_payload else 0
                 ),
             },
-            "manual": manual.load_manual(directory),
+            "manual": manual_values,
         }
     )

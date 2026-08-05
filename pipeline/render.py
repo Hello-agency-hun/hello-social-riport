@@ -70,6 +70,7 @@ def render(
                         for day, value in block["daily"][field]
                     ],
                     label=f"{labels.channel(name)} — {labels.page_field(field)}",
+                    height=175,
                 ),
             )
             for field in sorted(block["daily"])

@@ -97,8 +97,19 @@ def test_render_is_deterministic(data, tmp_path):
     assert first == second
 
 
+def _visible_text(html: str) -> str:
+    """Csak az, amit az olvasó lát: tagek, attribútumok és a style/script nélkül.
+
+    A gépi kulcsok legitim módon szerepelnek `data-manual` attribútumokban és a
+    beágyazott JS-ben — a tilalom a látható szövegre vonatkozik.
+    """
+    body = re.sub(r"<(style|script).*?</>", " ", html, flags=re.S)
+    return re.sub(r"<[^>]+>", " ", body)
+
+
 def test_machine_identifiers_never_reach_the_client(html):
-    """A Meta belső kulcsai nem kerülhetnek ki az ügyfélnek szánt riportba."""
+    """A Meta belső kulcsai nem kerülhetnek az ügyfél szeme elé."""
+    visible = _visible_text(html)
     for raw in (
         "actions:omni_landing_page_view",
         "actions:post_engagement",
@@ -106,7 +117,7 @@ def test_machine_identifiers_never_reach_the_client(html):
         "link_clicks",
         "LINK_CLICKS",
     ):
-        assert raw not in html, f"nyers azonosító a riportban: {raw}"
+        assert raw not in visible, f"nyers azonosító a riportban: {raw}"
 
 
 def test_labels_are_hungarian(html):

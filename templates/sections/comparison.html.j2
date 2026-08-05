@@ -16,10 +16,14 @@
     </div>
     {% endfor %}
     {% if not block %}
-    <div class="panel note">
-      Az előző hónap számai még nincsenek meg. Írd be őket, vagy másold be a
-      múlt havi <code>report_data.json</code>-t <code>previous.json</code> néven.
-    </div>
+    {% for key in data.channels[name].totals %}
+    {{ slot(
+         "prev_" ~ name ~ "_" ~ key,
+         none,
+         (key | field) ~ " — előző hónap",
+         "A múlt havi riportból; vagy másold be a previous.json-t"
+       ) }}
+    {% endfor %}
     {% endif %}
   </div>
 </section>

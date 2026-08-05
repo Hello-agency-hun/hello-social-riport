@@ -32,3 +32,17 @@ def deltas(now: dict, before: dict) -> dict:
             "pct": round(diff / previous * 100, 1) if previous else None,
         }
     return result
+
+
+def previous_from_manual(manual: dict, channel: str, fields) -> dict:
+    """Kézzel bevitt előző havi értékek.
+
+    Az első hónapban nincs `previous.json`. A riport ilyenkor sem hagyja ki az
+    összehasonlító oldalt: kitölthető mezőket mutat `prev_<csatorna>_<metrika>`
+    kulccsal, és a menedzser beírt értékei innen kerülnek vissza a számításba.
+    """
+    return {
+        field: manual[f"prev_{channel}_{field}"]
+        for field in fields
+        if f"prev_{channel}_{field}" in manual
+    }

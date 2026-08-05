@@ -31,3 +31,32 @@ def test_load_previous_reads_the_json(tmp_path):
         encoding="utf-8",
     )
     assert load_previous(tmp_path)["channels"]["facebook"]["totals"]["visits"] == 9
+
+
+def test_previous_values_can_come_from_manual_entry():
+    """Az első hónapban nincs previous.json — a menedzser beírja a számokat."""
+    from pipeline.compare import previous_from_manual
+
+    manual = {"prev_facebook_visits": 1000, "prev_instagram_visits": 500}
+    assert previous_from_manual(manual, "facebook", ["visits", "follows"]) == {
+        "visits": 1000
+    }
+
+
+def test_comparison_page_offers_fillable_fields_without_previous_data(tmp_path):
+    """Ha nincs előző havi adat, a lap nem marad üres: beírható mezőket mutat.
+
+    Enélkül a menedzser sosem tudná meg, hogy egyáltalán van ilyen oldal.
+    """
+    import json
+    from pathlib import Path
+
+    from pipeline.render import render
+
+    golden = (
+        Path(__file__).parent / "fixtures" / "larus-2026-07" / "report_data.golden.json"
+    )
+    data = json.loads(golden.read_text(encoding="utf-8"))
+    html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+    assert 'data-manual="prev_facebook_visits"' in html
+    assert "Változás az előző hónaphoz" in html
