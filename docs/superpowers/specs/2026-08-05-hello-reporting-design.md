@@ -42,12 +42,15 @@ Ez lassú, ügyfelenként máshogy néz ki, és **a számokat egy LLM állítja 
 - Interaktív export-varázsló hiányzó fájlokhoz
 - HTML riport + PDF nyomtatás
 - Ügyfelenkénti konfiguráció: nyelv, pénznem, KPI-választás, szekció ki/be
+- HELLO design rendszer (a benchmark riport tokenjei), inline SVG grafikonok
+- Review-kör: szövegszerkesztés és megjegyzések a HTML-ben, visszaalkalmazás
 
 ### Nincs benne (v1)
 
 - **Google Ads** — a szekció-architektúra előkészíti, de v1-ben nem implementált (v2)
 - **MCP / API integráció** — minden adat kézi exportból jön (v2+)
 - **Story-teljesítmény** — sehol nem elérhető adat; a story mennyiségként és kreatívként szerepel
+- **Canva / PPTX export** — a review-kör kiváltja; ha mégis kell, v2
 - Automatikus e-mail kiküldés
 - Több hónapos trendriport (a havi összehasonlítás benne van, hosszabb idősor nem)
 
@@ -248,21 +251,28 @@ hello-reporting/
 │   ├── schema.py
 │   ├── join.py
 │   ├── kpi.py
-│   ├── charts.py
+│   ├── charts.py                     # inline SVG, külső chart-lib nélkül
 │   ├── images.py                     # letöltés + base64 beágyazás
 │   ├── validate.py                   # szám-ellenőrzés a narratívában
 │   ├── render.py
+│   ├── review.py                     # review.json beolvasása és alkalmazása
 │   └── run.py                        # CLI belépési pont
 ├── templates/
 │   ├── report.html.j2
-│   ├── brand.css
-│   └── print.css
+│   ├── brand.css                     # design tokenek (8.1.)
+│   ├── print.css                     # 16:9 oldaltörés
+│   └── review.js                     # szerkesztés + megjegyzések a HTML-ben
+├── assets/
+│   ├── fonts/                        # OpenSauceOne woff2
+│   ├── logo/
+│   └── shapes/
 ├── clients/
 │   └── <ugyfel>/
 │       ├── client.yaml
 │       └── <YYYY-MM>/
 │           ├── input/
 │           ├── page_metrics.yaml
+│           ├── review.json           # opcionális, a review-körből
 │           └── Riport.html
 ├── tests/
 │   ├── fixtures/larus-2026-07/
@@ -290,8 +300,15 @@ Csak ellenőrzés, generálás nélkül:
 /hello-report clients/larus/2026-07 --validate
 ```
 
+Review-kör alkalmazása (10.):
+
+```
+/hello-report clients/larus/2026-07 --apply-review
+```
+
 A skill első futáskor ellenőrzi a Python-környezetet és telepíti a függőségeket
-(`pandas`, `openpyxl`, `jinja2`, `pyyaml`, `matplotlib`, `pillow`, `requests`).
+(`pandas`, `openpyxl`, `jinja2`, `pyyaml`, `pillow`, `requests`).
+Grafikonhoz nincs külön csomag — a `charts.py` közvetlenül SVG-t generál (8.4.).
 
 **Miért plugin és nem másolt skill-mappa:** git-ből frissül. Template-javítás vagy
 Meta-oldali oszlopnév-változás javítása mindenkihez eljut újratelepítés nélkül.
@@ -394,7 +411,82 @@ Eltérő `Eredmény jelzése` mellett egy táblában értelmezhetetlenek.
 
 ---
 
-## 8. Narratíva-réteg
+## 8. Design rendszer
+
+**A kiindulási rendszer a `HELLO_CLIENT'S Google Ads Report`**, nem a brand guide közvetlenül.
+A brand guide a márka egészét írja le; a riport ennek egy tudatosan visszafogott,
+riportálásra hangolt változata. Az eltéréseket (`#6B665D`, `#E4E0D8`) a designer
+hivatalos bővítésként hozta létre — ezek a rendszer részei.
+
+### 8.1 Színek
+
+A benchmark PDF rajzoló-utasításaiból mért használati arányok alapján:
+
+```css
+--ink:        #0A0A0A;   /* elsődleges szöveg */
+--ink-soft:   #6B665D;   /* másodlagos szöveg — meleg szürke */
+--rule:       #E4E0D8;   /* keretek, panelek, elválasztók — meleg homok */
+--paper:      #FFFDF9;   /* oldal alapszín — meleg törtfehér */
+--paper-alt:  #FAFAFA;   /* váltakozó panelháttér */
+--accent:     #4CD892;   /* Aquamarine — a fő akcentus */
+--brand-rose: #FF33CC;   /* ritka kiemelés */
+--brand-sun:  #FFFA8E;   /* ritka kiemelés */
+--brand-pink: #FF91E7;   /* ritka kiemelés */
+--brand-red:  #FF321D;   /* figyelmeztetés, negatív változás */
+--brand-blue: #025CC6;   /* tartalék adatsor-szín */
+```
+
+**Használati arány a benchmarkban:** semleges tónusok ~80%, Aquamarine ~13%,
+a hangos márkaszínek együtt ~5%. A `brand.css` ezt kommentben rögzíti, hogy
+későbbi szerkesztésnél ne csússzon el.
+
+### 8.2 Tipográfia
+
+**Open Sauce One** — Regular, Medium, Bold, Black. *(A brand guide `Open Sauce Sans`-t
+nevez meg; a benchmark riport `Open Sauce One`-t használ. A riportban az utóbbi az irányadó.)*
+
+A woff2 fájlok a repóban (`assets/fonts/`, OFL licenc, terjeszthető), a build
+base64-ként ágyazza be a HTML-be — így offline megnyitva és PDF-be nyomtatva is helyes.
+
+Hierarchia a brand guide szerint: H1 Black, H2 Bold, H3 Black, kenyérszöveg Regular/Light.
+
+### 8.3 Oldalformátum
+
+**16:9 fekvő oldalak, 1440 × 810 px** — ahogy a benchmark. Nem görgetős dokumentum:
+minden szekció egy önálló oldal, a `print.css` oldaltöréssel.
+
+Előnyök: pontosan a benchmarkot adja vissza, tisztán nyomtat, és ha később mégis
+kell PPTX/Canva export, oldalanként képezhető le.
+
+### 8.4 Grafikonok
+
+A `charts.py` **közvetlenül inline SVG-t generál** — nincs matplotlib, nincs JS chart-könyvtár.
+
+Indoklás:
+
+- **Nulla új függőség.**
+- **Vektoros nyomtatás** — a PDF-ben éles marad, nem pixeles.
+- **A design tokenekből színez**, nem beégetett palettából; akcentus-változás automatikusan átüt.
+- A review-körben a chart feliratai is szerkeszthetők.
+
+Charttípusok v1-ben: napi trendvonal, oszlopdiagram, halmozott sáv (organic/paid megoszlás),
+kördiagram. Mind egyszerű geometria — SVG-ben pár tucat sor.
+
+### 8.5 Assetek
+
+```
+assets/
+├── fonts/          OpenSauceOne-{Regular,Medium,Bold,Black}.woff2
+├── logo/           HELLO logó SVG-ben, elsődleges palettában
+└── shapes/         geometriai díszelemek (90° / 35°) SVG-ben
+```
+
+A logót a brand guide szerint **tilos nyújtani, átszínezni vagy átszabni** —
+a template fix méretarányban használja.
+
+---
+
+## 9. Narratíva-réteg
 
 Claude a lezárt `report_data.json`-t kapja, és négy blokkot ír:
 vezetői összefoglaló, kulcsmegállapítás, „mi működött / min javítsunk", következő lépések.
@@ -422,7 +514,84 @@ hivatkozásból jön, a build hibát dob.**
 
 ---
 
-## 9. Hibakezelés
+## 10. Review-kör — szerkesztés a riportban
+
+A generált HTML nem végállomás, hanem egy körfolyamat egyik lépése:
+
+```
+/hello-report clients/larus/2026-07
+        ↓
+   Riport.html          duplakattal megnyitva, offline
+        ↓
+   szöveg átírása helyben  +  megjegyzés bármelyik oldalhoz
+        ↓
+   „Mentés" → review.json letöltődik, a menedzser az input mappába teszi
+        ↓
+/hello-report clients/larus/2026-07 --apply-review
+        ↓
+   Riport.html          átírt szövegek + a megjegyzésekben kért változtatások
+```
+
+### Mit lehet szerkeszteni
+
+Három kategória, eltérő szabállyal:
+
+| Kategória | Szerkeszthető | Hova íródik vissza |
+|---|---|---|
+| **Narratíva-blokkok** (✍️) | ✅ | `narrative.json` |
+| **Kézi eredetű számok** — havi reach, követő-összlétszám (3.5) | ✅ | `page_metrics.yaml` |
+| **Számított értékek** — összegek, arányok, joinolt poszt-metrikák, chartok | ❌ | — |
+
+A kézi számok azért szerkeszthetők, mert **eredetük szerint is kézi bevitel**:
+a menedzser leolvassa a Business Suite felületéről és begépeli. Ha elgépelte,
+a riportban lássa és javíthassa — ne kelljen külön fájlt keresnie.
+
+Ezek a mezők vizuálisan meg vannak különböztetve (szaggatott aláhúzás + „kézi adat"
+jelölés), hogy egyértelmű legyen: ez nem mért érték.
+
+**A javítás a `page_metrics.yaml`-be íródik vissza, nem a kész HTML-be**, és az
+`--apply-review` a teljes pipeline-t újrafuttatja. Így minden, ami az adott számból
+származik — arányok, összehasonlítások, narratíva — együtt frissül, nem csúszik szét.
+
+**A számított értékek továbbra sem szerkeszthetők.** Ha egy összeg rossz, a hiba
+a forrásfájlban vagy a parserben van; a HTML-ben átírni azt jelentené, hogy a riport
+és az adat elválik egymástól. Ilyenkor a helyes lépés a forrás javítása és újrafuttatás.
+
+### Megjegyzések
+
+Bármelyik oldalhoz fűzhető szabad szöveges megjegyzés, például
+*„ide kérek egy kördiagramot a paid megoszlásról"* vagy *„ez a bekezdés túl hosszú"*.
+Ezek a `review.json`-be kerülnek, és a `--apply-review` futáskor Claude kapja meg őket
+utasításként — a szerkezeti kéréseket (új chart, átrendezés) a
+`report-structure.md` keretein belül hajtja végre.
+
+### Mentés lokális fájlból
+
+`file://` protokollon a böngésző nem tud fájlba írni, de letöltést indítani igen:
+a „Mentés" gomb `review.json`-t tölt le. Közben `localStorage`-ba automatikusan
+menti a munkát, így böngésző-bezárásnál nem vész el semmi.
+
+### `review.json` szerkezete
+
+```json
+{
+  "report": "clients/larus/2026-07",
+  "generated_at": "2026-08-05T14:00:00",
+  "edits": [
+    { "block": "executive_summary", "text": "átírt szöveg…" }
+  ],
+  "comments": [
+    { "page": 12, "text": "ide kérek egy kördiagramot a paid megoszlásról" }
+  ]
+}
+```
+
+**A visszaírt szöveg is átmegy a szám-ellenőrzésen (9.).** Ha kézzel beírt szám
+nem egyezik a `report_data.json`-nal, a build hibát dob.
+
+---
+
+## 11. Hibakezelés
 
 ### Leállító hibák
 
@@ -447,7 +616,7 @@ hivatkozásból jön, a build hibát dob.**
 
 1. **Reach-őr** — nincs kódút, ami napi vagy poszt-szintű reach-et összeadva
    havi reach-nek nevezne. Teszt rögzíti.
-2. **Szám-ellenőrzés** a narratívában (lásd 8.).
+2. **Szám-ellenőrzés** a narratívában (lásd 9.).
 3. **Hiányzó adat ≠ nulla.**
 
 ### Képkezelés
@@ -459,7 +628,7 @@ A HTML így egyetlen önálló fájl (~3-5 MB, 30 kép mellett), e-mailben küld
 
 ---
 
-## 10. PDF export
+## 12. PDF export
 
 Elsődleges út: dedikált `print.css` + „Letöltés PDF-ként" gomb, ami `window.print()`-et hív.
 Nulla függőség, natív fontok, kattintható linkek megmaradnak.
@@ -469,7 +638,7 @@ kell PDF több ügyfélre.
 
 ---
 
-## 11. Konfiguráció (`client.yaml`)
+## 13. Konfiguráció (`client.yaml`)
 
 ```yaml
 client:
@@ -502,7 +671,7 @@ A varázsló első futáskor létrehozza, később csak a hiányzó mezőkre ké
 
 ---
 
-## 12. Tesztelés
+## 14. Tesztelés
 
 A 2026 júliusi Larus-anyag teljes valós tesztkészlet: ZoomSphere XLSX + Ads CSV +
 Tartalom CSV + 8 napi insights CSV. Ez lesz a `tests/fixtures/larus-2026-07/`,
@@ -510,6 +679,9 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 | Teszt | Mit rögzít |
 |---|---|
+| Design tokenek | a `brand.css` az 8.1. paletta értékeit tartalmazza |
+| Chart | az SVG a tokenekből színez, nem beégetett hexből |
+| Review | narratíva + kézi szám szerkeszthető, számított érték nem |
 | Parser — kódolás | UTF-16 BOM felismerés, `sep=,` sor kezelése |
 | Parser — azonosítás | metrika a 2. sorból, nem fájlnévből |
 | Parser — pénznem | `Elköltött összeg (EUR)` → EUR; HUF-os változat is |
@@ -523,7 +695,7 @@ mellette *golden file*-ként a helyesnek elfogadott `report_data.json`.
 
 ---
 
-## 13. Nyitott kérdések
+## 15. Nyitott kérdések
 
 | # | Kérdés | Hatás | Mikor dől el |
 |---|---|---|---|
@@ -537,11 +709,13 @@ felépíthetők a meglévő valós adatokon, és ezek mindegyike hozzáadás, ne
 
 ---
 
-## 14. Verziók
+## 16. Verziók
 
 **v1** — ez a spec.
 
-**v2** — Google Ads modul. A szekció-architektúra „ha van adat, van szekció" logikája
+**v2** — Google Ads modul, és ha igény van rá, PPTX/Canva export
+(a 16:9-es oldalstruktúrából oldalanként leképezve).
+A szekció-architektúra „ha van adat, van szekció" logikája
 és a `google_ads.py` stub már készen áll; egy parser és egy riport-szekció hozzáadása.
 
 **v3** — MCP / Graph API integráció. Csak az ① parser-réteg cserélődik;
