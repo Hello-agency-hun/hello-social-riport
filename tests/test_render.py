@@ -153,3 +153,21 @@ def test_page_count_stays_within_the_agreed_limit(html):
 def test_channel_kpi_tiles_use_hungarian_labels(html):
     assert "Hivatkozáskattintások" in html
     assert "Új követők" in html
+
+
+def test_report_does_not_apologise_to_the_client(html):
+    """A hiánylista a menedzsernek szól, nem az ügyfélnek."""
+    for phrase in ("nem illesztett", "Nem becsültük meg", "nem közöl ilyen számot"):
+        assert phrase not in html
+
+
+def test_quality_block_still_records_everything(data):
+    """A belső szigor nem lazul: a JSON-ban minden hiány rögzítve marad."""
+    for key in ("unmatched_boosts", "unmatched_content", "dropped_zero_campaign_rows",
+                "posts_measured"):
+        assert key in data["quality"]
+
+
+def test_summary_page_shows_the_six_key_numbers(html):
+    assert "A hónap mérlege" in html
+    assert "a boost szorzója" in html
