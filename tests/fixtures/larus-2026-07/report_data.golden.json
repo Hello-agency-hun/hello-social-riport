@@ -1917,6 +1917,10 @@
       ]
     }
   },
+  "comparison": {
+    "instagram": {},
+    "facebook": {}
+  },
   "paid": {
     "spend": 472.71,
     "currency": "EUR",

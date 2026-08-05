@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import guards, kpi
+from pipeline import compare, guards, kpi
 from pipeline.detect import scan
 from pipeline.errors import DuplicateSourceError, UnknownSourceError
 from pipeline.join import join_posts
@@ -86,6 +86,11 @@ def build(directory: Path, period: str) -> dict:
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
 
+    channels = kpi.channel_blocks(
+        series=series, posts=joined.posts, campaigns=campaigns
+    )
+    previous = compare.load_previous(directory)
+
     return _serialise(
         {
             "meta": {
@@ -97,9 +102,14 @@ def build(directory: Path, period: str) -> dict:
             "content": kpi.content_summary(items),
             # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
             # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
-            "channels": kpi.channel_blocks(
-                series=series, posts=joined.posts, campaigns=campaigns
-            ),
+            "channels": channels,
+            "comparison": {
+                name: compare.deltas(
+                    block["totals"],
+                    (previous or {}).get("channels", {}).get(name, {}).get("totals", {}),
+                )
+                for name, block in channels.items()
+            },
             "paid": kpi.paid_totals(campaigns),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
