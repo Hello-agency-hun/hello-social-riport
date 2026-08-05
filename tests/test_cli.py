@@ -60,3 +60,25 @@ def test_cli_survives_a_cp1250_console(fixture_dir, tmp_path, monkeypatch):
 
     assert exit_code == 0
     assert target.exists(), "a riportadat akkor is megíródik, ha a konzol szűk"
+
+
+def test_render_writes_the_html(fixture_dir, tmp_path):
+    target = tmp_path / "Riport.html"
+    exit_code = main(
+        [
+            str(fixture_dir), "--period", "2026-07",
+            "--out", str(tmp_path / "report_data.json"),
+            "--html", str(target),
+            "--offline",
+        ]
+    )
+    assert exit_code == 0
+    html = target.read_text(encoding="utf-8")
+    assert "Larus Étterem" in html
+    assert html.startswith("<!doctype html>")
+
+
+def test_validate_does_not_render(fixture_dir, tmp_path):
+    target = tmp_path / "Riport.html"
+    main([str(fixture_dir), "--period", "2026-07", "--validate", "--html", str(target)])
+    assert not target.exists()

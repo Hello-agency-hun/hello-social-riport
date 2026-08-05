@@ -51,6 +51,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--period", required=True, help="YYYY-MM")
     parser.add_argument("--validate", action="store_true", help="csak ellenőrzés")
     parser.add_argument("--out", default=None, help="report_data.json útvonala")
+    parser.add_argument("--html", default=None, help="Riport.html útvonala")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="ne töltsön le képet — a kreatívok helyén helyőrző jelenik meg",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -67,6 +73,21 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(f"\n→ {target}")
+
+        from pipeline import images
+        from pipeline.render import render
+
+        html_path = Path(args.html or Path(args.directory) / "Riport.html")
+        fetcher = (lambda url: b"") if args.offline else images.fetch
+        html_path.write_text(
+            render(
+                data,
+                cache_dir=Path(args.directory) / ".image-cache",
+                fetcher=fetcher,
+            ),
+            encoding="utf-8",
+        )
+        print(f"→ {html_path}")
 
     return 0
 
