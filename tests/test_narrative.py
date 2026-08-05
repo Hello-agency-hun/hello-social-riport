@@ -81,3 +81,26 @@ def test_every_declared_block_is_documented():
     for key, meta in BLOCKS.items():
         assert meta["label"], key
         assert meta["guidance"], f"{key}: nincs megadva, mit írjon bele"
+
+
+def test_the_shipped_narrative_passes_the_number_check():
+    """A fixture narratívája ugyanazon a szűrőn megy át, mint bármelyik másik.
+
+    Ez az egyetlen valódi, kézzel írt narratíva a repóban — ha a mezőnevek
+    elmozdulnak, itt derül ki elsőként.
+    """
+    import json
+    from pathlib import Path
+
+    base = Path(__file__).parent / "fixtures" / "larus-2026-07"
+    data = json.loads((base / "report_data.golden.json").read_text(encoding="utf-8"))
+    narrative = json.loads((base / "narrative.json").read_text(encoding="utf-8"))
+
+    resolved = resolve_all(narrative, data)
+
+    from pipeline.narrative import REFERENCE
+
+    assert set(resolved) == set(BLOCKS), "minden blokknak meg kell lennie"
+    assert not REFERENCE.search(json.dumps(resolved)), "maradt feloldatlan hivatkozás"
+    assert resolved["key_finding"]["title"]
+    assert len(resolved["next_steps"]) >= 3

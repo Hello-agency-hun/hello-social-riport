@@ -80,11 +80,17 @@ def main(argv: list[str] | None = None) -> int:
         current = load_narrative(directory)
 
         if stored["edits"] and current:
+            applied = review_module.applied_edits(current, stored["edits"])
             updated = review_module.apply_edits(current, stored["edits"])
             (directory / "narrative.json").write_text(
                 json.dumps(updated, ensure_ascii=False, indent=2), encoding="utf-8"
             )
-            print(f"{len(stored['edits'])} szövegjavítás alkalmazva.")
+            print(f"{len(applied)} szövegjavítás alkalmazva.")
+            # Amit nem tudtunk hova tenni, azt megnevezzük — a néma elnyelés
+            # rosszabb, mint a hiba.
+            for path in stored["edits"]:
+                if path not in applied:
+                    print(f"  ⚠ nem alkalmazható javítás: {path!r} — nincs ilyen blokk")
 
         for comment in stored["comments"]:
             print(f"  megjegyzés — {comment['page']}. oldal: {comment['text']}")

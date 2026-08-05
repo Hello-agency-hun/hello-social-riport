@@ -67,3 +67,37 @@ def test_manual_values_now_come_from_review_json(tmp_path):
         json.dumps({"manual": {"reach_facebook": 92400}}), encoding="utf-8"
     )
     assert load_manual(tmp_path)["reach_facebook"] == 92400
+
+
+def test_nested_paths_are_edited():
+    """A böngészőben a `key_finding.title` is szerkeszthető — pontozott útvonal."""
+    narrative = {"key_finding": {"title": "Eredeti", "body": "Törzs"}}
+    edited = apply_edits(narrative, {"key_finding.title": "Átírt"})
+    assert edited["key_finding"]["title"] == "Átírt"
+    assert edited["key_finding"]["body"] == "Törzs"
+
+
+def test_editing_does_not_mutate_the_original():
+    narrative = {"key_finding": {"title": "Eredeti"}}
+    apply_edits(narrative, {"key_finding.title": "Átírt"})
+    assert narrative["key_finding"]["title"] == "Eredeti"
+
+
+def test_a_path_that_does_not_exist_is_reported_not_swallowed():
+    """A néma elnyelés rosszabb, mint a hiba — a hívó tudja meg, mi maradt ki."""
+    from pipeline.review import applied_edits
+
+    narrative = {"executive_summary": "a", "key_finding": {"title": "b"}}
+    edits = {"executive_summary": "x", "key_finding.title": "y", "nincs.ilyen": "z"}
+    assert set(applied_edits(narrative, edits)) == {
+        "executive_summary",
+        "key_finding.title",
+    }
+
+
+def test_a_list_block_cannot_be_replaced_by_a_string():
+    narrative = {"next_steps": ["a", "b"]}
+    assert apply_edits(narrative, {"next_steps": "egyetlen szöveg"})["next_steps"] == [
+        "a",
+        "b",
+    ]

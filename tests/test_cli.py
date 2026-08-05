@@ -152,11 +152,16 @@ def test_comments_are_reported_to_the_manager(fixture_dir, tmp_path, capsys):
     assert "ide kérek kördiagramot" in capsys.readouterr().out
 
 
-def test_apply_review_is_a_no_op_without_a_review_file(fixture_dir, tmp_path):
+def test_apply_review_leaves_the_narrative_alone_without_a_review_file(
+    fixture_dir, tmp_path
+):
+    """Review nélkül a `--apply-review` nem nyúl a narratívához."""
     import shutil
 
     work = tmp_path / "larus"
     shutil.copytree(fixture_dir, work)
+    before = (work / "narrative.json").read_text(encoding="utf-8")
+
     exit_code = main(
         [
             str(work), "--period", "2026-07", "--apply-review",
@@ -165,4 +170,4 @@ def test_apply_review_is_a_no_op_without_a_review_file(fixture_dir, tmp_path):
         ]
     )
     assert exit_code == 0
-    assert not (work / "narrative.json").exists()
+    assert (work / "narrative.json").read_text(encoding="utf-8") == before
