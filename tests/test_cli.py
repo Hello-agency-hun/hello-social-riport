@@ -107,3 +107,62 @@ def test_cli_never_writes_into_the_client_folder(fixture_dir, tmp_path):
     before = {p.name for p in Path(fixture_dir).iterdir()}
     run(fixture_dir, tmp_path)
     assert {p.name for p in Path(fixture_dir).iterdir()} == before
+
+
+def test_apply_review_writes_the_edits_into_the_narrative(fixture_dir, tmp_path):
+    import shutil
+
+    work = tmp_path / "larus"
+    shutil.copytree(fixture_dir, work)
+    (work / "narrative.json").write_text(
+        json.dumps({"executive_summary": "Eredeti szöveg."}), encoding="utf-8"
+    )
+    (work / "review.json").write_text(
+        json.dumps({"edits": {"executive_summary": "Átírt szöveg."}}), encoding="utf-8"
+    )
+
+    exit_code = main(
+        [
+            str(work), "--period", "2026-07", "--apply-review",
+            "--out", str(tmp_path / "d.json"),
+            "--html", str(tmp_path / "r.html"), "--offline",
+        ]
+    )
+    assert exit_code == 0
+    narrative = json.loads((work / "narrative.json").read_text(encoding="utf-8"))
+    assert narrative["executive_summary"] == "Átírt szöveg."
+
+
+def test_comments_are_reported_to_the_manager(fixture_dir, tmp_path, capsys):
+    import shutil
+
+    work = tmp_path / "larus"
+    shutil.copytree(fixture_dir, work)
+    (work / "review.json").write_text(
+        json.dumps({"comments": [{"page": 12, "text": "ide kérek kördiagramot"}]}),
+        encoding="utf-8",
+    )
+    main(
+        [
+            str(work), "--period", "2026-07", "--apply-review",
+            "--out", str(tmp_path / "d.json"),
+            "--html", str(tmp_path / "r.html"), "--offline",
+        ]
+    )
+    assert "ide kérek kördiagramot" in capsys.readouterr().out
+
+
+def test_apply_review_is_a_no_op_without_a_review_file(fixture_dir, tmp_path):
+    import shutil
+
+    work = tmp_path / "larus"
+    shutil.copytree(fixture_dir, work)
+    exit_code = main(
+        [
+            str(work), "--period", "2026-07", "--apply-review",
+            "--out", str(tmp_path / "d.json"),
+            "--html", str(tmp_path / "r.html"), "--offline",
+        ]
+    )
+    assert exit_code == 0
+    assert not (work / "narrative.json").exists()

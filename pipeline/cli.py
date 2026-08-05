@@ -57,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="ne töltsön le képet — a kreatívok helyén helyőrző jelenik meg",
     )
+    parser.add_argument(
+        "--apply-review",
+        action="store_true",
+        help="a review.json szövegjavításait beírja a narrative.json-be",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -66,6 +71,23 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(_report_map(data))
+
+    if args.apply_review:
+        from pipeline import review as review_module
+
+        directory = Path(args.directory)
+        stored = review_module.load_review(directory)
+        current = load_narrative(directory)
+
+        if stored["edits"] and current:
+            updated = review_module.apply_edits(current, stored["edits"])
+            (directory / "narrative.json").write_text(
+                json.dumps(updated, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"{len(stored['edits'])} szövegjavítás alkalmazva.")
+
+        for comment in stored["comments"]:
+            print(f"  megjegyzés — {comment['page']}. oldal: {comment['text']}")
 
     if not args.validate:
         target = Path(args.out or Path(args.directory) / "report_data.json")
