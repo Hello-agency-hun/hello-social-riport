@@ -100,8 +100,9 @@ DATA = {
 
 
 def test_plain_reference_is_formatted_hungarian():
-    assert resolve("{cross.avg_reach_boosted_post} ember", DATA) == "4 312 ember".replace(
-        " ", " ", 1
+    """Ezres elválasztó nem törhető szóköz — a szám nem törhet két sorba."""
+    assert resolve("{cross.avg_reach_boosted_post} ember", DATA) == (
+        "4 312 ember"
     )
 
 
