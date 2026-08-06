@@ -49,3 +49,25 @@ def test_creatives_are_shown_whole_not_cropped():
     thumb = text[text.index(".thumb") : text.index(".thumb") + 400]
     assert "object-fit: contain" in thumb
     assert "cover" not in thumb
+
+
+def test_list_items_carry_their_own_size():
+    """A `p, li, td, th` szabály felülírja az öröklést, ezért a listaelem
+    méretét magán az `li`-n kell megadni, nem a szülő `ol`-on."""
+    template = (
+        Path(__file__).resolve().parent.parent
+        / "templates"
+        / "sections"
+        / "narrative.html.j2"
+    ).read_text(encoding="utf-8")
+    for line in template.splitlines():
+        if "<li" in line:
+            assert "font-size" in line, f"méret nélküli listaelem: {line.strip()[:60]}"
+
+
+def test_stat_tiles_share_a_baseline():
+    """A pénznem-csempe kisebb betűs; enélkül a felirata följebb csúszna."""
+    text = CSS.read_text(encoding="utf-8")
+    stat = text[text.index(".stat {") : text.index(".stat--sm")]
+    assert "min-height" in stat
+    assert "align-items: flex-end" in stat

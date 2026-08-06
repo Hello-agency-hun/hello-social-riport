@@ -158,3 +158,25 @@ def test_an_edited_block_still_renders():
     out = resolve_all(edited, data)["executive_summary"]
     assert out.startswith("Bevezető. ")
     assert "472,71 EUR" in out
+
+
+def test_list_items_are_editable_by_index():
+    """A „mi működött" pontjait is át lehet írni a böngészőben."""
+    narrative = {"what_worked": ["első", "második"], "next_steps": ["lépés"]}
+    edited = apply_edits(
+        narrative, {"what_worked.1": "átírt második", "next_steps.0": "átírt lépés"}
+    )
+    assert edited["what_worked"] == ["első", "átírt második"]
+    assert edited["next_steps"] == ["átírt lépés"]
+
+
+def test_an_index_beyond_the_list_is_reported_not_swallowed():
+    from pipeline.review import applied_edits
+
+    narrative = {"what_worked": ["egy"]}
+    assert applied_edits(narrative, {"what_worked.5": "x"}) == []
+
+
+def test_a_list_index_cannot_create_an_element():
+    narrative = {"what_worked": ["egy"]}
+    assert apply_edits(narrative, {"what_worked.3": "x"})["what_worked"] == ["egy"]

@@ -21,24 +21,36 @@ def load_review(directory: Path) -> dict:
     return {key: stored.get(key) or kind() for key, kind in SECTIONS.items()}
 
 
-def _leaf(narrative: dict, path: str):
-    """A pontozott útvonal létező **szöveges** levele: `(szülő, kulcs)` vagy `None`.
+def _leaf(narrative, path: str):
+    """A pontozott útvonal létező **szöveges** levele: `(tároló, kulcs)` vagy `None`.
 
-    A `key_finding.title` alakú útvonalak azért kellenek, mert a böngészőben a
-    beágyazott blokkok is szerkeszthetők. Nem szöveges vagy nem létező levélre
-    nem írunk — a review nem hozhat létre új blokkot, és nem cserélhet listát
-    szövegre.
+    Kezel beágyazott szótárat (`key_finding.title`) és listaelemet is
+    (`what_worked.0`) — a böngészőben mindkettő szerkeszthető. Nem szöveges
+    vagy nem létező levélre nem írunk: a review nem hozhat létre új blokkot,
+    és nem cserélhet listát szövegre.
     """
+
+    def step(container, part: str):
+        if isinstance(container, list):
+            if not part.isdigit() or int(part) >= len(container):
+                return None, None
+            return container, int(part)
+        if isinstance(container, dict) and part in container:
+            return container, part
+        return None, None
+
     parts = path.split(".")
     current = narrative
     for part in parts[:-1]:
-        if not isinstance(current, dict) or part not in current:
+        container, key = step(current, part)
+        if container is None:
             return None
-        current = current[part]
-    last = parts[-1]
-    if isinstance(current, dict) and isinstance(current.get(last), str):
-        return current, last
-    return None
+        current = container[key]
+
+    container, key = step(current, parts[-1])
+    if container is None or not isinstance(container[key], str):
+        return None
+    return container, key
 
 
 def applied_edits(narrative: dict, edits: dict) -> list[str]:

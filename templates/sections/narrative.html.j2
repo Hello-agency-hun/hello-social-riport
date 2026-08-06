@@ -2,9 +2,12 @@
 <section class="page">
   <div class="eyebrow">Vezetői összefoglaló</div>
   <h2 style="margin-bottom:36px">A hónap röviden</h2>
-  <p data-narrative="executive_summary" style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)">
+  <div class="fill">
+  <p style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)"
+     data-narrative="executive_summary">
     {{ narrative.executive_summary | safe }}
   </p>
+  </div>
 </section>
 {% endif %}
 
@@ -29,7 +32,8 @@
       <h3 class="accent" style="margin-bottom:16px">Mi működött</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_worked %}
-        <li style="margin-bottom:12px">{{ item | safe }}</li>
+        <li style="margin-bottom:14px;font-size:18px"
+            data-narrative="what_worked.{{ loop.index0 }}">{{ item | safe }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -37,7 +41,8 @@
       <h3 style="margin-bottom:16px">Min javítsunk</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_to_improve %}
-        <li style="margin-bottom:12px">{{ item | safe }}</li>
+        <li style="margin-bottom:14px;font-size:18px"
+            data-narrative="what_to_improve.{{ loop.index0 }}">{{ item | safe }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -49,10 +54,13 @@
 <section class="page">
   <div class="eyebrow">Következő lépések</div>
   <h2 style="margin-bottom:36px">Mit csinálunk a jövő hónapban</h2>
+  <div class="fill">
   <ol style="padding-left:26px;font-size:20px">
     {% for item in narrative.next_steps %}
-    <li style="margin-bottom:20px;color:var(--ink)">{{ item | safe }}</li>
+    <li style="margin-bottom:22px;color:var(--ink);font-size:21px"
+        data-narrative="next_steps.{{ loop.index0 }}">{{ item | safe }}</li>
     {% endfor %}
   </ol>
+  </div>
 </section>
 {% endif %}

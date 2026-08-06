@@ -73,16 +73,22 @@ h3 { font-size: 22px; font-weight: 700; }
 p, li, td, th { font-size: 17px; line-height: 1.5; color: var(--ink-soft); }
 strong { color: var(--ink); font-weight: 700; }
 
+/* A számblokk magassága fix, és a szám az aljára ül. Enélkül a kisebb betűs
+   pénznem-csempe feliratai följebb csúsznának, mint a szomszédjaié. */
 .stat { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em;
-        white-space: nowrap; }
+        white-space: nowrap; min-height: 64px; display: flex; align-items: flex-end; }
 /* Pénznemmel a szám hosszabb — enélkül két sorba törne a csempében. */
 .stat--sm { font-size: 42px; }
 
 /* A kreatívok álló (4:5, 9:16) és fekvő arányban is érkeznek. `cover` esetén az
    álló képek közepét vágnánk ki — a poszt fele eltűnne. `contain` mellett a
    teljes kreatív látszik, a keret pedig semleges háttérrel tölti ki a helyet. */
-.thumb { display: block; width: 100%; height: 260px;
+.thumb { display: block; width: 100%; height: 240px;
          object-fit: contain; border-radius: 8px; background: var(--rule); }
+
+/* A poszt-kártya tartalma nem nőhet túl az oldalon: a kép fix, a szöveg két
+   sorra fogott, a metrikatábla pedig tömör. */
+.panel table td { padding: 6px 8px 6px 0; font-size: 14px; }
 
 /* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
    kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
@@ -91,7 +97,17 @@ strong { color: var(--ink); font-weight: 700; }
 .stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
               text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
 
-.grid { display: grid; gap: 28px; }
+/* A tartalom töltse ki az oldalt. Enélkül minden a lap tetejére torlódik, és
+   alatta fél oldalnyi üres hely marad — 16:9-es dián ez feltűnő. A `margin-top:
+   auto`-val lehorgonyzott lábjegyzet ettől függetlenül alul marad. */
+.page > .grid,
+.page > table { flex: 1 1 auto; align-content: center; }
+/* Szövegblokknak az `align-content` nem elég — saját flex-doboz kell hozzá,
+   különben a bekezdés a magas terület tetején ragadna. */
+.page > .fill { flex: 1 1 auto; display: flex; flex-direction: column;
+                justify-content: center; }
+
+.grid { display: grid; gap: 28px; align-content: center; }
 .panel { background: var(--paper-alt); border: 1px solid var(--rule);
          border-radius: 14px; padding: 26px; }
 .rule { height: 1px; background: var(--rule); }

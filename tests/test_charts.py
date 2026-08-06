@@ -99,3 +99,71 @@ def test_single_point_series_does_not_divide_by_zero():
 def test_donut_with_zero_total_does_not_divide_by_zero():
     svg = donut([("a", 0), ("b", 0)], label="x")
     assert "nincs adat" in svg
+
+
+def test_line_chart_labels_more_than_just_the_maximum():
+    """Egyetlen `max` felirat kevés — a görbe legyen önmagában leolvasható."""
+    svg = line_chart(SERIES, label="x")
+    root = _parse(svg)
+    texts = [t.text or "" for t in root.iter("{http://www.w3.org/2000/svg}text")]
+    # rácsvonal-értékek: nulla, fél, csúcs
+    assert "0" in texts
+    assert "93" in texts, "a legerősebb nap értéke"
+    assert any("összesen" in t for t in texts), "az időszak összege"
+    assert len(texts) >= 7
+
+
+def test_the_three_strongest_days_are_marked():
+    """Egy csúcs kevés — ránézésre látszódjon a hónap három legerősebb napja."""
+    svg = line_chart(SERIES, label="x")
+    circles = list(_parse(svg).iter("{http://www.w3.org/2000/svg}circle"))
+    assert len(circles) == 3
+
+
+def test_peaks_are_spread_out_not_three_days_of_one_spike():
+    """Egyetlen kiugrás szomszédos napjait ne címkézzük fel háromszor."""
+    from datetime import timedelta
+
+    flat = [(date(2026, 7, 1) + timedelta(days=d), 10) for d in range(31)]
+    for d in (9, 10, 11):
+        flat[d] = (flat[d][0], 500 - d)
+    svg = line_chart(flat, label="x")
+    labelled = [
+        t.text
+        for t in _parse(svg).iter("{http://www.w3.org/2000/svg}text")
+        if t.get("font-size") == "10"
+    ]
+    assert len(labelled) == 3
+    assert len(set(labelled)) == 3
+    assert labelled.count("07.10.") <= 1
+
+
+def test_the_peak_label_stays_inside_the_chart_when_the_peak_is_last():
+    """Ha a csúcs a jobb szélen van, a felirat befelé fordul, nem lóg ki."""
+    rising = [(date(2026, 7, day), day) for day in range(1, 32)]
+    svg = line_chart(rising, label="x")
+    anchors = [
+        t.get("text-anchor")
+        for t in _parse(svg).iter("{http://www.w3.org/2000/svg}text")
+        if t.get("font-weight") == "700"
+    ]
+    assert anchors == ["end"]
+
+
+def test_the_curve_itself_takes_the_given_colour():
+    """Nem elég a kitöltést színezni — a vonal maradt volna zöld mindenhol."""
+    svg = line_chart(SERIES, label="x", colour="var(--brand-rose)")
+    line = _parse(svg).find(".//{http://www.w3.org/2000/svg}polyline")
+    assert line.get("stroke") == "var(--brand-rose)"
+    assert "var(--accent)" not in svg
+
+
+def test_peak_labels_do_not_collide():
+    """A címkék vízszintes távolsága legyen elég a szöveg szélességéhez."""
+    import re as _re
+
+    svg = line_chart(SERIES, label="x")
+    xs = sorted(
+        float(m) for m in _re.findall(r'<circle cx="([\d.]+)"', svg)
+    )
+    assert all(b - a >= 60 for a, b in zip(xs, xs[1:])), xs

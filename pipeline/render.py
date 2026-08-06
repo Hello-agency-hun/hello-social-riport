@@ -79,6 +79,15 @@ def render(
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
 
+    # Egy oldalon négy görbe fut; ha mind zöld, összemosódnak. A ciklus a
+    # márkapaletta hangosabb színeit is behozza, nem csak az akcentust.
+    curve_colours = [
+        "var(--accent)",
+        "var(--brand-rose)",
+        "var(--brand-blue)",
+        "var(--brand-pink)",
+    ]
+
     trends = {}
     for name, block in data.get("channels", {}).items():
         trends[name] = [
@@ -91,12 +100,14 @@ def render(
                     ],
                     label=f"{labels.channel(name)} — {labels.page_field(field)}",
                     height=175,
+                    colour=curve_colours[index % len(curve_colours)],
                 ),
             )
-            for field in sorted(block["daily"])
+            for index, field in enumerate(sorted(block["daily"]))
         ]
 
     channel_posts = {}
+    ranking: dict[str, str] = {}
     for name, block in data.get("channels", {}).items():
         ranked = sorted(block["posts"], key=lambda post: -post["reach"])
         selected = [post for post in ranked if post["reach"]][:6]
@@ -110,12 +121,23 @@ def render(
             )
             post["thumb"] = uris[0] if uris else images.PLACEHOLDER
         channel_posts[name] = _balanced_chunks(selected)
+        # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,
+        # amit a kártyák oldalanként háromra bontva nem tudnak.
+        if any(post["reach"] for post in selected):
+            ranking[name] = charts.bar_chart(
+                [
+                    (post["caption"][:38] or "(nincs szöveg)", post["reach"])
+                    for post in selected
+                ],
+                label=f"{labels.channel(name)} — elérés szerinti sorrend",
+            )
 
     template = _environment().get_template("report.html.j2")
     return template.render(
         data=data,
         trends=trends,
         channel_posts=channel_posts,
+        ranking=ranking,
         narrative=resolved,
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),

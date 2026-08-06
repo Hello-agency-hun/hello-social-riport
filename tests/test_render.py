@@ -258,3 +258,23 @@ def test_narrative_with_a_written_number_stops_the_build(data, tmp_path):
             fetcher=lambda url: b"",
             narrative={"executive_summary": "A boost 33,2-szeresére emelte."},
         )
+
+
+def test_trend_curves_do_not_all_use_the_same_colour(html):
+    """Négy görbe egy oldalon; mind zölden összemosódna."""
+    for token in ("var(--accent)", "var(--brand-rose)", "var(--brand-blue)"):
+        assert token in html
+
+
+def test_the_reach_ranking_page_is_back(html):
+    """A poszt-szövegekkel felsorolt, oldalra fordított oszlopdiagram."""
+    assert "Elérés szerinti sorrend" in html
+    assert 'class="bar"' in html
+
+
+def test_list_items_in_the_evaluation_are_editable(data, tmp_path):
+    """A „mi működött" és a „következő lépések" pontjai is átírhatók."""
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
+    assert 'data-narrative="what_worked.0"' in out
+    assert 'data-narrative="what_to_improve.0"' in out
+    assert 'data-narrative="next_steps.0"' in out
