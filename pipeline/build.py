@@ -7,7 +7,11 @@ import yaml
 
 from pipeline import compare, guards, kpi, manual
 from pipeline.detect import scan
-from pipeline.errors import DuplicateSourceError, UnknownSourceError
+from pipeline.errors import (
+    DuplicateSourceError,
+    NoSourceError,
+    UnknownSourceError,
+)
 from pipeline.join import join_posts
 from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere
 
@@ -36,6 +40,36 @@ def _serialise(value):
 def load_config(directory: Path) -> dict:
     path = Path(directory) / "client.yaml"
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+# Mi hiányozhat, és mibe kerül. A varázsló ebből dolgozik: nem elég tudni,
+# hogy nincs meg — azt is meg kell mondani, mi vész el nélküle.
+EXPECTED = {
+    "zoomsphere": "ZoomSphere tartalomnaptár — enélkül nincs kreatív és nincs poszt-szöveg",
+    "meta_ads": "Meta Ads export — enélkül nincs költés és nincs boost-adat",
+}
+EXPECTED_PER_CHANNEL = {
+    "content": "{channel} Tartalom export — enélkül nincs poszt-szintű elérés",
+    "daily": "{channel} Eredmények napi CSV-k — enélkül nincs trendgörbe és nincs oldal-összesítés",
+}
+
+
+def _missing(seen: dict, content_channels: dict, daily_channels: set, client: dict):
+    """A hiányzó források, emberi megfogalmazásban."""
+    gaps = [text for kind, text in EXPECTED.items() if kind not in seen]
+
+    channels = {}
+    if client.get("fb_page_id") or client.get("fb_page_name"):
+        channels["facebook"] = "Facebook"
+    if client.get("ig_handle"):
+        channels["instagram"] = "Instagram"
+
+    for channel, label in channels.items():
+        if channel not in content_channels:
+            gaps.append(EXPECTED_PER_CHANNEL["content"].format(channel=label))
+        if channel not in daily_channels:
+            gaps.append(EXPECTED_PER_CHANNEL["daily"].format(channel=label))
+    return gaps
 
 
 def load_narrative(directory: Path) -> dict | None:
@@ -103,6 +137,12 @@ def build(directory: Path, period: str) -> dict:
     if unknown:
         raise UnknownSourceError("nem azonosítható fájl: " + ", ".join(unknown))
 
+    if not any([items, content, campaigns, series]):
+        raise NoSourceError(
+            f"{directory / 'input'}: egyetlen felismerhető forrásfájl sincs. "
+            "Enélkül csak nullákkal teli riport készülne."
+        )
+
     guards.check_client(hints, client)
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
@@ -152,5 +192,11 @@ def build(directory: Path, period: str) -> dict:
                 ),
             },
             "manual": manual_values,
+            "missing": _missing(
+                seen,
+                content_channels,
+                {entry.channel for entry in series},
+                client,
+            ),
         }
     )

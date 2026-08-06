@@ -10,6 +10,10 @@ class DuplicateSourceError(PipelineError):
     """Egy hónaphoz két azonos típusú forrásfájl került."""
 
 
+class NoSourceError(PipelineError):
+    """A hónap mappájában egyetlen felismerhető forrásfájl sincs."""
+
+
 class MissingColumnError(PipelineError):
     """Kötelező oszlop hiányzik egy forrásból."""
 

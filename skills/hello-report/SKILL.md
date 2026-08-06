@@ -39,8 +39,18 @@ biztosíték arra, hogy egy tetszetős, de hamis szám ne kerüljön ki az ügyf
 python -m pipeline.cli clients/<ugyfel>/<YYYY-MM> --period <YYYY-MM> --validate
 ```
 
-Ez kiírja, mit talált és mi hiányzik. Ha hibával áll meg, olvasd el az üzenetet —
-megnevezi a fájlt és a problémát.
+Ez kiírja, mit talált, és külön szakaszban azt, **mi hiányzik és mibe kerül**:
+
+```
+Hiányzó források:
+  ✗ Instagram Tartalom export — enélkül nincs poszt-szintű elérés
+```
+
+Ha hibával áll meg, olvasd el az üzenetet — megnevezi a fájlt és a problémát.
+Üres mappánál nem készít nullákkal teli riportot, hanem megáll.
+
+A hiányt a `client.yaml` alapján állapítja meg: csak arról a csatornáról
+hiányol adatot, amiről a konfiguráció szerint van fiók.
 
 ### 2. Ha hiányzik forrásfájl
 

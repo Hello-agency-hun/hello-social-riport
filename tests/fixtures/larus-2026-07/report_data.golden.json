@@ -1993,5 +1993,8 @@
     ],
     "dropped_zero_campaign_rows": 16
   },
-  "manual": {}
+  "manual": {},
+  "missing": [
+    "Instagram Tartalom export — enélkül nincs poszt-szintű elérés"
+  ]
 }

@@ -7,6 +7,7 @@ from pipeline.build import build
 from pipeline.errors import (
     ClientMismatchError,
     DuplicateSourceError,
+    NoSourceError,
     PeriodMismatchError,
 )
 
@@ -120,3 +121,59 @@ def test_two_content_exports_for_different_channels_are_allowed(fixture_dir, tmp
     """Facebookra és Instagramra külön export jön — ez a normális eset."""
     data = build(fixture_dir, period="2026-07")
     assert data["quality"]["posts_measured"] == 16
+
+
+def test_missing_sources_are_named_with_what_they_cost(fixture_dir):
+    """A varázsló első lépése erre épül: nem elég tudni, hogy hiányzik —
+    azt is meg kell mondani, mi vész el nélküle."""
+    data = build(fixture_dir, period="2026-07")
+    assert any("Instagram Tartalom" in gap for gap in data["missing"])
+    assert all("—" in gap for gap in data["missing"]), "mindegyik mondja meg, mibe kerül"
+
+
+def test_a_complete_folder_reports_nothing_missing(fixture_dir, tmp_path):
+    import shutil
+
+    work = tmp_path / "teljes"
+    shutil.copytree(fixture_dir, work)
+    original = next(work.glob("input/Jul-01-2026*.csv"))
+    # az IG Tartalom export pótlása: elég, hogy a csatorna jelen legyen
+    faked = original.read_text(encoding="utf-8-sig").replace(
+        "facebook.com", "instagram.com"
+    )
+    original.with_name("Jul-01-2026_instagram.csv").write_text(faked, encoding="utf-8")
+
+    assert build(work, period="2026-07")["missing"] == []
+
+
+def test_an_empty_input_folder_is_an_error_not_a_zero_report(fixture_dir, tmp_path):
+    """Üres mappával csendben nullákkal teli riport készült volna."""
+    import shutil
+
+    work = tmp_path / "ures"
+    shutil.copytree(fixture_dir, work)
+    for path in (work / "input").iterdir():
+        path.unlink()
+
+    with pytest.raises(NoSourceError, match="egyetlen felismerhető forrásfájl sincs"):
+        build(work, period="2026-07")
+
+
+def test_a_channel_the_client_does_not_have_is_not_reported_missing(
+    fixture_dir, tmp_path
+):
+    """Csak arról hiányolunk adatot, amiről a client.yaml szerint van fiók."""
+    import shutil
+
+    import yaml as yaml_module
+
+    work = tmp_path / "csak_fb"
+    shutil.copytree(fixture_dir, work)
+    config = yaml_module.safe_load((work / "client.yaml").read_text(encoding="utf-8"))
+    del config["client"]["ig_handle"]
+    (work / "client.yaml").write_text(
+        yaml_module.safe_dump(config, allow_unicode=True), encoding="utf-8"
+    )
+
+    gaps = build(work, period="2026-07")["missing"]
+    assert not any("Instagram" in gap for gap in gaps)

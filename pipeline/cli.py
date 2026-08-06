@@ -36,6 +36,13 @@ def _report_map(data: dict) -> str:
             f"Boostolt poszt átlagos elérése: {cross['avg_reach_boosted_post']}"
             f"  ({cross['reach_multiplier']}×)",
             "",
+            (
+                "Hiányzó források:\n"
+                + "\n".join(f"  ✗ {gap}" for gap in data["missing"])
+                if data["missing"]
+                else "Minden várt forrás megvan."
+            ),
+            "",
             "⚠ nem illesztett boost: "
             + (f"{len(unmatched)} db — " + "; ".join(unmatched) if unmatched else "nincs"),
         ]
