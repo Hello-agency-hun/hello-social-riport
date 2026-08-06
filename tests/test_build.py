@@ -7,6 +7,7 @@ from pipeline.build import build
 from pipeline.errors import (
     ClientMismatchError,
     DuplicateSourceError,
+    MissingConfigError,
     NoSourceError,
     PeriodMismatchError,
 )
@@ -177,3 +178,17 @@ def test_a_channel_the_client_does_not_have_is_not_reported_missing(
 
     gaps = build(work, period="2026-07")["missing"]
     assert not any("Instagram" in gap for gap in gaps)
+
+
+def test_a_new_client_gets_a_template_not_a_traceback(tmp_path):
+    """Egy új ügyfélnél a client.yaml még nincs meg — ez az első parancs,
+    amit a menedzser lefuttat, és eddig nyers FileNotFoundError volt."""
+    (tmp_path / "input").mkdir()
+
+    with pytest.raises(MissingConfigError) as caught:
+        build(tmp_path, period="2026-07")
+
+    message = str(caught.value)
+    assert "client.yaml" in message
+    assert "fb_page_id" in message, "a sablon legyen benne, ne csak a hiány ténye"
+    assert "ig_handle" in message

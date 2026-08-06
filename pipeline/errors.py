@@ -10,6 +10,10 @@ class DuplicateSourceError(PipelineError):
     """Egy hónaphoz két azonos típusú forrásfájl került."""
 
 
+class MissingConfigError(PipelineError):
+    """Nincs `client.yaml` az ügyfél mappájában."""
+
+
 class NoSourceError(PipelineError):
     """A hónap mappájában egyetlen felismerhető forrásfájl sincs."""
 
