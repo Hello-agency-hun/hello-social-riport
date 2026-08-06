@@ -15,13 +15,27 @@
 
     var edits = {};
     document.querySelectorAll("[data-narrative]").forEach(function (block) {
-      var text = block.textContent.trim();
+      var text = asTemplate(block);
       if (text && text !== block.dataset.original) {
         edits[block.dataset.narrative] = text;
       }
     });
 
     return { manual: manual, edits: edits, comments: comments };
+  }
+
+  // A megjelenített szövegből visszaállítja az eredeti sablont: az értékek
+  // szerkeszthetetlen szigetek, amik a hivatkozásukat data-ref-ben hordozzák.
+  // Enélkül a mentés a behelyettesített számokat írná vissza sablonként, és a
+  // következő build a saját narratíváját utasítaná el.
+  function asTemplate(block) {
+    var out = "";
+    block.childNodes.forEach(function (node) {
+      if (node.nodeType === Node.TEXT_NODE) out += node.textContent;
+      else if (node.dataset && node.dataset.ref) out += node.dataset.ref;
+      else out += node.textContent;
+    });
+    return out.trim().replace(/\s+/g, " ");
   }
 
   function remember() {
@@ -36,9 +50,13 @@
   });
 
   document.querySelectorAll("[data-narrative]").forEach(function (block) {
-    block.dataset.original = block.textContent.trim();
+    block.dataset.original = asTemplate(block);
     var saved = (stored.edits || {})[block.dataset.narrative];
-    if (saved) block.textContent = saved;
+    if (saved && saved.indexOf("{") === -1) {
+      // Régi, sablon nélküli mentés — inkább hagyjuk az eredetit, mint hogy
+      // a hivatkozásokat elveszítsük.
+      saved = null;
+    }
     block.setAttribute("contenteditable", "true");
     block.classList.add("editable");
     block.addEventListener("input", remember);

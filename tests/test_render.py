@@ -222,13 +222,30 @@ def test_narrative_pages_appear_when_given(data, tmp_path):
     out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
     assert "Vezetői összefoglaló" in out
     assert "A boost megtérül" in out
-    assert "33,2×-ra emelte" in out
+    assert "33,2×" in out
+    assert "-ra emelte az elérést." in out
     assert "Következő lépések" in out
 
 
-def test_narrative_references_are_substituted_not_shown_raw(data, tmp_path):
+def test_values_are_uneditable_islands_that_carry_their_reference(data, tmp_path):
+    """A menedzser a megjelenített szöveget látja és írja át.
+
+    Ha a mentés a behelyettesített számokat írná vissza sablonként, a következő
+    build a saját narratíváját utasítaná el a számjegy-tilalom miatt. Ezért
+    minden érték szerkeszthetetlen sziget, ami a hivatkozását magában hordozza.
+    """
     out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
-    assert "{cross." not in out
+    assert 'data-ref="{cross.reach_multiplier|x}"' in out
+    assert 'contenteditable="false"' in out
+
+
+def test_the_reader_never_sees_a_raw_reference(data, tmp_path):
+    """A hivatkozás csak attribútumban él, látható szövegként soha."""
+    import re as _re
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=NARRATIVE)
+    visible = _re.sub(r"<[^>]+>", " ", out[out.index("<body"):])
+    assert "{cross." not in visible
 
 
 def test_narrative_with_a_written_number_stops_the_build(data, tmp_path):

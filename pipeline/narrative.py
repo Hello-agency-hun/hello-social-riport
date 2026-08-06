@@ -10,6 +10,7 @@ Magyarul ez nem kényelmetlen: „a hat legjobb poszt" kiírva természetesebb i
 Ahol tényleg szám kell, ott adat van mögötte — tehát van mire hivatkozni.
 """
 
+import html
 import re
 
 from pipeline.errors import NarrativeError
@@ -87,8 +88,7 @@ def _format(value, formatter: str | None, data: dict) -> str:
     raise NarrativeError(f"ismeretlen formázó: {formatter!r}")
 
 
-def resolve(text: str, data: dict) -> str:
-    """Behelyettesítés — de előbb a számjegy-tilalom."""
+def _check_digits(text: str) -> None:
     without_refs = REFERENCE.sub("", text)
     if DIGIT.search(without_refs):
         found = "".join(DIGIT.findall(without_refs))
@@ -97,18 +97,56 @@ def resolve(text: str, data: dict) -> str:
             "Számot nem lehet beírni, csak hivatkozni rá: {mezo.ut|formazo}."
         )
 
+
+def resolve(text: str, data: dict) -> str:
+    """Behelyettesítés — de előbb a számjegy-tilalom."""
+    _check_digits(text)
+
     def replace(match: re.Match) -> str:
         return _format(_lookup(match.group(1), data), match.group(2), data)
 
     return REFERENCE.sub(replace, text)
 
 
-def resolve_all(narrative, data: dict):
+def resolve_markup(text: str, data: dict) -> str:
+    """Mint a `resolve`, de a behelyettesített értékek szerkeszthetetlen
+    szigetek, amik magukban hordozzák a hivatkozásukat.
+
+    A menedzser a böngészőben a **megjelenített** szöveget látja. Ha azt
+    mentenénk vissza sablonként, a hivatkozások helyére beírt számok kerülnének
+    — és a következő build a saját narratíváját utasítaná el a számjegy-tilalom
+    miatt. Egyetlen szerkesztés tönkretenné a riportot.
+
+    Ezért minden érték `<span data-ref="{...}" contenteditable="false">`-be
+    kerül: a szöveg körülötte szabadon átírható, a szám viszont sem elgépelni,
+    sem a hivatkozását elveszíteni nem lehet. A `review.js` ebből állítja
+    vissza az eredeti sablont.
+    """
+    _check_digits(text)
+
+    parts: list[str] = []
+    position = 0
+    for match in REFERENCE.finditer(text):
+        parts.append(html.escape(text[position : match.start()]))
+        value = _format(_lookup(match.group(1), data), match.group(2), data)
+        parts.append(
+            f'<span class="val" contenteditable="false" '
+            f'data-ref="{html.escape(match.group(0), quote=True)}">'
+            f"{html.escape(value)}</span>"
+        )
+        position = match.end()
+    parts.append(html.escape(text[position:]))
+    return "".join(parts)
+
+
+def resolve_all(narrative, data: dict, markup: bool = False):
     """Rekurzívan végigmegy a narratíva teljes szerkezetén."""
     if isinstance(narrative, str):
-        return resolve(narrative, data)
+        return resolve_markup(narrative, data) if markup else resolve(narrative, data)
     if isinstance(narrative, list):
-        return [resolve_all(item, data) for item in narrative]
+        return [resolve_all(item, data, markup) for item in narrative]
     if isinstance(narrative, dict):
-        return {key: resolve_all(value, data) for key, value in narrative.items()}
+        return {
+            key: resolve_all(value, data, markup) for key, value in narrative.items()
+        }
     return narrative

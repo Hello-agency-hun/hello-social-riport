@@ -70,7 +70,11 @@ def render(
     fetcher: Callable[[str], bytes] = images.fetch,
     manual: dict | None = None,
 ) -> str:
-    resolved = narrative_module.resolve_all(narrative, data) if narrative else None
+    resolved = (
+        narrative_module.resolve_all(narrative, data, markup=True)
+        if narrative
+        else None
+    )
 
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]

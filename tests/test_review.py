@@ -101,3 +101,60 @@ def test_a_list_block_cannot_be_replaced_by_a_string():
         "a",
         "b",
     ]
+
+
+def _as_template(markup: str) -> str:
+    """Amit a böngészőben a review.js csinál: sablon vissza a megjelenített HTML-ből."""
+    import html as html_module
+    import re
+
+    parts = []
+    for match in re.finditer(
+        r'<span[^>]*data-ref="([^"]+)"[^>]*>.*?</span>|([^<]+)', markup
+    ):
+        parts.append(match.group(1) or match.group(2))
+    return html_module.unescape("".join(parts))
+
+
+def test_the_edit_round_trip_preserves_the_template():
+    """A menedzser a megjelenített szöveget látja; a mentésnek a sablont kell
+    visszaadnia.
+
+    Enélkül a behelyettesített számok kerülnének vissza a narrative.json-be, és
+    a következő build a saját narratíváját utasítaná el a számjegy-tilalom
+    miatt — egyetlen szerkesztés tönkretenné a riportot.
+    """
+    import json
+    from pathlib import Path
+
+    from pipeline.narrative import resolve_all
+
+    base = Path(__file__).parent / "fixtures" / "larus-2026-07"
+    data = json.loads((base / "report_data.golden.json").read_text(encoding="utf-8"))
+    narrative = json.loads((base / "narrative.json").read_text(encoding="utf-8"))
+
+    rendered = resolve_all(narrative, data, markup=True)["executive_summary"]
+    recovered = _as_template(rendered)
+
+    assert recovered == narrative["executive_summary"]
+
+
+def test_an_edited_block_still_renders():
+    """Szerkesztés után is fel kell oldódnia — a hivatkozások megmaradnak."""
+    import json
+    from pathlib import Path
+
+    from pipeline.narrative import resolve_all
+
+    base = Path(__file__).parent / "fixtures" / "larus-2026-07"
+    data = json.loads((base / "report_data.golden.json").read_text(encoding="utf-8"))
+    narrative = json.loads((base / "narrative.json").read_text(encoding="utf-8"))
+
+    recovered = _as_template(
+        resolve_all(narrative, data, markup=True)["executive_summary"]
+    )
+    edited = apply_edits(narrative, {"executive_summary": "Bevezető. " + recovered})
+
+    out = resolve_all(edited, data)["executive_summary"]
+    assert out.startswith("Bevezető. ")
+    assert "472,71 EUR" in out
