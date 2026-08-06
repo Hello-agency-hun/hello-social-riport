@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import compare, guards, kpi, manual
+from pipeline import bootstrap, compare, guards, kpi, manual
 from pipeline.detect import scan
 from pipeline.errors import (
     DuplicateSourceError,
@@ -38,26 +38,22 @@ def _serialise(value):
     return value
 
 
-CONFIG_TEMPLATE = """client:
-  name: "<Ügyfél neve>"
-  fb_page_id: "<Business Suite → Beállítások → Oldalazonosító>"
-  fb_page_name: "<a Facebook-oldal pontos neve>"
-  ig_handle: "<instagram felhasználónév, @ nélkül>"
-
-report:
-  language: hu
-  currency: EUR
-"""
-
-
 def load_config(directory: Path) -> dict:
     """Az ügyfél beállításai. Új ügyfélnél ez még nincs meg — a hibaüzenet
-    ezért tartalmazza a kitöltendő sablont, nem csak azt, hogy hiányzik."""
+    ezért a kitöltött sablont adja vissza, nem csak a hiány tényét. Amit az
+    exportokból ki lehet olvasni, azt ki is olvassuk: az oldalazonosítót
+    bekérni olyasmi, amit már megkaptunk."""
     path = Path(directory) / "client.yaml"
     if not path.exists():
+        found = bootstrap.suggest(Path(directory) / "input")
+        lead = (
+            "Az exportokból kitöltöttem, amit lehetett — a <…> részeket egészítsd ki:"
+            if found
+            else "Hozd létre ezzel a tartalommal, kitöltve:"
+        )
         raise MissingConfigError(
-            f"nincs client.yaml itt: {path.parent}\n"
-            f"Hozd létre ezzel a tartalommal, kitöltve:\n\n{CONFIG_TEMPLATE}"
+            f"nincs client.yaml itt: {path.parent}\n{lead}\n\n"
+            f"{bootstrap.template(found)}"
         )
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
@@ -155,7 +151,15 @@ def build(directory: Path, period: str) -> dict:
         hints.update({k: v for k, v in parsed.client_hints.items() if v})
 
     if unknown:
-        raise UnknownSourceError("nem azonosítható fájl: " + ", ".join(unknown))
+        raise UnknownSourceError(
+            "nem azonosítható fájl az input mappában: "
+            + ", ".join(unknown)
+            + ".\nHa nem a riporthoz tartozik, vedd ki a mappából. Ha igen, akkor "
+            "nem a Meta vagy a ZoomSphere exportja, vagy megszerkesztették — "
+            "töltsd le újra, változtatás nélkül.\n"
+            "Csendben átugrani nem tudjuk: ha mégis riportadat volt, egy egész "
+            "csatorna hiányozna a riportból anélkül, hogy bárki észrevenné."
+        )
 
     if not any([items, content, campaigns, series]):
         raise NoSourceError(

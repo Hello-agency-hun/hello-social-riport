@@ -192,3 +192,26 @@ def test_a_new_client_gets_a_template_not_a_traceback(tmp_path):
     assert "client.yaml" in message
     assert "fb_page_id" in message, "a sablon legyen benne, ne csak a hiány ténye"
     assert "ig_handle" in message
+
+
+def test_the_template_is_filled_in_from_the_exports(fixture_dir, tmp_path):
+    """Az oldalazonosító ott van a Tartalom exportban. Bekérni olyasmit, amit
+    már megkaptunk, elakasztja azt a menedzsert, aki nem éri el a Business
+    Suite-ot — és pont ő a leggyakoribb eset."""
+    work = tmp_path / "uj"
+    shutil.copytree(fixture_dir, work)
+    (work / "client.yaml").unlink()
+
+    with pytest.raises(MissingConfigError) as caught:
+        build(work, period="2026-07")
+
+    message = str(caught.value)
+    assert '"100064824963030"' in message, "az oldalazonosító a Tartalom exportból"
+    assert '"Larus Étterem"' in message, "az oldal neve ugyanonnan"
+    assert "currency: EUR" in message, "a pénznem a Meta Ads export fejlécéből"
+    # amit tényleg nem tudunk, az placeholder marad — nem találjuk ki
+    assert "<instagram felhasználónév" in message
+
+    # és amit kiír, az érvényes YAML, egy másolással használható
+    template = message.split("\n\n", 1)[1]
+    assert yaml.safe_load(template)["client"]["fb_page_id"] == "100064824963030"

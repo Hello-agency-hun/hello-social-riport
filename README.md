@@ -57,8 +57,8 @@ látszanak** — az ügyfélhez tiszta dokumentum megy.
 
 ```
 clients/larus/
-├── client.yaml            # ügyfélnév, oldal-azonosítók, nyelv, pénznem
 └── 2026-07/
+    ├── client.yaml        # ügyfélnév, oldal-azonosítók, nyelv, pénznem
     ├── input/             # ide dobd az exportokat
     ├── review.json        # amit a böngészőben mentettél
     ├── previous.json      # opcionális: az előző havi report_data.json

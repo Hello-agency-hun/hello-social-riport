@@ -3,8 +3,39 @@ from datetime import datetime
 
 from pipeline.detect import DAILY_METRICS
 from pipeline.errors import MissingColumnError, UnknownSourceError
+from pipeline.labels import PAGE_FIELDS
 from pipeline.schema import DailySeries, ParsedSource
 from pipeline.textio import read_lines
+
+
+def _unknown_metric_help(path, metric: str) -> str:
+    """A hiba önmagában nem segítség.
+
+    Az üzenet eddig annyit mondott, hogy „add hozzá a `daily_metric_overrides`
+    szakaszhoz" — se formátumot, se választható mezőneveket nem mutatott. A
+    csempék közül ez az egyetlen fajta, ami nem árulja el a csatornáját, tehát
+    a menedzser pont ott marad magára, ahol a legkevesebb támpontja van.
+    """
+    # A csempe magyar neve megmondja, melyik mezőről van szó — a riport ugyanezt
+    # a szótárat használja visszafelé, a feliratokhoz.
+    field = {label: key for key, label in PAGE_FIELDS.items()}.get(metric, "<mező>")
+    # A csatornát nem tippeljük meg a nevéből, ha nincs benne. Egy rossz tipp itt
+    # nem hibát okoz, hanem csendben a másik csatorna grafikonjára teszi a görbét.
+    known = (
+        "instagram" if "nstagram" in metric
+        else "facebook" if "acebook" in metric
+        else None
+    )
+    hint = "" if known else '   # vagy "instagram" — ez a csempe nem árulja el'
+
+    return (
+        f"{path}: a(z) {metric!r} csempe nem árulja el, melyik csatornáé.\n"
+        "Nézd meg, a Business Suite → Eredmények melyik fülén töltötted le, és "
+        "másold a client.yaml végére:\n\n"
+        "daily_metric_overrides:\n"
+        f'  "{metric}": ["{known or "facebook"}", "{field}"]{hint}\n\n'
+        f"Választható mezőnevek: {', '.join(sorted(PAGE_FIELDS))}"
+    )
 
 
 def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSource:
@@ -20,10 +51,7 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
     lookup = dict(DAILY_METRICS)
     lookup.update(overrides or {})
     if metric not in lookup:
-        raise UnknownSourceError(
-            f"{path}: ismeretlen napi metrika — {metric!r}. "
-            "Add hozzá a client.yaml `daily_metric_overrides` szakaszához."
-        )
+        raise UnknownSourceError(_unknown_metric_help(path, metric))
     channel, field = lookup[metric]
 
     points = []

@@ -114,8 +114,8 @@ kérést tartalmaznak („ide kérek egy kördiagramot"), a `references/` és a
 
 ```
 clients/<ugyfel>/
-├── client.yaml                # ügyfélnév, oldal-azonosítók, nyelv, pénznem
 └── <YYYY-MM>/
+    ├── client.yaml            # ügyfélnév, oldal-azonosítók, nyelv, pénznem
     ├── input/                 # ide kerülnek az exportok, átnevezés nélkül
     ├── narrative.json         # amit én írok
     ├── review.json            # amit a menedzser visszaküld
