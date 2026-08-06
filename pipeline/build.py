@@ -12,8 +12,9 @@ from pipeline.join import join_posts
 from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere
 
 
-# Ezekből pontosan egy tartozik egy hónaphoz. A `meta_content` és a `meta_daily`
-# szándékosan nincs itt: előbbiből csatornánként, utóbbiból metrikánként jön egy.
+# Ezekből pontosan egy tartozik egy hónaphoz. A `meta_daily` szándékosan nincs
+# itt: abból metrikánként jön egy. A `meta_content` sem — abból **csatornánként**
+# egy, ezért azt a csatorna ismeretében külön kell őrizni (lásd lentebb).
 SINGLETON_SOURCES = {
     "zoomsphere": "ZoomSphere export",
     "meta_ads": "Meta Ads export",
@@ -56,6 +57,7 @@ def build(directory: Path, period: str) -> dict:
     hints: dict[str, str] = {}
     unknown: list[str] = []
     seen: dict[str, str] = {}
+    content_channels: dict[str, str] = {}
 
     for source in scan(directory / "input"):
         if source.kind in SINGLETON_SOURCES:
@@ -76,6 +78,17 @@ def build(directory: Path, period: str) -> dict:
             campaigns = parsed.payload.campaigns
         elif source.kind == "meta_content":
             parsed = meta_content.parse(source.path)
+            # Tartalom exportból csatornánként egy van. Kettő ugyanarra a
+            # csatornára minden posztot megkétszerezne — az elérés-összegek és
+            # az átlagok csendben elromlanának.
+            for channel in {post.channel for post in parsed.payload}:
+                if channel in content_channels:
+                    raise DuplicateSourceError(
+                        f"két {channel} Tartalom export van a mappában: "
+                        f"{content_channels[channel]} és {source.path.name}. "
+                        "Töröld a régit — különben minden poszt kétszer szerepelne."
+                    )
+                content_channels[channel] = source.path.name
             content += parsed.payload
         elif source.kind == "meta_daily":
             parsed = meta_daily.parse(source.path, overrides=overrides)

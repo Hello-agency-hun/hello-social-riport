@@ -127,6 +127,12 @@ Kulcsoszlopok: `Bejegyzésazonosító`, `Oldalazonosító`, `Oldal neve`, `Cím`
 Megjegyzések:
 
 - A `Bejegyzésazonosító` a ZoomSphere ID **második fele** (oldal-prefix nélkül) → utótag-illesztés.
+- **Az oszlopok sorrendje nem állandó.** Ugyanarra a hónapra két export eltérő
+  sorrendben adta a `Hivatkozáskattintások` és a `Photo Click` oszlopot. A parser
+  ezért névvel dolgozik, nem pozícióval — így ez nem érinti.
+- **Story-t nem tartalmaz**, akkor sem, ha a teljes hónapra kérjük. Ellenőrizve
+  két különböző exporton: mindkettő ugyanazt a 16 feed-posztot adja
+  (14 fénykép, 1 hivatkozás, 1 videó).
 - A `Fizetett tartalom állapota` oszlop üresen jön — **a paid jelölés az Ads joinból származik**, nem innen.
 - Az `Elérés` **teljes elérés, a fizetettet is tartalmazza**. A riport ezt így is címkézi.
 - **Story-t nem tartalmaz**, csak feed posztokat (`Fényképek` / `Hivatkozások` / `Videók`).
@@ -652,6 +658,7 @@ nem egyezik a `report_data.json`-nal, a build hibát dob.
 | **Vegyes pénznem** | fejléc-detektálás; több pénznem egy exportban → stop |
 | **Nem illeszkedő boostolt poszt** | felsorolás, rákérdezés |
 | **Két azonos típusú forrásfájl** | egy hónaphoz egy ZoomSphere és egy Ads export tartozik; kettőnél az egyikük csendben elveszne |
+| **Két Tartalom export ugyanarra a csatornára** | a Meta ugyanarra a hónapra több exportot is ad, eltérő fájlnévvel; kettő ugyanarra a csatornára minden posztot megkétszerezne |
 | **Csonka vagy hibás napi export** | sorszám- és formátum-ellenőrzés, a fájl és a rossz sor megnevezésével |
 | **Narratíva-szám nem egyezik** | build hiba |
 

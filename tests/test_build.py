@@ -99,3 +99,24 @@ def test_several_daily_and_content_exports_are_allowed(fixture_dir):
     """Napi metrikából csempénként, Tartalomból csatornánként több fájl a normális."""
     data = build(fixture_dir, period="2026-07")
     assert set(data["channels"]) == {"facebook", "instagram"}
+
+
+def test_two_content_exports_for_the_same_channel_are_rejected(fixture_dir, tmp_path):
+    """A Meta ugyanarra a hónapra több Tartalom exportot is ad, eltérő fájlnévvel.
+
+    Ha mindkettő a mappában marad, minden poszt kétszer kerülne be: az
+    elérés-összegek és az átlagok csendben megduplázódnának.
+    """
+    other = tmp_path / "larus-2026-07"
+    shutil.copytree(fixture_dir, other)
+    original = next(other.glob("input/Jul-01-2026*.csv"))
+    shutil.copy(original, original.with_name("Jul-01-2026_masodik_export.csv"))
+
+    with pytest.raises(DuplicateSourceError, match="Tartalom export"):
+        build(other, period="2026-07")
+
+
+def test_two_content_exports_for_different_channels_are_allowed(fixture_dir, tmp_path):
+    """Facebookra és Instagramra külön export jön — ez a normális eset."""
+    data = build(fixture_dir, period="2026-07")
+    assert data["quality"]["posts_measured"] == 16
