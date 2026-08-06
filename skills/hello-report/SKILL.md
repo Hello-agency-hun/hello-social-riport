@@ -70,6 +70,14 @@ Olvasd el a `references/narrative-guide.md`-t, és írd meg a
 Ha a build `NarrativeError`-t dob, az üzenet megmondja, melyik számot írtad le
 vagy melyik mező nem létezik. Javítsd, ne kerüld meg.
 
+**Ha új szekciót vagy layoutot tervezel:** előbb nézd meg a
+`references/design-system.html`-t. Generált dokumentum a valódi `brand.css`-ből
+és `charts.py`-ból, tehát nem tud elcsúszni a rendszertől. Másolható
+markup-mintákat tartalmaz minden komponensre, és mellettük a szabályt, hogy
+miért úgy — köztük azokat, amiket hibából tanultunk (miért kell a `.fill` burok,
+miért az `li`-n legyen a betűméret, miért nem szabad `cover`-rel vágni a
+kreatívot).
+
 ### 5. Rendereld újra, és add oda
 
 Futtasd újra a 3. lépést, majd mondd meg a menedzsernek, hol a `Riport.html`,

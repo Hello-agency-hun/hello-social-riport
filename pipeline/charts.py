@@ -7,6 +7,8 @@ tokenjeiből jönnek — ha az akcentus változik, a grafikonok követik.
 
 from datetime import date
 
+from pipeline.labels import shorten
+
 W, H = 620, 260
 PAD_L, PAD_R, PAD_T, PAD_B = 8, 8, 18, 26
 
@@ -182,7 +184,7 @@ def bar_chart(
         width = max(track * value / top, 2)
         parts.append(
             f'<text x="0" y="{y + 15}" font-size="13" fill="var(--ink-soft)">'
-            f"{_escape(name[:34])}</text>"
+            f"{_escape(shorten(name, 34))}</text>"
             f'<rect class="bar" x="0" y="{y + 22}" width="{width:.1f}" height="14" '
             f'rx="7" fill="{colour}"/>'
             f'<text x="{width + 10:.1f}" y="{y + 34}" font-size="13" font-weight="700" '

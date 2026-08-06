@@ -47,6 +47,7 @@ def _environment() -> Environment:
     env.filters["result"] = labels.result_type
     env.filters["channel"] = labels.channel
     env.filters["ptype"] = labels.post_type
+    env.filters["short"] = labels.shorten
     return env
 
 
@@ -126,7 +127,7 @@ def render(
         if any(post["reach"] for post in selected):
             ranking[name] = charts.bar_chart(
                 [
-                    (post["caption"][:38] or "(nincs szöveg)", post["reach"])
+                    (labels.shorten(post["caption"], 44) or "(nincs szöveg)", post["reach"])
                     for post in selected
                 ],
                 label=f"{labels.channel(name)} — elérés szerinti sorrend",

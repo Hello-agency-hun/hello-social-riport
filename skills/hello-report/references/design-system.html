@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="hu"><head><meta charset="utf-8"><title>HELLO Reporting — design rendszer</title><style>/* HELLO Reporting — design tokenek.
+ *
+ * Forrás: a HELLO_CLIENT'S Google Ads Report benchmark PDF rajzoló-utasításaiból
+ * mért paletta. Ez a riportálási rendszer: a brand guide hangos palettájának
+ * tudatosan visszafogott változata.
+ *
+ * Használati arány a benchmarkban — ettől ne térj el:
+ *   semleges tónusok  ~80%
+ *   --accent          ~13%
+ *   hangos márkaszínek ~5%, csak kiemelésre
+ *
+ * Szín kizárólag itt szerepelhet. A sablonok és a charts.py var(--…)-t használ.
+ */
+
+@font-face { font-family: "Open Sauce One"; font-weight: 400; font-style: normal;
+             src: url("../../../assets/fonts/OpenSauceOne-Regular.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 500; font-style: normal;
+             src: url("../../../assets/fonts/OpenSauceOne-Medium.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 700; font-style: normal;
+             src: url("../../../assets/fonts/OpenSauceOne-Bold.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Open Sauce One"; font-weight: 900; font-style: normal;
+             src: url("../../../assets/fonts/OpenSauceOne-Black.woff2") format("woff2"); font-display: block; }
+
+:root {
+  --ink: #0A0A0A;
+  --ink-soft: #6B665D;
+  --rule: #E4E0D8;
+  --paper: #FFFDF9;
+  --paper-alt: #FAFAFA;
+  --accent: #4CD892;
+
+  --brand-rose: #FF33CC;
+  --brand-sun: #FFFA8E;
+  --brand-pink: #FF91E7;
+  --brand-red: #FF321D;
+  --brand-blue: #025CC6;
+
+  --page-w: 1440px;
+  --page-h: 810px;
+  --pad: 72px;
+
+  --font: "Open Sauce One", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--rule);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  width: var(--page-w);
+  height: var(--page-h);
+  padding: var(--pad);
+  background: var(--paper);
+  margin: 24px auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.eyebrow {
+  font-size: 13px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+h1 { font-size: 84px; font-weight: 900; line-height: .98; letter-spacing: -.02em; }
+h2 { font-size: 46px; font-weight: 900; line-height: 1.05; letter-spacing: -.015em; }
+h3 { font-size: 22px; font-weight: 700; }
+p, li, td, th { font-size: 17px; line-height: 1.5; color: var(--ink-soft); }
+strong { color: var(--ink); font-weight: 700; }
+
+/* A számblokk magassága fix, és a szám az aljára ül. Enélkül a kisebb betűs
+   pénznem-csempe feliratai följebb csúsznának, mint a szomszédjaié. */
+.stat { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em;
+        white-space: nowrap; min-height: 64px; display: flex; align-items: flex-end; }
+/* Pénznemmel a szám hosszabb — enélkül két sorba törne a csempében. */
+.stat--sm { font-size: 42px; }
+
+/* A kreatívok álló (4:5, 9:16) és fekvő arányban is érkeznek. `cover` esetén az
+   álló képek közepét vágnánk ki — a poszt fele eltűnne. `contain` mellett a
+   teljes kreatív látszik, a keret pedig semleges háttérrel tölti ki a helyet. */
+.thumb { display: block; width: 100%; height: 240px;
+         object-fit: contain; border-radius: 8px; background: var(--rule); }
+
+/* A poszt-kártya tartalma nem nőhet túl az oldalon: a kép fix, a szöveg két
+   sorra fogott, a metrikatábla pedig tömör. */
+.panel table td { padding: 6px 8px 6px 0; font-size: 14px; }
+
+/* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
+   kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+          overflow: hidden; min-height: 2.9em; }
+.stat-label { font-size: 13px; font-weight: 500; letter-spacing: .1em;
+              text-transform: uppercase; color: var(--ink-soft); margin-top: 10px; }
+
+/* A tartalom töltse ki az oldalt. Enélkül minden a lap tetejére torlódik, és
+   alatta fél oldalnyi üres hely marad — 16:9-es dián ez feltűnő. A `margin-top:
+   auto`-val lehorgonyzott lábjegyzet ettől függetlenül alul marad. */
+.page > .grid,
+.page > table { flex: 1 1 auto; align-content: center; }
+/* Szövegblokknak az `align-content` nem elég — saját flex-doboz kell hozzá,
+   különben a bekezdés a magas terület tetején ragadna. */
+.page > .fill { flex: 1 1 auto; display: flex; flex-direction: column;
+                justify-content: center; }
+
+.grid { display: grid; gap: 28px; align-content: center; }
+.panel { background: var(--paper-alt); border: 1px solid var(--rule);
+         border-radius: 14px; padding: 26px; }
+.rule { height: 1px; background: var(--rule); }
+.accent { color: var(--accent); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; font-weight: 700; letter-spacing: .1em;
+     text-transform: uppercase; color: var(--ink-soft);
+     padding: 0 12px 10px 0; border-bottom: 1px solid var(--rule); }
+td { padding: 13px 12px 13px 0; border-bottom: 1px solid var(--rule); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.note { font-size: 13px; color: var(--ink-soft); }
+.flag { color: var(--brand-red); font-weight: 700; }
+
+/* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
+   Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */
+.manual-slot { border: 1.5px dashed var(--rule); border-radius: 12px; padding: 20px; }
+.manual-input { font-size: 48px; font-weight: 900; line-height: 1;
+                min-height: 50px; outline: none; color: var(--ink); }
+.manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
+.manual-input:focus { border-bottom: 2px solid var(--accent); }
+.manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }
+
+/* Review-kör: a menedzser a böngészőben írja át, amit másképp mondana. */
+.editable:focus { outline: 2px solid var(--accent); outline-offset: 6px; }
+/* Az értékek szerkeszthetetlen szigetek. Szerkesztés közben látszik, mi az
+   adat és mi a szöveg — a számot nem lehet elgépelni. */
+.editable:focus .val { background: var(--paper-alt); box-shadow: 0 0 0 3px var(--paper-alt); }
+.comment-button { position: absolute; bottom: 18px; right: 18px;
+                  font-family: var(--font); font-size: 12px; font-weight: 700;
+                  padding: 7px 12px; border-radius: 999px; cursor: pointer;
+                  color: var(--ink-soft); background: var(--paper-alt);
+                  border: 1px solid var(--rule); }
+
+/* Nyomtatás: minden szekció egy 16:9-es oldal, ahogy a benchmark riportban. */
+
+@page {
+  size: 1440px 810px;
+  margin: 0;
+}
+
+@media print {
+  body { background: var(--paper); }
+  .page {
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+    box-shadow: none;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .no-print { display: none !important; }
+  .manual-slot { display: none !important; }
+  .comment-button { display: none !important; }
+  a { text-decoration: none; color: inherit; }
+}
+
+@media screen {
+  .page { box-shadow: 0 2px 24px rgba(0, 0, 0, .07); }
+}
+
+.pdf-button {
+  position: fixed; top: 18px; right: 18px; z-index: 10;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  padding: 11px 18px; border-radius: 999px; cursor: pointer;
+  color: var(--ink); background: var(--accent); border: none;
+}
+</style><style>body{background:var(--paper);padding:56px;max-width:1100px;margin:0 auto}header{margin-bottom:48px}h1{font-size:60px;margin:8px 0 18px}h2{font-size:30px;margin:56px 0 18px;padding-top:20px;border-top:1px solid var(--rule)}h3{font-size:16px;margin-bottom:8px}.lead{font-size:19px;max-width:760px;color:var(--ink)}.swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.swatch{display:grid;grid-template-columns:44px 132px 90px 1fr;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:10px 14px}.swatch span{width:44px;height:32px;border-radius:6px;border:1px solid var(--rule)}.swatch b{font-size:13px}.swatch i{font-size:13px;font-style:normal;color:var(--ink-soft)}.swatch u{grid-column:2/5;text-decoration:none;font-size:12px;color:var(--ink-soft)}.rules{padding-left:20px}.rules li{margin-bottom:14px}.rules b{display:block;color:var(--ink)}.rules span{font-size:15px}.demo{margin:22px 0 34px}.stage{border:1px solid var(--rule);border-radius:12px;padding:24px;background:var(--paper-alt);margin-bottom:10px}pre{background:var(--ink);color:var(--paper);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:12px;line-height:1.55}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}</style></head><body>
+<header>
+  <div class="eyebrow">HELLO Reporting</div>
+  <h1>Design rendszer</h1>
+  <p class="lead">Ez a dokumentum generált: a tokenek a <code>templates/brand.css</code>-ből,
+  a grafikonok a <code>pipeline/charts.py</code>-ból jönnek. Ha a rendszer változik,
+  ez is változik — nem tud elcsúszni tőle.</p>
+  <p class="note">A kiinduló paletta a HELLO benchmark riportjából mért, nem a brand
+  guide teljes palettája: ez a riportálási rendszer, a márka hangos színeinek
+  tudatosan visszafogott változata.</p>
+</header>
+
+<h2>Színek</h2>
+<div class="swatches"><div class="swatch"><span style="background:#0A0A0A"></span><code>--ink</code><b>#0A0A0A</b><i>Elsődleges szöveg</i><u>~50% a kitöltéseknek</u></div><div class="swatch"><span style="background:#6B665D"></span><code>--ink-soft</code><b>#6B665D</b><i>Másodlagos szöveg, feliratok</i><u>~25%</u></div><div class="swatch"><span style="background:#E4E0D8"></span><code>--rule</code><b>#E4E0D8</b><i>Keretek, elválasztók, panelhatár</i><u>~10%</u></div><div class="swatch"><span style="background:#FFFDF9"></span><code>--paper</code><b>#FFFDF9</b><i>Oldal alapszíne</i><u>háttér</u></div><div class="swatch"><span style="background:#FAFAFA"></span><code>--paper-alt</code><b>#FAFAFA</b><i>Panel háttere</i><u>háttér</u></div><div class="swatch"><span style="background:#4CD892"></span><code>--accent</code><b>#4CD892</b><i>Kiemelés, elsődleges grafikon</i><u>~13%</u></div><div class="swatch"><span style="background:#FF33CC"></span><code>--brand-rose</code><b>#FF33CC</b><i>Grafikon-sorozat, ritka kiemelés</i><u>a hangos színek együtt ~5%</u></div><div class="swatch"><span style="background:#FFFA8E"></span><code>--brand-sun</code><b>#FFFA8E</b><i>Ritka kiemelés</i><u>a hangos színek együtt ~5%</u></div><div class="swatch"><span style="background:#FF91E7"></span><code>--brand-pink</code><b>#FF91E7</b><i>Grafikon-sorozat</i><u>a hangos színek együtt ~5%</u></div><div class="swatch"><span style="background:#FF321D"></span><code>--brand-red</code><b>#FF321D</b><i>Figyelmeztetés, negatív változás</i><u>csak jelzésre</u></div><div class="swatch"><span style="background:#025CC6"></span><code>--brand-blue</code><b>#025CC6</b><i>Grafikon-sorozat</i><u>csak grafikonon</u></div></div>
+
+<h2>Tipográfia</h2>
+<div class="stage type">
+  <div class="eyebrow">Szemöldök · eyebrow · 13px/700, ritkított, nagybetűs</div>
+  <h2 style="margin:6px 0 14px">Szekciócím · h2 · 46px/900</h2>
+  <div class="stat">18 811</div>
+  <div class="stat-label">Csempe-felirat · stat-label · 13px/500</div>
+  <p style="margin-top:16px;max-width:640px">Kenyérszöveg · 17px/1.5, másodlagos
+  színnel. A <strong>kiemelés</strong> elsődleges színt és 700-as vastagságot kap.</p>
+  <p class="note">Lábjegyzet · note · 13px</p>
+</div>
+
+<h2>Az oldal felépítése</h2>
+<ol class="rules"><li><b>Az oldal 1440 × 810, és a tartalom töltse ki</b><span>A <code>.page</code> függőleges flex-doboz. A fő tartalom (<code>.grid</code>, <code>table</code>, vagy egy <code>.fill</code> burok) <code>flex: 1</code>-et kap, és középre igazodik. Enélkül minden a lap tetejére torlódik, és alatta fél oldalnyi üres hely marad — 16:9-es dián ez azonnal feltűnik.</span></li><li><b>Szövegblokknak saját flex-doboz kell</b><span>Az <code>align-content</code> csak flex/grid konténerre hat. Egy bekezdés vagy lista körül <code>&lt;div class="fill"&gt;</code> kell, különben a szöveg a magas terület tetején ragad.</span></li><li><b>A listaelem mérete az <code>li</code>-n legyen</b><span>A <code>p, li, td, th</code> szabály felülírja az öröklést, tehát a szülő <code>&lt;ol style="font-size:20px"&gt;</code> nem ér el a listaelemig. Ez néma: a szöveg egyszerűen kisebb marad.</span></li><li><b>Az azonos sorban álló számok osszanak alapvonalat</b><span>A <code>.stat</code> fix magasságú és alulra igazít, így a kisebb betűs <code>.stat--sm</code> (pénznem) felirata nem csúszik följebb a szomszédjáénál.</span></li><li><b>A kreatívot ne vágd</b><span>A poszt-képek álló és fekvő arányban is érkeznek. <code>object-fit: contain</code> fix magassággal — <code>cover</code> esetén az álló képek közepét vágnánk ki.</span></li><li><b>Szín csak tokenből</b><span>Sem a sablonokban, sem a <code>charts.py</code>-ban nem lehet beégetett hex. Minden <code>var(--…)</code>, hogy a paletta egy helyen legyen állítható. Teszt őrzi.</span></li><li><b>Nyomtatásban eltűnik, ami a szerkesztéshez kell</b><span>Az üres kézi mezők, a megjegyzés-gombok és a szerkesztő-keretek <code>@media print</code> alatt rejtettek — az ügyfélhez tiszta dokumentum megy.</span></li><li><b>A narratíva értékei szerkeszthetetlen szigetek</b><span>Minden behelyettesített szám <code>&lt;span class="val" data-ref="{…}"&gt;</code>-be kerül. A körülötte lévő szöveg átírható, a szám nem — és mentéskor a hivatkozás áll vissza, nem a kiírt érték.</span></li></ol>
+
+<h2>Komponensek</h2>
+<section class="demo"><h3>Statisztika-csempe</h3><p class="note">Pénznemnél <code>stat--sm</code>, különben két sorba törne. A fix magasság miatt a feliratok akkor is egy vonalban maradnak.</p><div class="stage"><div class="grid" style="grid-template-columns:repeat(3,1fr)"><div><div class="stat">18 811</div><div class="stat-label">poszt-elérés</div></div><div><div class="stat stat--sm">472,71 EUR</div><div class="stat-label">hirdetési költés</div></div><div><div class="stat accent">33,2×</div><div class="stat-label">a boost szorzója</div></div></div></div><pre><code>&lt;div class=&quot;grid&quot; style=&quot;grid-template-columns:repeat(3,1fr)&quot;&gt;&lt;div&gt;&lt;div class=&quot;stat&quot;&gt;18 811&lt;/div&gt;&lt;div class=&quot;stat-label&quot;&gt;poszt-elérés&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div class=&quot;stat stat--sm&quot;&gt;472,71 EUR&lt;/div&gt;&lt;div class=&quot;stat-label&quot;&gt;hirdetési költés&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div class=&quot;stat accent&quot;&gt;33,2×&lt;/div&gt;&lt;div class=&quot;stat-label&quot;&gt;a boost szorzója&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</code></pre></section>
+<section class="demo"><h3>Panel</h3><div class="stage"><div class="panel"><h3 class="accent" style="margin-bottom:10px">Mi működött</h3><p>Panelbe kerül minden, ami önálló egységet alkot: kártya, csempecsoport, kiemelt blokk.</p></div></div><pre><code>&lt;div class=&quot;panel&quot;&gt;&lt;h3 class=&quot;accent&quot; style=&quot;margin-bottom:10px&quot;&gt;Mi működött&lt;/h3&gt;&lt;p&gt;Panelbe kerül minden, ami önálló egységet alkot: kártya, csempecsoport, kiemelt blokk.&lt;/p&gt;&lt;/div&gt;</code></pre></section>
+<section class="demo"><h3>Kézi adatmező</h3><p class="note">Ami hiányzik, de beszerezhető, az látható és kitölthető marad, és kiírja, honnan szerezhető be. Üresen nyomtatásban nem jelenik meg.</p><div class="stage"><div class="grid" style="grid-template-columns:1fr 1fr"><div class="manual-slot" data-manual="reach_facebook"><div class="manual-input" data-placeholder="—"></div><div class="stat-label">Facebook havi elérés</div><p class="note" style="margin-top:6px">Business Suite → Elérés csempe</p></div><div class="panel"><div class="stat">92 400</div><div class="stat-label">Facebook havi elérés <span class="manual-mark">kézi adat</span></div></div></div></div><pre><code>&lt;div class=&quot;grid&quot; style=&quot;grid-template-columns:1fr 1fr&quot;&gt;&lt;div class=&quot;manual-slot&quot; data-manual=&quot;reach_facebook&quot;&gt;&lt;div class=&quot;manual-input&quot; data-placeholder=&quot;—&quot;&gt;&lt;/div&gt;&lt;div class=&quot;stat-label&quot;&gt;Facebook havi elérés&lt;/div&gt;&lt;p class=&quot;note&quot; style=&quot;margin-top:6px&quot;&gt;Business Suite → Elérés csempe&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;panel&quot;&gt;&lt;div class=&quot;stat&quot;&gt;92 400&lt;/div&gt;&lt;div class=&quot;stat-label&quot;&gt;Facebook havi elérés &lt;span class=&quot;manual-mark&quot;&gt;kézi adat&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</code></pre></section>
+<section class="demo"><h3>Narratíva-blokk szerkeszthető értékkel</h3><p class="note">A <code>.val</code> sziget nem szerkeszthető, és a hivatkozását <code>data-ref</code>-ben hordozza — mentéskor az áll vissza.</p><div class="stage"><p data-narrative="executive_summary" style="font-size:20px">A boost <span class="val" data-ref="{{cross.reach_multiplier|x}}">33,2×</span> elérést hozott az organikus átlaghoz képest.</p></div><pre><code>&lt;p data-narrative=&quot;executive_summary&quot; style=&quot;font-size:20px&quot;&gt;A boost &lt;span class=&quot;val&quot; data-ref=&quot;{{cross.reach_multiplier|x}}&quot;&gt;33,2×&lt;/span&gt; elérést hozott az organikus átlaghoz képest.&lt;/p&gt;</code></pre></section>
+
+<h2>Grafikonok</h2>
+<p class="note">Mind inline SVG, tokenből színezve. Külső chart-könyvtár nincs;
+a nyomtatás így vektoros marad.</p>
+<section class="demo"><h3>Napi trendvonal</h3><p class="note">Rácsvonalak értékkel, a három legerősebb nap megjelölve dátummal, a lábban az időszak összege. A csúcsok között legalább öt nap, különben a címkék egymásra csúsznának.</p><div class="stage"><div class="panel" style="max-width:640px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 200" role="img" aria-label="Példa" class="chart"><line x1="52" y1="174.0" x2="604" y2="174.0" stroke="var(--rule)" stroke-width="1"/><text x="44" y="178.0" text-anchor="end" font-size="11" fill="var(--ink-soft)">0</text><line x1="52" y1="96.0" x2="604" y2="96.0" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/><text x="44" y="100.0" text-anchor="end" font-size="11" fill="var(--ink-soft)">15</text><line x1="52" y1="18.0" x2="604" y2="18.0" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 4"/><text x="44" y="22.0" text-anchor="end" font-size="11" fill="var(--ink-soft)">31</text><path d="M52,174 L52.0,158.9 L70.4,148.8 L88.8,153.9 L107.2,128.7 L125.6,143.8 L144.0,153.9 L162.4,148.8 L180.8,63.3 L199.2,138.8 L217.6,148.8 L236.0,153.9 L254.4,143.8 L272.8,148.8 L291.2,133.7 L309.6,68.3 L328.0,78.4 L346.4,18.0 L364.8,103.5 L383.2,113.6 L401.6,128.7 L420.0,118.6 L438.4,133.7 L456.8,138.8 L475.2,143.8 L493.6,128.7 L512.0,113.6 L530.4,123.7 L548.8,133.7 L567.2,128.7 L585.6,138.8 L604.0,148.8 L604,174 Z" fill="var(--accent)" opacity=".12"/><polyline points="52.0,158.9 70.4,148.8 88.8,153.9 107.2,128.7 125.6,143.8 144.0,153.9 162.4,148.8 180.8,63.3 199.2,138.8 217.6,148.8 236.0,153.9 254.4,143.8 272.8,148.8 291.2,133.7 309.6,68.3 328.0,78.4 346.4,18.0 364.8,103.5 383.2,113.6 401.6,128.7 420.0,118.6 438.4,133.7 456.8,138.8 475.2,143.8 493.6,128.7 512.0,113.6 530.4,123.7 548.8,133.7 567.2,128.7 585.6,138.8 604.0,148.8" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/><circle cx="346.4" cy="18.0" r="4" fill="var(--accent)" stroke="var(--paper)" stroke-width="2"/><text x="354.4" y="9.0" text-anchor="start" font-size="13" font-weight="700" fill="var(--ink)">31</text><text x="354.4" y="-5.0" text-anchor="start" font-size="10" fill="var(--ink-soft)">07.17.</text><circle cx="180.8" cy="63.3" r="3" fill="var(--accent)" stroke="var(--paper)" stroke-width="2"/><text x="188.8" y="54.3" text-anchor="start" font-size="12" font-weight="500" fill="var(--ink-soft)">22</text><text x="188.8" y="40.3" text-anchor="start" font-size="10" fill="var(--ink-soft)">07.08.</text><circle cx="512.0" cy="113.6" r="3" fill="var(--accent)" stroke="var(--paper)" stroke-width="2"/><text x="504.0" y="104.6" text-anchor="end" font-size="12" font-weight="500" fill="var(--ink-soft)">12</text><text x="504.0" y="90.6" text-anchor="end" font-size="10" fill="var(--ink-soft)">07.26.</text><text x="52" y="194" font-size="11" fill="var(--ink-soft)">07.01.</text><text x="604" y="194" text-anchor="end" font-size="11" fill="var(--ink-soft)">07.31.</text><text x="328.0" y="194" text-anchor="middle" font-size="11" fill="var(--ink-soft)">összesen 291</text></svg></div></div><pre><code>&lt;div class=&quot;panel&quot; style=&quot;max-width:640px&quot;&gt;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 620 200&quot; role=&quot;img&quot; aria-label=&quot;Példa&quot; class=&quot;chart&quot;&gt;&lt;line x1=&quot;52&quot; y1=&quot;174.0&quot; x2=&quot;604&quot; y2=&quot;174.0&quot; stroke=&quot;var(--rule)&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;44&quot; y=&quot;178.0&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;52&quot; y1=&quot;96.0&quot; x2=&quot;604&quot; y2=&quot;96.0&quot; stroke=&quot;var(--rule)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;2 4&quot;/&gt;&lt;text x=&quot;44&quot; y=&quot;100.0&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;15&lt;/text&gt;&lt;line x1=&quot;52&quot; y1=&quot;18.0&quot; x2=&quot;604&quot; y2=&quot;18.0&quot; stroke=&quot;var(--rule)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;2 4&quot;/&gt;&lt;text x=&quot;44&quot; y=&quot;22.0&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;31&lt;/text&gt;&lt;path d=&quot;M52,174 L52.0,158.9 L70.4,148.8 L88.8,153.9 L107.2,128.7 L125.6,143.8 L144.0,153.9 L162.4,148.8 L180.8,63.3 L199.2,138.8 L217.6,148.8 L236.0,153.9 L254.4,143.8 L272.8,148.8 L291.2,133.7 L309.6,68.3 L328.0,78.4 L346.4,18.0 L364.8,103.5 L383.2,113.6 L401.6,128.7 L420.0,118.6 L438.4,133.7 L456.8,138.8 L475.2,143.8 L493.6,128.7 L512.0,113.6 L530.4,123.7 L548.8,133.7 L567.2,128.7 L585.6,138.8 L604.0,148.8 L604,174 Z&quot; fill=&quot;var(--accent)&quot; opacity=&quot;.12&quot;/&gt;&lt;polyline points=&quot;52.0,158.9 70.4,148.8 88.8,153.9 107.2,128.7 125.6,143.8 144.0,153.9 162.4,148.8 180.8,63.3 199.2,138.8 217.6,148.8 236.0,153.9 254.4,143.8 272.8,148.8 291.2,133.7 309.6,68.3 328.0,78.4 346.4,18.0 364.8,103.5 383.2,113.6 401.6,128.7 420.0,118.6 438.4,133.7 456.8,138.8 475.2,143.8 493.6,128.7 512.0,113.6 530.4,123.7 548.8,133.7 567.2,128.7 585.6,138.8 604.0,148.8&quot; fill=&quot;none&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;2.5&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;circle cx=&quot;346.4&quot; cy=&quot;18.0&quot; r=&quot;4&quot; fill=&quot;var(--accent)&quot; stroke=&quot;var(--paper)&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;354.4&quot; y=&quot;9.0&quot; text-anchor=&quot;start&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--ink)&quot;&gt;31&lt;/text&gt;&lt;text x=&quot;354.4&quot; y=&quot;-5.0&quot; text-anchor=&quot;start&quot; font-size=&quot;10&quot; fill=&quot;var(--ink-soft)&quot;&gt;07.17.&lt;/text&gt;&lt;circle cx=&quot;180.8&quot; cy=&quot;63.3&quot; r=&quot;3&quot; fill=&quot;var(--accent)&quot; stroke=&quot;var(--paper)&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;188.8&quot; y=&quot;54.3&quot; text-anchor=&quot;start&quot; font-size=&quot;12&quot; font-weight=&quot;500&quot; fill=&quot;var(--ink-soft)&quot;&gt;22&lt;/text&gt;&lt;text x=&quot;188.8&quot; y=&quot;40.3&quot; text-anchor=&quot;start&quot; font-size=&quot;10&quot; fill=&quot;var(--ink-soft)&quot;&gt;07.08.&lt;/text&gt;&lt;circle cx=&quot;512.0&quot; cy=&quot;113.6&quot; r=&quot;3&quot; fill=&quot;var(--accent)&quot; stroke=&quot;var(--paper)&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;504.0&quot; y=&quot;104.6&quot; text-anchor=&quot;end&quot; font-size=&quot;12&quot; font-weight=&quot;500&quot; fill=&quot;var(--ink-soft)&quot;&gt;12&lt;/text&gt;&lt;text x=&quot;504.0&quot; y=&quot;90.6&quot; text-anchor=&quot;end&quot; font-size=&quot;10&quot; fill=&quot;var(--ink-soft)&quot;&gt;07.26.&lt;/text&gt;&lt;text x=&quot;52&quot; y=&quot;194&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;07.01.&lt;/text&gt;&lt;text x=&quot;604&quot; y=&quot;194&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;07.31.&lt;/text&gt;&lt;text x=&quot;328.0&quot; y=&quot;194&quot; text-anchor=&quot;middle&quot; font-size=&quot;11&quot; fill=&quot;var(--ink-soft)&quot;&gt;összesen 291&lt;/text&gt;&lt;/svg&gt;&lt;/div&gt;</code></pre></section>
+<section class="demo"><h3>Vízszintes oszlop</h3><p class="note">Rangsorhoz. A felirat a sáv fölött, az érték a végén.</p><div class="stage"><div class="panel" style="max-width:640px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 166" role="img" aria-label="Példa" class="chart"><text x="0" y="33" font-size="13" fill="var(--ink-soft)">Séfünk ajánlata</text><rect class="bar" x="0" y="40" width="410.0" height="14" rx="7" fill="var(--brand-rose)"/><text x="420.0" y="52" font-size="13" font-weight="700" fill="var(--ink)">9 046</text><text x="0" y="79" font-size="13" fill="var(--ink-soft)">Gambas Pil-Pil</text><rect class="bar" x="0" y="86" width="187.7" height="14" rx="7" fill="var(--brand-rose)"/><text x="197.7" y="98" font-size="13" font-weight="700" fill="var(--ink)">4 142</text><text x="0" y="125" font-size="13" fill="var(--ink-soft)">Frissen, roppanósan</text><rect class="bar" x="0" y="132" width="93.7" height="14" rx="7" fill="var(--brand-rose)"/><text x="103.7" y="144" font-size="13" font-weight="700" fill="var(--ink)">2 068</text></svg></div></div><pre><code>&lt;div class=&quot;panel&quot; style=&quot;max-width:640px&quot;&gt;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 620 166&quot; role=&quot;img&quot; aria-label=&quot;Példa&quot; class=&quot;chart&quot;&gt;&lt;text x=&quot;0&quot; y=&quot;33&quot; font-size=&quot;13&quot; fill=&quot;var(--ink-soft)&quot;&gt;Séfünk ajánlata&lt;/text&gt;&lt;rect class=&quot;bar&quot; x=&quot;0&quot; y=&quot;40&quot; width=&quot;410.0&quot; height=&quot;14&quot; rx=&quot;7&quot; fill=&quot;var(--brand-rose)&quot;/&gt;&lt;text x=&quot;420.0&quot; y=&quot;52&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--ink)&quot;&gt;9 046&lt;/text&gt;&lt;text x=&quot;0&quot; y=&quot;79&quot; font-size=&quot;13&quot; fill=&quot;var(--ink-soft)&quot;&gt;Gambas Pil-Pil&lt;/text&gt;&lt;rect class=&quot;bar&quot; x=&quot;0&quot; y=&quot;86&quot; width=&quot;187.7&quot; height=&quot;14&quot; rx=&quot;7&quot; fill=&quot;var(--brand-rose)&quot;/&gt;&lt;text x=&quot;197.7&quot; y=&quot;98&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--ink)&quot;&gt;4 142&lt;/text&gt;&lt;text x=&quot;0&quot; y=&quot;125&quot; font-size=&quot;13&quot; fill=&quot;var(--ink-soft)&quot;&gt;Frissen, roppanósan&lt;/text&gt;&lt;rect class=&quot;bar&quot; x=&quot;0&quot; y=&quot;132&quot; width=&quot;93.7&quot; height=&quot;14&quot; rx=&quot;7&quot; fill=&quot;var(--brand-rose)&quot;/&gt;&lt;text x=&quot;103.7&quot; y=&quot;144&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--ink)&quot;&gt;2 068&lt;/text&gt;&lt;/svg&gt;&lt;/div&gt;</code></pre></section>
+<section class="demo"><h3>Gyűrű</h3><p class="note">Kétosztatú megoszláshoz. A jelmagyarázat magyar tizedesvesszőt használ, mint a riport szövege.</p><div class="stage"><div class="panel" style="max-width:340px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 344" role="img" aria-label="Példa" class="chart"><circle class="segment" cx="150" cy="140" r="60" fill="none" stroke="var(--accent)" stroke-width="34" stroke-dasharray="345.63 31.36" stroke-dashoffset="-0.00" transform="rotate(-90 150 140)"/><circle class="segment" cx="150" cy="140" r="60" fill="none" stroke="var(--brand-rose)" stroke-width="34" stroke-dasharray="31.36 345.63" stroke-dashoffset="-345.63" transform="rotate(-90 150 140)"/><rect x="18" y="234" width="11" height="11" rx="3" fill="var(--accent)"/><text x="37" y="244" font-size="13" fill="var(--ink-soft)">Boostolt — 91,7%</text><rect x="18" y="256" width="11" height="11" rx="3" fill="var(--brand-rose)"/><text x="37" y="266" font-size="13" fill="var(--ink-soft)">Organikus — 8,3%</text></svg></div></div><pre><code>&lt;div class=&quot;panel&quot; style=&quot;max-width:340px&quot;&gt;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 300 344&quot; role=&quot;img&quot; aria-label=&quot;Példa&quot; class=&quot;chart&quot;&gt;&lt;circle class=&quot;segment&quot; cx=&quot;150&quot; cy=&quot;140&quot; r=&quot;60&quot; fill=&quot;none&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;34&quot; stroke-dasharray=&quot;345.63 31.36&quot; stroke-dashoffset=&quot;-0.00&quot; transform=&quot;rotate(-90 150 140)&quot;/&gt;&lt;circle class=&quot;segment&quot; cx=&quot;150&quot; cy=&quot;140&quot; r=&quot;60&quot; fill=&quot;none&quot; stroke=&quot;var(--brand-rose)&quot; stroke-width=&quot;34&quot; stroke-dasharray=&quot;31.36 345.63&quot; stroke-dashoffset=&quot;-345.63&quot; transform=&quot;rotate(-90 150 140)&quot;/&gt;&lt;rect x=&quot;18&quot; y=&quot;234&quot; width=&quot;11&quot; height=&quot;11&quot; rx=&quot;3&quot; fill=&quot;var(--accent)&quot;/&gt;&lt;text x=&quot;37&quot; y=&quot;244&quot; font-size=&quot;13&quot; fill=&quot;var(--ink-soft)&quot;&gt;Boostolt — 91,7%&lt;/text&gt;&lt;rect x=&quot;18&quot; y=&quot;256&quot; width=&quot;11&quot; height=&quot;11&quot; rx=&quot;3&quot; fill=&quot;var(--brand-rose)&quot;/&gt;&lt;text x=&quot;37&quot; y=&quot;266&quot; font-size=&quot;13&quot; fill=&quot;var(--ink-soft)&quot;&gt;Organikus — 8,3%&lt;/text&gt;&lt;/svg&gt;&lt;/div&gt;</code></pre></section>
+</body></html>

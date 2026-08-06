@@ -71,3 +71,34 @@ def test_stat_tiles_share_a_baseline():
     stat = text[text.index(".stat {") : text.index(".stat--sm")]
     assert "min-height" in stat
     assert "align-items: flex-end" in stat
+
+
+DESIGN_PAGE = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "hello-report"
+    / "references"
+    / "design-system.html"
+)
+
+
+def test_the_design_system_page_matches_the_stylesheet():
+    """A dokumentum generált — ha elcsúszna a brand.css-től, semmit nem érne."""
+    assert DESIGN_PAGE.exists(), "futtasd: python tools/build_styleguide.py"
+    html = DESIGN_PAGE.read_text(encoding="utf-8")
+    for token, value in TOKENS.items():
+        assert f"<code>{token}</code><b>{value}</b>" in html, token
+
+
+def test_the_design_system_page_stays_small_enough_to_read():
+    """A plugin a kontextusába olvassa be — a beágyazott fontok itt pazarlás."""
+    html = DESIGN_PAGE.read_text(encoding="utf-8")
+    assert "data:font/woff2" not in html
+    assert DESIGN_PAGE.stat().st_size < 60_000, DESIGN_PAGE.stat().st_size
+
+
+def test_the_design_system_page_carries_copyable_markup():
+    """Az érték a másolható mintában van, nem a rendereltségben."""
+    html = DESIGN_PAGE.read_text(encoding="utf-8")
+    for snippet in ("class=&quot;stat", "class=&quot;manual-slot", "data-narrative"):
+        assert snippet in html, snippet

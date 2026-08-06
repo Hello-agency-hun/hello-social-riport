@@ -26,7 +26,7 @@
     {% for post in chunk %}
     <div class="panel">
       <img class="thumb" src="{{ post.thumb }}" alt="">
-      <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption[:80] }}</p>
+      <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
       <div class="rule" style="margin:12px 0"></div>
       <table style="font-size:14px">
         {% if post.reach %}
@@ -55,7 +55,11 @@
 <section class="page">
   <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
   <h2 style="margin-bottom:20px">Elérés szerinti sorrend</h2>
-  <div class="fill">{{ ranking[name] | safe }}</div>
+  {# A diagram a viewBox aránya szerint skálázódik; teljes szélességen hat
+     sávval kilógna a 16:9-es lapról. #}
+  <div class="fill"><div style="max-width:880px;margin:0 auto">
+    {{ ranking[name] | safe }}
+  </div></div>
 </section>
 {% endif %}
 {% endfor %}

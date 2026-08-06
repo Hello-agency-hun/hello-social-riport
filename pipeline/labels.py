@@ -51,3 +51,24 @@ def channel(key: str) -> str:
 
 def post_type(key: str) -> str:
     return POST_TYPES.get(key, key)
+
+
+def shorten(text: str, limit: int) -> str:
+    """Rövidítés **szóhatáron**, nem a szó közepén.
+
+    A poszt-szövegeket karakterszámra vágva olyan feliratok születtek, mint
+    „Ahogy szereti" vagy „lehet panas" — az ügyfélnek szánt dokumentumban ez
+    hanyagságnak látszik.
+
+    Ha a legközelebbi szóhatár túl korán jönne (a limit alatt jóval), inkább a
+    kemény vágás marad — egyetlen hosszú szó ne tüntesse el az egész feliratot.
+    """
+    text = " ".join((text or "").split())
+    if len(text) <= limit:
+        return text
+
+    cut = text[:limit].rstrip()
+    space = cut.rfind(" ")
+    if space > limit * 0.5:
+        cut = cut[:space]
+    return cut.rstrip(" ,.;:!?-–—") + "…"

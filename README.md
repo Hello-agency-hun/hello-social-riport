@@ -96,6 +96,11 @@ Egyszeri eszközök, az eredményük commitolva:
 python tools/vendor_fonts.py                    # Open Sauce One → woff2
 python tools/extract_logo.py "<brand guide.pdf>"  # logó → SVG
 python tools/import_previous.py "<riport.pdf>"    # előző havi számok, javaslatként
+python tools/build_styleguide.py                  # design rendszer dokumentum
 ```
+
+A design rendszer élő referenciája:
+`skills/hello-report/references/design-system.html` — nyisd meg böngészőben.
+Generált a `brand.css`-ből és a `charts.py`-ból, tehát nem tud elcsúszni tőlük.
 
 Tervek és döntések: `docs/superpowers/`.
