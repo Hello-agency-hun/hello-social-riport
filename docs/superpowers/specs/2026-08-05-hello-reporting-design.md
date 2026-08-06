@@ -1,7 +1,7 @@
 # HELLO Reporting — omnichannel havi riport skill
 
 **Dátum:** 2026-08-05
-**Státusz:** v1 kész — négy terv végrehajtva, 223 teszt
+**Státusz:** v1 kész — négy terv végrehajtva, 225 teszt
 **Készítette:** Mészáros Péter + Claude (brainstorming session)
 
 ---
@@ -135,7 +135,6 @@ Megjegyzések:
   (14 fénykép, 1 hivatkozás, 1 videó).
 - A `Fizetett tartalom állapota` oszlop üresen jön — **a paid jelölés az Ads joinból származik**, nem innen.
 - Az `Elérés` **teljes elérés, a fizetettet is tartalmazza**. A riport ezt így is címkézi.
-- **Story-t nem tartalmaz**, csak feed posztokat (`Fényképek` / `Hivatkozások` / `Videók`).
 
 ### 3.4 Meta Business Suite — Eredmények napi CSV-k
 
