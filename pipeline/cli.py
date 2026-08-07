@@ -114,6 +114,17 @@ def _report_map(data: dict) -> str:
                 if data.get("obtainable")
                 else "Minden beszerezhető adat megvan."
             ),
+            # A záróoldal címe kimegy az ügyfélhez. A mappanévből kitalált cím
+            # jó kiindulás, de nem tudás — ezt egyszer meg kell erősíteni.
+            (
+                f"⚠ ellenőrizd a kapcsolati e-mailt: {data['meta']['contact_email']}\n"
+                "  Ezt a mappanévből találtam ki, és a záróoldalon az ügyfélhez "
+                "megy ki. Ha más, írd a client.yaml-be:\n"
+                "      client:\n        contact_email: \"...@helloagency.hu\""
+                if data["meta"].get("contact_email_is_guess")
+                else f"Kapcsolati e-mail: {data['meta']['contact_email']}"
+            ),
+            "",
             (
                 "⚠ az előző hónaphoz mérés bizonytalan — "
                 + data["comparison_health"]["message"]
@@ -308,16 +319,22 @@ def main(argv: list[str] | None = None) -> int:
 
         html_path = Path(args.html or Path(args.directory) / "Riport.html")
         fetcher = (lambda url: b"") if args.offline else images.fetch
-        html_path.write_text(
-            render(
+        # A renderelés is dobhat pipeline-hibát — a narratíva nyelve és a
+        # számjegy-tiltás itt dől el. Ha ez a `try`-on kívül marad, a menedzser
+        # nyers stack trace-t kap arra, amiről pontos üzenetünk van.
+        try:
+            html = render(
                 data,
                 cache_dir=Path(args.directory) / ".image-cache",
                 fetcher=fetcher,
                 manual=data.get("manual"),
                 narrative=load_narrative(Path(args.directory)),
-            ),
-            encoding="utf-8",
-        )
+            )
+        except PipelineError as error:
+            print(f"HIBA: {error}", file=sys.stderr)
+            return 1
+
+        html_path.write_text(html, encoding="utf-8")
         print(f"→ {html_path}")
 
     return 0

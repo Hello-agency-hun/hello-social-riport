@@ -126,6 +126,28 @@ UNMATCHED_BOOST_LIMIT = 0.5
 COVERAGE_SPREAD_LIMIT = 2
 
 
+AGENCY_DOMAIN = "helloagency.hu"
+
+
+def _contact(directory: Path, config: dict) -> dict:
+    """A záróoldal e-mail címe.
+
+    Ügyfelenként külön postafiók van (`larus@`, `mammut@`), és a mappanévből
+    jó eséllyel kitalálható. „Jó eséllyel" viszont nem elég egy olyan címhez,
+    ami az ügyfélhez kimegy — ezért megjelöljük, hogy találgattuk, és a
+    `--validate` emlékeztet, hogy nézze át.
+    """
+    client = config.get("client") or {}
+    given = (client.get("contact_email") or "").strip()
+    if given:
+        return {"contact_email": given, "contact_email_is_guess": False}
+
+    # `clients/larus/2026-07` → `larus`
+    slug = Path(directory).resolve().parent.name.lower()
+    slug = "".join(ch for ch in slug if ch.isalnum() or ch in "-_") or "agency"
+    return {"contact_email": f"{slug}@{AGENCY_DOMAIN}", "contact_email_is_guess": True}
+
+
 def _coverage(per_source: dict, period: str) -> dict:
     """A riport tényleges időszaka — a forrásfájlokból mérve.
 
@@ -426,6 +448,11 @@ def build(directory: Path, period: str) -> dict:
                 "comparison_headline": config.get("report", {}).get(
                     "comparison_headline", "value"
                 ),
+                # Ügyfelenként külön postafiók van (larus@, mammut@…). A
+                # mappanévből kitalált cím jó kiindulás, de nem biztos, hogy
+                # helyes — ezért jelöljük, hogy találgatás, és a `--validate`
+                # emlékeztet rá. Rossz e-mail a záróoldalon az ügyfélhez megy ki.
+                **_contact(directory, config),
                 # Meddig ér ténylegesen az adat — a fájlokból mérve, nem a
                 # naptárból feltételezve.
                 **_coverage(coverage, period),

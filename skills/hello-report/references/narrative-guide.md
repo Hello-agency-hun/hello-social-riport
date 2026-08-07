@@ -1,5 +1,24 @@
 # Hogyan írjuk a riport szövegét
 
+## Először: milyen nyelven?
+
+**A riport nyelvét a `client.yaml` `report.language` mezője dönti el**, nem az,
+hogy te épp milyen nyelven beszélgetsz a menedzserrel. Ha ott `en` áll, akkor a
+vezetői összefoglaló, a kulcsmegállapítás és mind a három lista **angolul**
+készül — az ügyfél ezeket olvassa, és egy angol keretbe ágyazott magyar elemzés
+használhatatlan.
+
+A build ezt ellenőrzi is: magyar szöveg angol riportban `NarrativeError`-t dob.
+
+Amit **nem fordítunk le**: a poszt-szövegeket. Azok az ügyfél saját tartalmai,
+és úgy idézzük őket, ahogy megjelentek.
+
+Az alábbi példák magyarul vannak, de minden szabály nyelvfüggetlen: a
+számjegy-tiltás, a hivatkozások és a hangnem ugyanaz.
+
+---
+
+
 Ez a dokumentum a **riport hangneméről** szól — arról, amit az ügyfél olvas.
 A menedzserrel folytatott beszélgetés ettől külön él, és lehet könnyed; ez itt
 nem az.

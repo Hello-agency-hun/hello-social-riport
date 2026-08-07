@@ -4,7 +4,7 @@
 {% if block.totals %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
-  <h2 style="margin-bottom:44px">A hónap teljesítménye</h2>
+  <h2 style="margin-bottom:44px">{{ t.month_performance }}</h2>
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for key, value in block.totals.items() %}
     <div class="panel">
@@ -24,57 +24,48 @@
    keresi elöl, nem találja, és a riportot hibásnak látja. #}
 {% if name == methodology_channel %}
 <section class="page">
-  <div class="eyebrow">Módszertan</div>
-  <h2 style="margin-bottom:12px">Mi alapján válogattuk ki ezeket a posztokat?</h2>
+  <div class="eyebrow">{{ t.methodology }}</div>
+  <h2 style="margin-bottom:12px">{{ t.methodology_title }}</h2>
   <p class="note" style="margin-bottom:28px;max-width:900px">
-    Nem elérés szerint — az ugyanis nem a tartalomról szól.
+    {{ t.methodology_lead }}
   </p>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="panel">
       <div class="stat stat--sm accent">1</div>
-      <h3 style="margin:10px 0 8px">Az elérést a költés dönti el</h3>
+      <h3 style="margin:10px 0 8px">{{ t.methodology_1_title }}</h3>
       <p class="note">
-        Amelyik posztra több hirdetési pénz megy, ahhoz több néző jut el. Ha elérés
-        szerint rangsorolnánk, a lista azt mutatná meg, mire költöttünk a
-        legtöbbet — nem azt, mi működött.
+        {{ t.methodology_1_body }}
       </p>
     </div>
     <div class="panel">
       <div class="stat stat--sm accent">2</div>
-      <h3 style="margin:10px 0 8px">Ezért azt nézzük, ki reagált</h3>
+      <h3 style="margin:10px 0 8px">{{ t.methodology_2_title }}</h3>
       <p class="note">
-        <strong>Rezonancia:</strong> a posztot látó nézők közül hányan reagáltak rá.
-        A hozzászólás és a megosztás nagyobb súllyal számít, mint egy reakció —
-        egy lájk egy koppintás, egy megosztás a saját név.
+        <strong>{{ t.resonance }}:</strong> {{ t.methodology_2_body }}
       </p>
     </div>
     <div class="panel">
       <div class="stat stat--sm accent">3</div>
-      <h3 style="margin:10px 0 8px">Hasonlót a hasonlóhoz</h3>
+      <h3 style="margin:10px 0 8px">{{ t.methodology_3_title }}</h3>
       <p class="note">
-        A hirdetés hidegebb közönséghez is eljut, ami természetes módon
-        kevesebbet reagál. Ezért a támogatott posztokat a támogatottakhoz, az
-        organikusakat az organikusakhoz mérjük — a kártyán ott is áll, melyikről
-        van szó.
+        {{ t.methodology_3_body }}
       </p>
     </div>
   </div>
   <p class="note" style="margin-top:28px;max-width:900px">
-    A <strong>kétszeres</strong> tehát azt jelenti: kétszer annyian reagáltak,
-    mint egy szokásos posztnál — a saját mezőnyén belül. Mindkét mezőnyből
-    kerül poszt a listára, hogy a kép ne dőljön el egyik irányba sem.
+    <strong>{{ t.twofold | capitalize }}</strong> {{ t.methodology_close }}
   </p>
 </section>
 {% endif %}
 
 {% for chunk in shown %}
 <section class="page">
-  <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
+  <div class="eyebrow">{{ name | channel }} · {{ t.highlighted_content }}</div>
   {# Nem „legnagyobb elérésű”: azt a költés dönti el. A sorrend a rezonancia
      szerint megy — azok közül, akik látták, hányan reagáltak. #}
   <h2 style="margin-bottom:24px">
-    {{ "A legjobban teljesítő posztok" if shown[0][0].score else
-       ("A legnagyobb elérésű posztok" if shown[0][0].reach else "A hónap támogatott posztjai") }}
+    {{ t.best_performing_posts if shown[0][0].score else
+       (t.biggest_reach_posts if shown[0][0].reach else t.boosted_posts_of_month) }}
   </h2>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
@@ -88,24 +79,24 @@
         {% if post.score %}
         {# A szorzó mezőnyfüggő: a boostolt posztot a boostoltakhoz mérjük.
            Enélkül két különböző jelentésű szám állna ugyanazon a néven. #}
-        <tr><td>Rezonancia<br>
-            <span class="note">{{ "a támogatottak közt" if post.score.boosted
-                                  else "az organikusok közt" }}</span></td>
+        <tr><td>{{ t.resonance }}<br>
+            <span class="note">{{ t.among_boosted if post.score.boosted
+                                  else t.among_organic }}</span></td>
             <td class="num"><strong>{{ post.score.vs_typical | num(1) }}×</strong></td></tr>
-        <tr><td>Interakciós arány</td>
+        <tr><td>{{ t.engagement_rate }}</td>
             <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>
         {% endif %}
         {% if post.reach %}
-        <tr><td>Elérés</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
+        <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
         {% endif %}
         {% if post.paid %}
-        <tr><td class="accent">{{ "ebből fizetett" if post.reach else "fizetett elérés" }}</td>
+        <tr><td class="accent">{{ t.of_which_paid if post.reach else t.paid_reach }}</td>
             <td class="num accent"><strong>{{ post.paid.reach | num }}</strong></td></tr>
-        <tr><td class="accent">költés</td>
+        <tr><td class="accent">{{ t.spend }}</td>
             <td class="num accent">{{ post.paid.spend | money(currency) }}</td></tr>
         {% endif %}
         {% if post.reactions %}
-        <tr><td>Reakció</td><td class="num">{{ post.reactions | num }}</td></tr>
+        <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
         {% endif %}
         {# A kattintás-sor szándékosan nincs itt. Boostolt posztnál a kattintások
            zömét a hirdetés hozza, tehát ugyanaz a torzítás van benne, ami miatt
@@ -120,11 +111,10 @@
 
 {% if ranking.get(name) %}
 <section class="page">
-  <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
-  <h2 style="margin-bottom:8px">Teljesítmény a szokásoshoz képest</h2>
+  <div class="eyebrow">{{ name | channel }} · {{ t.highlighted_content }}</div>
+  <h2 style="margin-bottom:8px">{{ t.performance_vs_typical }}</h2>
   <p class="note" style="margin-bottom:16px">
-    Azok közül, akik látták, hányan reagáltak — a csatorna havi mediánjához mérve.
-    Így a hirdetési költés nem torzítja a sorrendet.
+    {{ t.ranking_note }}
   </p>
   {# A diagram a viewBox aránya szerint skálázódik; teljes szélességen hat
      sávval kilógna a 16:9-es lapról. A korlátozást a `.chart-frame` adja —

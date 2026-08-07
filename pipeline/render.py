@@ -1,12 +1,13 @@
 """A riport összeállítása. Csak a `report_data.json`-t olvassa, forrásfájlt soha."""
 
+import json
 from datetime import date
 from pathlib import Path
 from typing import Callable
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline import charts, images, labels
+from pipeline import charts, i18n, images, labels
 from pipeline import manual as manual_module
 from pipeline import performance
 from pipeline import narrative as narrative_module
@@ -18,15 +19,21 @@ MONTHS_HU = [
 ]
 
 
-def _number(value, digits: int = 0) -> str:
-    """Magyar formátum: szóköz ezres elválasztó, vessző tizedesjel."""
+def _number(value, digits: int = 0, language: str = "hu") -> str:
+    """Magyar: szóköz ezres, vessző tizedes. Angol: vessző ezres, pont tizedes.
+
+    Egyetlen riporton belül nem keveredhet a kettő: magyar szövegben egy
+    angolosan tördelt szám elírásnak látszik, és fordítva.
+    """
     if value is None:
         return "–"
     text = f"{float(value):,.{digits}f}"
+    if language != "hu":
+        return text
     return text.replace(",", " ").replace(".", ",")
 
 
-def _signed(value, digits: int = 0) -> str:
+def _signed(value, digits: int = 0, language: str = "hu") -> str:
     """Előjeles változás: `+412` vagy `−87`.
 
     A mínusz valódi mínuszjel (U+2212), nem kötőjel — a kötőjel a számjegyek
@@ -34,17 +41,24 @@ def _signed(value, digits: int = 0) -> str:
     """
     if value is None:
         return "–"
-    text = _number(abs(value), digits)
+    text = _number(abs(value), digits, language)
     return f"+{text}" if value > 0 else (f"−{text}" if value < 0 else text)
 
 
-def _money(value, currency: str) -> str:
-    return f"{_number(value, 2)} {currency}"
+def _money(value, currency: str, language: str = "hu") -> str:
+    """A pénznem helye nyelvfüggő: a szimbólumok (`$`, `£`) angolul a szám elé
+    kerülnek, a betűkódok (HUF, EUR) mindkét nyelven mögé."""
+    amount = _number(value, 2, language)
+    symbols = {"USD": "$", "GBP": "£"}
+    if language != "hu" and currency in symbols:
+        return f"{symbols[currency]}{amount}"
+    return f"{amount} {currency}"
 
 
-def _period_hu(period: str) -> str:
+def _period_name(period: str, language: str = "hu") -> str:
     year, month = period.split("-")
-    return f"{year}. {MONTHS_HU[int(month) - 1]}"
+    name = i18n.months(language)[int(month) - 1]
+    return f"{year}. {name}" if language == "hu" else f"{name} {year}"
 
 
 def _period_range(period: str) -> str:
@@ -77,21 +91,27 @@ def _measured_range(meta: dict) -> str:
     return f"{start} – {end}"
 
 
-def _environment() -> Environment:
+def _environment(language: str = "hu") -> Environment:
+    """A nyelv a szűrőkbe van kötve, nem a hívási helyekre bízva.
+
+    Ha minden `| num` hívásnál külön át kellene adni, egy elfelejtett helyen
+    magyar formátumú szám maradna az angol riportban — és ez nem hibaüzenettel
+    derülne ki, hanem az ügyfélnél.
+    """
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES)),
         autoescape=select_autoescape(["html", "j2"]),
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    env.filters["num"] = _number
-    env.filters["money"] = _money
-    env.filters["field"] = labels.page_field
-    env.filters["result"] = labels.result_type
+    env.filters["num"] = lambda v, d=0: _number(v, d, language)
+    env.filters["money"] = lambda v, c: _money(v, c, language)
+    env.filters["signed"] = lambda v, d=0: _signed(v, d, language)
+    env.filters["field"] = lambda k: labels.page_field(k, language)
+    env.filters["result"] = lambda k: labels.result_type(k, language)
     env.filters["channel"] = labels.channel
-    env.filters["ptype"] = labels.post_type
+    env.filters["ptype"] = lambda k: labels.post_type(k, language)
     env.filters["short"] = labels.shorten
-    env.filters["signed"] = _signed
     return env
 
 
@@ -115,6 +135,13 @@ def render(
     fetcher: Callable[[str], bytes] = images.fetch,
     manual: dict | None = None,
 ) -> str:
+    # A nyelv a riportadatból jön, az pedig a `client.yaml`-ből. Egy helyen
+    # dől el, és onnantól a szűrők, a feliratok és a diagramok is ezt követik.
+    language = data["meta"].get("language") or i18n.DEFAULT
+    text = i18n.strings(language)
+
+    if narrative:
+        narrative_module.check_language(narrative, language)
     resolved = (
         narrative_module.resolve_all(narrative, data, markup=True)
         if narrative
@@ -137,15 +164,17 @@ def render(
     for name, block in data.get("channels", {}).items():
         trends[name] = [
             (
-                labels.page_field(field),
+                labels.page_field(field, language),
                 charts.line_chart(
                     [
                         (date.fromisoformat(day), value)
                         for day, value in block["daily"][field]
                     ],
-                    label=f"{labels.channel(name)} — {labels.page_field(field)}",
+                    label=f"{labels.channel(name)} — {labels.page_field(field, language)}",
                     height=175,
                     colour=curve_colours[index % len(curve_colours)],
+                    language=language,
+                    total_label=text.total,
                 ),
             )
             for index, field in enumerate(sorted(block["daily"]))
@@ -200,11 +229,12 @@ def render(
                     )
                     for post in measured
                 ],
-                label=f"{labels.channel(name)} — teljesítmény a szokásoshoz képest",
+                label=f"{labels.channel(name)} — {text.performance_vs_typical}",
+                language=language,
                 value_format=lambda value: _number(value, 1) + "×",
             )
 
-    template = _environment().get_template("report.html.j2")
+    template = _environment(language).get_template("report.html.j2")
     return template.render(
         data=data,
         trends=trends,
@@ -225,14 +255,19 @@ def render(
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
         logo_mark=logo("hello-mark"),
-        period_hu=_period_hu(data["meta"]["period"]),
+        t=text,
+        # A gombfeliratok a JavaScriptbe is átmennek: az a kód a sablonon kívül
+        # él, és az angol próbán pont ezek maradtak magyarul.
+        ui_labels=json.dumps(i18n.ui(language), ensure_ascii=False),
+        period_name=_period_name(data["meta"]["period"], language),
         period_range=_measured_range(data["meta"]),
         coverage_partial=data["meta"].get("coverage_partial", False),
         generated=date.today().isoformat(),
         charts={
             "reach_split": charts.donut(
-                [("Boostolt posztok", boosted), ("Organikus posztok", organic)],
-                label="A poszt-elérés megoszlása",
+                [(text.boosted_posts_label, boosted), (text.organic_posts_label, organic)],
+                label=text.reach_split_label,
+                language=language,
             ),
         },
         currency=data["paid"]["currency"],

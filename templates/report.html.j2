@@ -3,7 +3,7 @@
 <html lang="{{ data.meta.language }}">
 <head>
 <meta charset="utf-8">
-<title>{{ data.meta.client }} — {{ period_hu }} riport</title>
+<title>{{ data.meta.client }} — {{ period_name }}</title>
 {# A stíluslap a saját tartalmunk, nem felhasználói adat. Escape-elve az
    idézőjelek `&#34;`-re válnának, amitől a `@font-face src` és a `--font`
    érvénytelen lenne — a riport néma talpas fallback fontra váltana. #}
@@ -11,55 +11,54 @@
 </head>
 <body>
 
-<button class="pdf-button no-print" onclick="window.print()">Letöltés PDF-ként</button>
+<button class="pdf-button no-print" onclick="window.print()">{{ t.download_pdf }}</button>
 
 <section class="page" style="justify-content:flex-end">
   <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
-  <div class="eyebrow">Social media riport</div>
+  <div class="eyebrow">{{ t.cover_eyebrow }}</div>
   <h1>{{ data.meta.client }}</h1>
-  <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_hu }}</h2>
+  <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_name }}</h2>
   {# A pontos időszak nem formaság. A korábbi, kézzel készült riportok
      metrikánként hét-tíz nappal korábban zárultak — a készítő más napokon
      nyitotta meg az egyes csempéket. Az ügyfél ezért ugrást fog látni az
      átálláskor, és annak megmagyarázhatónak kell lennie. Ha a riport nem
      mondja ki, mit mért, a magyarázat nem áll meg. #}
   <p class="note" style="margin-top:10px">
-    Mért időszak: {{ period_range }}
-    {%- if coverage_partial %} · <strong>a hónap még nem zárult le</strong>,
-    az adatok eddig a napig tartanak{% endif %}
+    {{ t.measured_period }}: {{ period_range }}
+    {%- if coverage_partial %} · <strong>{{ t.month_not_closed }}</strong>,
+    {{ t.data_until_here }}{% endif %}
   </p>
 </section>
 
 <section class="page">
-  <div class="eyebrow">Áttekintés</div>
-  <h2 style="margin-bottom:44px">A hónap számokban</h2>
+  <div class="eyebrow">{{ t.overview }}</div>
+  <h2 style="margin-bottom:44px">{{ t.month_in_numbers }}</h2>
   <div class="grid" style="grid-template-columns:repeat(4,1fr)">
     <div>
       <div class="stat">{{ data.content.total }}</div>
-      <div class="stat-label">kiküldött tartalom</div>
+      <div class="stat-label">{{ t.content_published }}</div>
     </div>
     <div>
       <div class="stat">{{ data.cross.post_reach_sum | num }}</div>
-      <div class="stat-label">poszt-elérés összesen</div>
+      <div class="stat-label">{{ t.post_reach_total }}</div>
     </div>
     <div>
       <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
-      <div class="stat-label">hirdetési költés</div>
+      <div class="stat-label">{{ t.ad_spend }}</div>
     </div>
     <div>
       <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
-      <div class="stat-label">boostolt / organikus elérés</div>
+      <div class="stat-label">{{ t.boosted_vs_organic }}</div>
     </div>
   </div>
   <p class="note" style="margin-top:auto">
-    A poszt-elérés a hónap posztjainak elérés-összege. Nem azonos a havi egyedi
-    eléréssel: aki több posztot is látott, itt többször szerepel.
+    {{ t.post_reach_note }}
   </p>
 </section>
 
 <section class="page">
-  <div class="eyebrow">Mit csináltunk</div>
-  <h2 style="margin-bottom:40px">A hónap tartalma</h2>
+  <div class="eyebrow">{{ t.what_we_did }}</div>
+  <h2 style="margin-bottom:40px">{{ t.month_content }}</h2>
   <div class="grid" style="grid-template-columns:repeat({{ data.content.by_type | length }},1fr)">
     {% for kind, count in data.content.by_type.items() %}
     <div class="panel">
@@ -70,7 +69,7 @@
   </div>
   {% if data.content.stories_by_channel %}
   <p style="margin-top:32px">
-    Story-k csatornánként:
+    {{ t.stories_by_channel }}
     {% for channel, count in data.content.stories_by_channel.items() %}
     <strong>{{ channel | channel }} {{ count }}</strong>{{ "" if loop.last else " · " }}
     {% endfor %}
@@ -85,11 +84,11 @@
 {% include "sections/channel.html.j2" %}
 
 <section class="page">
-  <div class="eyebrow">Fizetett hirdetés</div>
-  <h2 style="margin-bottom:36px">Kampányok eredménytípus szerint</h2>
+  <div class="eyebrow">{{ t.paid_advertising }}</div>
+  <h2 style="margin-bottom:36px">{{ t.campaigns_by_result }}</h2>
   <table>
-    <tr><th>Eredménytípus</th><th class="num">Kampány</th>
-        <th class="num">Költés</th><th class="num">Eredmény</th></tr>
+    <tr><th>{{ t.result_type }}</th><th class="num">{{ t.campaign }}</th>
+        <th class="num">{{ t.spend | capitalize }}</th><th class="num">{{ t.result }}</th></tr>
     {% for kind, block in data.paid.by_result_type.items() %}
     <tr>
       <td>{{ kind | result }}</td>
@@ -105,32 +104,31 @@
      látja a számlán. #}
   {% if data.quality.earlier_posts_boosted_now %}
   <p class="note" style="margin-top:20px">
-    Ebből <strong>{{ data.quality.earlier_posts_boosted_now | length }}</strong>
-    hirdetés korábbi hónapban megjelent bejegyzést támogatott
+    {{ t.earlier_posts_note_1 }} <strong>{{ data.quality.earlier_posts_boosted_now | length }}</strong>
+    {{ t.earlier_posts_note_2 }}
     ({{ data.quality.earlier_posts_boosted_now | sum(attribute="spend") | money(currency) }}).
-    A költésük ebben a hónapban merült fel, ezért a fenti összegben szerepel.
+    {{ t.earlier_posts_note_3 }}
   </p>
   {% endif %}
   <p class="note" style="margin-top:auto">
-    Az eredménytípusok külön sorokban szerepelnek, mert mást mérnek — összegük
-    nem értelmezhető.
+    {{ t.result_types_note }}
   </p>
 </section>
 
 <section class="page">
-  <div class="eyebrow">Organikus és fizetett</div>
-  <h2 style="margin-bottom:24px">Mennyit ér a boost</h2>
+  <div class="eyebrow">{{ t.organic_and_paid }}</div>
+  <h2 style="margin-bottom:24px">{{ t.what_boost_is_worth }}</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr;align-items:center">
     <div style="max-width:400px">{{ charts.reach_split | safe }}</div>
     <div>
       <div class="stat">{{ data.cross.avg_reach_organic_post | num }}</div>
-      <div class="stat-label">organikus poszt átlagos elérése</div>
+      <div class="stat-label">{{ t.avg_organic_reach }}</div>
       <div class="stat accent" style="margin-top:34px">{{ data.cross.avg_reach_boosted_post | num }}</div>
-      <div class="stat-label">boostolt poszt átlagos elérése</div>
+      <div class="stat-label">{{ t.avg_boosted_reach }}</div>
       <p style="margin-top:28px">
-        {{ data.cross.posts_boosted }} boostolt poszt
-        {{ data.cross.boost_spend | money(currency) }} költéssel a havi poszt-elérés
-        <strong>{{ (data.cross.boosted_share_of_post_reach * 100) | num(1) }}%-át</strong> adta.
+        {{ data.cross.posts_boosted }} {{ t.boosted_posts }},
+        {{ data.cross.boost_spend | money(currency) }} {{ t.with_spend }}
+        <strong>{{ (data.cross.boosted_share_of_post_reach * 100) | num(1) }}%</strong>{{ t.share_of }}
       </p>
     </div>
   </div>
@@ -139,34 +137,34 @@
 {% include "sections/narrative.html.j2" %}
 
 <section class="page">
-  <div class="eyebrow">Összefoglaló</div>
+  <div class="eyebrow">{{ t.summary }}</div>
   {# Nem „KPI”: nem minden ügyfélnél van kimondott vállalás, és egy
      számtáblát célként feltüntetni olyat ígér, amit nem vállaltunk. #}
-  <h2 style="margin-bottom:40px">A hónap fókusza</h2>
+  <h2 style="margin-bottom:40px">{{ t.month_focus }}</h2>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     <div>
       <div class="stat">{{ data.content.total }}</div>
-      <div class="stat-label">kiküldött tartalom</div>
+      <div class="stat-label">{{ t.content_published }}</div>
     </div>
     <div>
       <div class="stat">{{ data.cross.post_reach_sum | num }}</div>
-      <div class="stat-label">poszt-elérés</div>
+      <div class="stat-label">{{ t.post_reach }}</div>
     </div>
     <div>
       <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
-      <div class="stat-label">hirdetési költés</div>
+      <div class="stat-label">{{ t.ad_spend }}</div>
     </div>
     <div>
       <div class="stat accent">{{ data.cross.avg_reach_boosted_post | num }}</div>
-      <div class="stat-label">boostolt poszt átlagos elérése</div>
+      <div class="stat-label">{{ t.avg_boosted_reach }}</div>
     </div>
     <div>
       <div class="stat">{{ data.cross.avg_reach_organic_post | num }}</div>
-      <div class="stat-label">organikus poszt átlagos elérése</div>
+      <div class="stat-label">{{ t.avg_organic_reach }}</div>
     </div>
     <div>
       <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
-      <div class="stat-label">a boost szorzója</div>
+      <div class="stat-label">{{ t.boost_multiplier }}</div>
     </div>
   </div>
   {# Itt korábban négy üres, szaggatott doboz állt olyan adatokra, amiket a Meta
@@ -181,7 +179,7 @@
       <div class="stat stat--sm">{{ block.followers | num }}</div>
       {# A felirat egy sor, a másodlagos infó alatta. Egy sorba fűzve a
          hosszabbak kettétörnek, és a csempék nem állnak egy vonalban. #}
-      <div class="stat-label">{{ name | channel }} követő</div>
+      <div class="stat-label">{{ name | channel }} {{ t.follower }}</div>
       {% if block.new_followers %}
       <p class="note" style="margin-top:6px">
         {{ delta(block.new_followers) }} {{ block.new_followers | signed }} a hónapban
@@ -194,10 +192,10 @@
     {% if block.monthly_reach %}
     <div>
       <div class="stat stat--sm">{{ block.monthly_reach | num }}</div>
-      <div class="stat-label">{{ name | channel }} havi elérés</div>
+      <div class="stat-label">{{ name | channel }} {{ t.monthly_reach }}</div>
       {% if block.reach_per_follower %}
       <p class="note" style="margin-top:6px">
-        {{ block.reach_per_follower | num(1) }}× a követőtábor
+        {{ block.reach_per_follower | num(1) }}{{ t.times_the_audience }}
       </p>
       {% endif %}
     </div>
@@ -205,19 +203,24 @@
     {% endfor %}
   </div>
   <p class="note" style="margin-top:auto">
-    Mért időszak: <strong>{{ period_range }}</strong> — naptári hónap, elsejétől
-    a hónap utolsó napjáig. Az adatok forrása a Meta Business Suite és a
-    ZoomSphere hivatalos exportja. Készült: {{ generated }}.
+    {{ t.measured_period }}: <strong>{{ period_range }}</strong> {{ t.footer_note }}
+    {{ t.generated_on }} {{ generated }}.
   </p>
 </section>
 
 <section class="page" style="justify-content:flex-end">
   <div style="width:150px;color:var(--ink);margin-bottom:auto">{{ logo_mark | safe }}</div>
-  <h2>Beszéljünk arról, mi jön ezután.</h2>
-  <p style="margin-top:22px">+36 1 365 1788 · agency@helloagency.hu · helloagency.hu</p>
+  <h2>{{ t.lets_talk }}</h2>
+  {# Ügyfelenként külön postafiók van. A cím a `client.yaml`-ből jön; ha ott
+     nincs megadva, a mappanévből tippelünk, és a `--validate` szól érte. #}
+  <p style="margin-top:22px">+36 1 365 1788 · {{ data.meta.contact_email }} · helloagency.hu</p>
+  <p style="margin-top:26px;font-size:22px;color:var(--ink-soft)">{{ t.thanks }}</p>
   <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
 </section>
 
+{# A gombfeliratok a riport nyelvén — a JavaScript a sablonon kívül él, és
+   az angol próbán pont ezek maradtak magyarul egy egyébként angol riporton. #}
+<script>window.__helloLabels = {{ ui_labels | safe }};</script>
 <script>{{ review_js | safe }}</script>
 </body>
 </html>

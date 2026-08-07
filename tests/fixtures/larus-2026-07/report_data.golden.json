@@ -5,6 +5,8 @@
     "currency": "EUR",
     "language": "hu",
     "comparison_headline": "value",
+    "contact_email": "fixtures@helloagency.hu",
+    "contact_email_is_guess": true,
     "coverage_start": "2026-07-01",
     "coverage_end": "2026-07-31",
     "coverage_partial": false,

@@ -22,8 +22,12 @@ def _unknown_metric_help(path, metric: str) -> str:
     a menedzser pont ott marad magára, ahol a legkevesebb támpontja van.
     """
     # A csempe magyar neve megmondja, melyik mezőről van szó — a riport ugyanezt
-    # a szótárat használja visszafelé, a feliratokhoz.
-    field = {label: key for key, label in PAGE_FIELDS.items()}.get(metric, "<mező>")
+    # a szótárat használja visszafelé, a feliratokhoz. A Business Suite magyar
+    # felületű, tehát itt mindig a magyar címkékből fejtünk vissza, akkor is,
+    # ha a riport angolul készül.
+    field = {label: key for key, label in PAGE_FIELDS["hu"].items()}.get(
+        metric, "<mező>"
+    )
     # A csatornát nem tippeljük meg a nevéből, ha nincs benne. Egy rossz tipp itt
     # nem hibát okoz, hanem csendben a másik csatorna grafikonjára teszi a görbét.
     known = (
@@ -42,7 +46,7 @@ def _unknown_metric_help(path, metric: str) -> str:
         "másold a client.yaml végére:\n\n"
         "daily_metric_overrides:\n"
         f'  "{Path(path).name}": ["{known or "facebook"}", "{field}"]{hint}\n\n'
-        f"Választható mezőnevek: {', '.join(sorted(PAGE_FIELDS))}\n"
+        f"Választható mezőnevek: {', '.join(sorted(PAGE_FIELDS['hu']))}\n"
         "(A kulcs lehet a csempe neve is, de ha ugyanaz a csempe mindkét "
         "csatornán szerepel, akkor csak a fájlnév különbözteti meg őket.)"
     )

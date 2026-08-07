@@ -139,6 +139,52 @@ def resolve_markup(text: str, data: dict) -> str:
     return "".join(parts)
 
 
+# A magyar ábécé sajátjai. Az `ő` és az `ű` gyakorlatilag csak magyarban
+# fordul elő latin írásban; a többi is erős jel együtt.
+HUNGARIAN_LETTERS = re.compile(r"[őűáéíóöúüŐŰÁÉÍÓÖÚÜ]")
+
+
+def check_language(narrative, language: str) -> None:
+    """A narratíva a riport nyelvén készüljön.
+
+    Ha a riport angol, de a narratíva magyarul íródott, a build ma zokszó
+    nélkül lefutna, és az ügyfél kapna egy angol keretbe ágyazott magyar
+    elemzést. Ez nem apró szépséghiba: pont a riport legfontosabb oldalai
+    lennének olvashatatlanok annak, akinek szól.
+
+    A nyelvet a `client.yaml` `report.language` mezője dönti el, nem az, hogy
+    az agent épp milyen nyelven beszélget a menedzserrel.
+    """
+    if language == "hu":
+        return
+
+    texts = []
+
+    def collect(node):
+        if isinstance(node, str):
+            texts.append(node)
+        elif isinstance(node, list):
+            for item in node:
+                collect(item)
+        elif isinstance(node, dict):
+            for value in node.values():
+                collect(value)
+
+    collect(narrative)
+    joined = " ".join(texts)
+    hits = HUNGARIAN_LETTERS.findall(joined)
+    # Néhány ékezet lehet idézett poszt-szöveg vagy márkanév; a tömeges
+    # előfordulás viszont azt jelenti, hogy az egész magyarul íródott.
+    if len(hits) > 12:
+        raise NarrativeError(
+            f"a riport nyelve `{language}`, de a narratíva magyarul íródott "
+            f"({len(hits)} magyar ékezetes betű).\n"
+            "A vezetői összefoglalót, a kulcsmegállapítást és a listákat a "
+            "riport nyelvén kell megírni — az ügyfél ezeket olvassa.\n"
+            "A nyelvet a client.yaml `report.language` mezője dönti el."
+        )
+
+
 def resolve_all(narrative, data: dict, markup: bool = False):
     """Rekurzívan végigmegy a narratíva teljes szerkezetén."""
     if isinstance(narrative, str):

@@ -20,6 +20,7 @@ PLACEHOLDERS = {
     "fb_page_id": "<Business Suite → Beállítások → Oldalazonosító>",
     "fb_page_name": "<a Facebook-oldal pontos neve>",
     "ig_handle": "<instagram felhasználónév, @ nélkül — a profil URL végéről>",
+    "contact_email": "<ugyfel>@helloagency.hu",
     "currency": "EUR",
 }
 
@@ -94,6 +95,9 @@ def template(found: dict[str, str]) -> str:
         f'  fb_page_id: "{values["fb_page_id"]}"\n'
         f'  fb_page_name: "{values["fb_page_name"]}"\n'
         f'  ig_handle: "{values["ig_handle"]}"\n'
+        "  # A záróoldal kapcsolati címe. Ügyfelenként külön postafiók van;\n"
+        "  # ha nem adod meg, a mappanévből tippelek (<mappa>@helloagency.hu).\n"
+        f'  contact_email: "{values["contact_email"]}"\n'
         "\n"
         "# Követőszám a hónap végén — a profilról olvasható le.\n"
         "followers:\n"

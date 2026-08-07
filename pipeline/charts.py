@@ -39,28 +39,36 @@ def _open(label: str, width: int = W, height: int = H) -> str:
     )
 
 
-def _empty(label: str, width: int = W, height: int = H) -> str:
+def _empty(label: str, width: int = W, height: int = H, empty_label: str = "nincs adat") -> str:
     return (
         _open(label, width, height)
         + f'<rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="10" '
         'fill="none" stroke="var(--rule)"/>'
         f'<text x="{width / 2}" y="{height / 2}" text-anchor="middle" '
-        'font-size="14" fill="var(--ink-soft)">nincs adat</text></svg>'
+        f'font-size="14" fill="var(--ink-soft)">{empty_label}</text></svg>'
     )
 
 
-def _thousands(value: float) -> str:
+def _thousands(value: float, language: str = "hu") -> str:
+    """A diagram számai ugyanúgy tördelődnek, mint a szöveg számai.
+
+    Az angol próbafutáson derült ki, hogy ezek kimaradtak: a lapon `31 782`
+    állt, két sorral lejjebb `31,782`. Egy riporton belül kétféle jelölés
+    elírásnak látszik.
+    """
+    if language != "hu":
+        return f"{int(value):,}"
+    return _thousands_hu(value)
+
+
+def _thousands_hu(value: float) -> str:
     return f"{int(value):,}".replace(",", " ")
 
 
-def _percent(share: float) -> str:
-    """Magyar tizedesjel. A riport szövege is vesszőt használ — egy oldalon
-    belül nem lehet kétféle jelölés.
-
-    (A riport v1-ben magyar nyelvű; ha később angol változat is lesz, ez a
-    formázás nyelvfüggő paraméterré válik.)
-    """
-    return f"{share * 100:.1f}".replace(".", ",") + "%"
+def _percent(share: float, language: str = "hu") -> str:
+    """Magyar tizedesjel vesszővel, angol ponttal — a riport szövegével egyezően."""
+    text = f"{share * 100:.1f}"
+    return (text.replace(".", ",") if language == "hu" else text) + "%"
 
 
 def line_chart(
@@ -68,6 +76,8 @@ def line_chart(
     label: str,
     height: int = H,
     colour: str = "var(--accent)",
+    language: str = "hu",
+    total_label: str = "összesen",
 ) -> str:
     """Napi idősor. Egyetlen pontnál vízszintes vonalat rajzol, nem oszt nullával.
 
@@ -110,7 +120,7 @@ def line_chart(
             + ('' if share == 0 else ' stroke-dasharray="2 4"')
             + "/>"
             f'<text x="{gutter - 8}" y="{y + 4:.1f}" text-anchor="end" font-size="11" '
-            f'fill="var(--ink-soft)">{_thousands(top * share)}</text>'
+            f'fill="var(--ink-soft)">{_thousands(top * share, language)}</text>'
         )
 
     area = (
@@ -147,7 +157,7 @@ def line_chart(
             f'font-size="{13 if strong else 12}" '
             f'font-weight="{700 if strong else 500}" '
             f'fill="var(--ink{"" if strong else "-soft"})">'
-            f"{_thousands(values[index])}</text>"
+            f"{_thousands(values[index], language)}</text>"
             f'<text x="{px + offset:.1f}" y="{py - 23:.1f}" text-anchor="{anchor}" '
             f'font-size="10" fill="var(--ink-soft)">'
             f'{_escape(points[index][0].strftime("%m.%d."))}</text>'
@@ -160,7 +170,7 @@ def line_chart(
         f'font-size="11" fill="var(--ink-soft)">'
         f'{_escape(points[-1][0].strftime("%m.%d."))}</text>'
         f'<text x="{gutter + inner_w / 2}" y="{height - 6}" text-anchor="middle" '
-        f'font-size="11" fill="var(--ink-soft)">összesen {_thousands(sum(values))}</text>'
+        f'font-size="11" fill="var(--ink-soft)">{total_label} {_thousands(sum(values), language)}</text>'
     )
     parts.append("</svg>")
     return "".join(parts)
@@ -171,6 +181,7 @@ def bar_chart(
     label: str,
     colour: str = "var(--brand-rose)",
     value_format=None,
+    language: str = "hu",
 ) -> str:
     """Vízszintes oszlopok, értékkel a végükön.
 
@@ -180,7 +191,7 @@ def bar_chart(
     """
     if not items:
         return _empty(label)
-    fmt = value_format or _thousands
+    fmt = value_format or (lambda v: _thousands(v, language))
 
     top = max(value for _, value in items) or 1
     row = 46
@@ -203,7 +214,7 @@ def bar_chart(
     return "".join(parts)
 
 
-def donut(parts: list[tuple[str, float]], label: str) -> str:
+def donut(parts: list[tuple[str, float]], label: str, language: str = "hu") -> str:
     """Gyűrűdiagram `stroke-dasharray`-jel — nincs szükség ív-matematikára."""
     total = sum(value for _, value in parts)
     if not parts or total <= 0:
@@ -229,7 +240,7 @@ def donut(parts: list[tuple[str, float]], label: str) -> str:
             f'<rect x="18" y="{234 + index * 22}" width="11" height="11" rx="3" '
             f'fill="{token}"/>'
             f'<text x="37" y="{244 + index * 22}" font-size="13" fill="var(--ink-soft)">'
-            f"{_escape(name)} — {_percent(share)}</text>"
+            f"{_escape(name)} — {_percent(share, language)}</text>"
         )
         offset += length
 

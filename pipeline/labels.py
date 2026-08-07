@@ -9,20 +9,39 @@ be, az látható lesz a riportban — csak csúnyán —, nem pedig eltűnik.
 """
 
 PAGE_FIELDS = {
-    "visits": "Felkeresések",
-    "follows": "Új követők",
-    "interactions": "Interakciók",
-    "link_clicks": "Hivatkozáskattintások",
-    "views": "Megtekintések",
+    "hu": {
+        "visits": "Felkeresések",
+        "follows": "Új követők",
+        "interactions": "Interakciók",
+        "link_clicks": "Hivatkozáskattintások",
+        "views": "Megtekintések",
+    },
+    "en": {
+        "visits": "Profile visits",
+        "follows": "New followers",
+        "interactions": "Interactions",
+        "link_clicks": "Link clicks",
+        "views": "Views",
+    },
 }
 
 RESULT_TYPES = {
-    "reach": "Elérés",
-    "actions:omni_landing_page_view": "Érkezésioldal-megtekintés",
-    "profile_visit_view": "Profil-felkeresés",
-    "actions:post_engagement": "Poszt-interakció",
-    "actions:link_click": "Hivatkozáskattintás",
-    "actions:click_to_call_native_call_placed": "Telefonhívás",
+    "hu": {
+        "reach": "Elérés",
+        "actions:omni_landing_page_view": "Érkezésioldal-megtekintés",
+        "profile_visit_view": "Profil-felkeresés",
+        "actions:post_engagement": "Poszt-interakció",
+        "actions:link_click": "Hivatkozáskattintás",
+        "actions:click_to_call_native_call_placed": "Telefonhívás",
+    },
+    "en": {
+        "reach": "Reach",
+        "actions:omni_landing_page_view": "Landing page view",
+        "profile_visit_view": "Profile visit",
+        "actions:post_engagement": "Post engagement",
+        "actions:link_click": "Link click",
+        "actions:click_to_call_native_call_placed": "Phone call",
+    },
 }
 
 CHANNELS = {
@@ -31,26 +50,32 @@ CHANNELS = {
 }
 
 POST_TYPES = {
-    "image": "kép",
-    "story": "story",
-    "reel": "reel",
+    "hu": {"image": "kép", "story": "story", "reel": "reel", "video": "videó"},
+    "en": {"image": "image", "story": "story", "reel": "reel", "video": "video"},
 }
 
 
-def page_field(key: str) -> str:
-    return PAGE_FIELDS.get(key, key)
+def _lookup(table: dict, key: str, language: str) -> str:
+    """Ismeretlen kulcsnál a nyers érték marad — így ha a Meta új
+    eredménytípust vezet be, az látható lesz a riportban, csak csúnyán, nem
+    pedig eltűnik."""
+    return table.get(language, table["hu"]).get(key, key)
 
 
-def result_type(key: str) -> str:
-    return RESULT_TYPES.get(key, key)
+def page_field(key: str, language: str = "hu") -> str:
+    return _lookup(PAGE_FIELDS, key, language)
+
+
+def result_type(key: str, language: str = "hu") -> str:
+    return _lookup(RESULT_TYPES, key, language)
 
 
 def channel(key: str) -> str:
     return CHANNELS.get(key, key)
 
 
-def post_type(key: str) -> str:
-    return POST_TYPES.get(key, key)
+def post_type(key: str, language: str = "hu") -> str:
+    return _lookup(POST_TYPES, key, language)
 
 
 def shorten(text: str, limit: int) -> str:

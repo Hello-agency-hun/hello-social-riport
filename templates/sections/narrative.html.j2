@@ -1,7 +1,7 @@
 {% if narrative and narrative.executive_summary %}
 <section class="page">
-  <div class="eyebrow">Vezetői összefoglaló</div>
-  <h2 style="margin-bottom:36px">A hónap röviden</h2>
+  <div class="eyebrow">{{ t.executive_summary }}</div>
+  <h2 style="margin-bottom:36px">{{ t.month_in_brief }}</h2>
   <div class="fill">
   <p style="font-size:26px;line-height:1.5;max-width:1000px;color:var(--ink)"
      data-narrative="executive_summary">
@@ -13,7 +13,7 @@
 
 {% if narrative and narrative.key_finding %}
 <section class="page" style="justify-content:center">
-  <div class="eyebrow">A hónap kulcsmegállapítása</div>
+  <div class="eyebrow">{{ t.key_finding }}</div>
   <h2 data-narrative="key_finding.title" style="font-size:60px;margin:18px 0 28px;max-width:1100px">
     {{ narrative.key_finding.title | safe }}
   </h2>
@@ -25,11 +25,11 @@
 
 {% if narrative and (narrative.what_worked or narrative.what_to_improve) %}
 <section class="page">
-  <div class="eyebrow">Értékelés</div>
-  <h2 style="margin-bottom:36px">Mi működött, min javítsunk</h2>
+  <div class="eyebrow">{{ t.assessment }}</div>
+  <h2 style="margin-bottom:36px">{{ t.what_worked_title }}</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr">
     <div class="panel">
-      <h3 class="accent" style="margin-bottom:16px">Mi működött</h3>
+      <h3 class="accent" style="margin-bottom:16px">{{ t.what_worked }}</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_worked %}
         <li style="margin-bottom:14px;font-size:18px"
@@ -38,7 +38,7 @@
       </ul>
     </div>
     <div class="panel">
-      <h3 style="margin-bottom:16px">Min javítsunk</h3>
+      <h3 style="margin-bottom:16px">{{ t.what_to_improve }}</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_to_improve %}
         <li style="margin-bottom:14px;font-size:18px"
@@ -52,8 +52,8 @@
 
 {% if narrative and narrative.next_steps %}
 <section class="page">
-  <div class="eyebrow">Következő lépések</div>
-  <h2 style="margin-bottom:36px">Mit csinálunk a jövő hónapban</h2>
+  <div class="eyebrow">{{ t.next_steps }}</div>
+  <h2 style="margin-bottom:36px">{{ t.next_month }}</h2>
   <div class="fill">
   <ol style="padding-left:26px;font-size:20px">
     {% for item in narrative.next_steps %}

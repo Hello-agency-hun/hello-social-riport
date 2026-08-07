@@ -142,6 +142,11 @@ Olvasd el a `references/narrative-guide.md`-t, és írd meg a
 Öt blokk: `executive_summary`, `key_finding` (`title` + `body`), `what_worked`,
 `what_to_improve`, `next_steps`.
 
+**A riport nyelvén írd**, amit a `client.yaml` `report.language` mezője mond —
+nem azon, amin a menedzserrel beszélgetsz. Ha ott `en` áll, az egész narratíva
+angol. A build ezt ellenőrzi. A poszt-szövegeket viszont nem fordítjuk: azok az
+ügyfél saját tartalmai.
+
 Ha a build `NarrativeError`-t dob, az üzenet megmondja, melyik számot írtad le
 vagy melyik mező nem létezik. Javítsd, ne kerüld meg.
 

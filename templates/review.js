@@ -1,6 +1,10 @@
 // Szerkesztés és mentés a böngészőben. Lokális fájlba írni nem lehet, letöltést
 // indítani viszont igen — a review.json onnan kerül a hónap mappájába.
 (function () {
+  // A gombfeliratok a riport nyelvén. A sablon szövegei az i18n modulból
+  // jönnek, ezek viszont a JavaScriptben élnek — az angol próbafutáson pont
+  // ezek maradtak magyarul egy egyébként teljesen angol riporton.
+  var LABELS = window.__helloLabels || {};
   var KEY = "hello-report-review";
   var stored = JSON.parse(localStorage.getItem(KEY) || "{}");
   var comments = stored.comments || [];
@@ -85,13 +89,13 @@
   document.querySelectorAll(".page").forEach(function (page, index) {
     var button = document.createElement("button");
     button.className = "comment-button no-print";
-    button.textContent = "megjegyzés";
+    button.textContent = LABELS.comment;
     button.onclick = function () {
-      var text = prompt("Megjegyzés ehhez az oldalhoz:");
+      var text = prompt(LABELS.comment_prompt);
       if (!text) return;
       comments.push({ page: index + 1, text: text });
       remember();
-      button.textContent = "megjegyzés ✓";
+      button.textContent = LABELS.comment_done;
     };
     page.appendChild(button);
   });
@@ -105,7 +109,7 @@
   var save = document.createElement("button");
   save.className = "pdf-button no-print";
   save.style.right = "190px";
-  save.textContent = "Mentés";
+  save.textContent = LABELS.save;
   save.onclick = function () {
     var blob = new Blob([payload()], { type: "application/json" });
     var link = document.createElement("a");
@@ -124,7 +128,7 @@
     var direct = document.createElement("button");
     direct.className = "pdf-button no-print";
     direct.style.right = "330px";
-    direct.textContent = "Mentés a mappába";
+    direct.textContent = LABELS.save_to_folder;
 
     direct.onclick = function () {
       var chain = handle
@@ -133,7 +137,7 @@
             suggestedName: "review.json",
             types: [
               {
-                description: "A hónap mappájába, a report_data.json mellé",
+                description: LABELS.save_picker || "review.json",
                 accept: { "application/json": [".json"] },
               },
             ],
@@ -150,15 +154,15 @@
           });
         })
         .then(function () {
-          direct.textContent = "Mentve ✓ — szólj Claude-nak";
+          direct.textContent = LABELS.saved_tell_claude;
           setTimeout(function () {
-            direct.textContent = "Mentés a mappába";
+            direct.textContent = LABELS.save_to_folder;
           }, 4000);
         })
         .catch(function (error) {
           // A megszakított fájlválasztó nem hiba — a menedzser meggondolta magát.
           if (error && error.name === "AbortError") return;
-          direct.textContent = "Nem sikerült — használd a Mentés gombot";
+          direct.textContent = LABELS.save_failed;
         });
     };
     document.body.appendChild(direct);
