@@ -2165,6 +2165,9 @@
   },
   "quality": {
     "posts_with_creative": 30,
+    "posts_without_creative": [
+      "Láttatok már ilyen szépet? 🐟 Süllőpofa, szőlő, bébi római sa"
+    ],
     "posts_total": 31,
     "posts_measured": 16,
     "unmatched_boosts": [],

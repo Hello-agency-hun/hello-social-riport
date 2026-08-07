@@ -66,6 +66,14 @@ def _report_map(data: dict) -> str:
                 else "Minden beszerezhető adat megvan."
             ),
             "",
+            (
+                "⚠ kreatív nélküli poszt (helyőrző lesz a riportban — a "
+                "ZoomSphere nem tud róla, tehát nem azon keresztül ment ki):\n"
+                + "\n".join(f"  · {text}" for text in quality["posts_without_creative"])
+                if quality.get("posts_without_creative")
+                else "Minden mért poszthoz van kreatív."
+            ),
+            "",
             "⚠ nem illesztett boost: "
             + (f"{len(unmatched)} db — " + "; ".join(unmatched) if unmatched else "nincs"),
         ]

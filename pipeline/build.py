@@ -273,6 +273,16 @@ def build(directory: Path, period: str) -> dict:
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),
+                # Amelyik posztnak nincs kreatívja, az a riportban helyőrzővel
+                # jelenik meg. Ez majdnem mindig azt jelenti, hogy a poszt nem a
+                # ZoomSphere-en keresztül ment ki, hanem közvetlenül a
+                # felületen — a Meta tudja a számait, a ZoomSphere nem tud róla.
+                # Enélkül a menedzser csak a kész riportban látja meg a lyukat.
+                "posts_without_creative": [
+                    (p.caption or p.post_id)[:60]
+                    for p in joined.posts
+                    if not p.creatives and p.organic_measured
+                ],
                 "posts_total": len(joined.posts),
                 "posts_measured": sum(1 for p in joined.posts if p.organic_measured),
                 "unmatched_boosts": [c.name for c in joined.unmatched_boosts],

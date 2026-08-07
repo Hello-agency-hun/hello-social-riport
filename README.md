@@ -144,7 +144,130 @@ Innentől Claude dolgozik:
 
 ---
 
-## 5. Amit a riportban csinálhatsz
+## 5. Az első hónap — amit a Meta nem exportál
+
+Két szám van, amit egyetlen export sem tartalmaz, viszont a Business Suite
+felületén ott van. Ezeket egyszer kell leolvasnod, **~2 perc alatt**.
+
+### a) Követőszám
+
+A `Követők.csv` a napi **új** követéseket adja, nem az állományt. A teljes
+számot a profil fejlécéből olvasod le.
+
+```yaml
+followers:
+  facebook: 10000
+  instagram: 4615
+```
+
+**A build addig nem enged tovább, amíg ez nincs meg** — nem szigorúságból,
+hanem mert enélkül a növekedésről semmit nem lehet mondani.
+
+> ⚠️ A Facebook a saját felületén **kerekítve** mutatja („10E"). Pontos szám a
+> Business Suite → Közönség alatt van.
+
+### b) Havi elérés
+
+**A csempe neve csatornánként más, és ez félrevezet:**
+
+| | csempe neve | mit jelent |
+|---|---|---|
+| **Facebook** | **Nézők** | „azon Meta-fiókok száma, amelyek legalább egyszer megnézték a tartalmaidat" |
+| **Instagram** | **Elérés** | ugyanaz |
+
+A Facebookon **nincs „Elérés" nevű csempe**. Ami ott „Megtekintések" néven fut,
+az mást mér (megjelenést, nem embert), és nagyságrenddel nagyobb — ne azt vedd.
+
+```yaml
+monthly_reach:
+  facebook: 139700
+  instagram: 14700
+```
+
+A `139,7 E` leolvasva `139700`. A kerekítés ±50, ami a riportban nem látszik.
+
+### Miért nem tudja ezt kiszámolni a rendszer?
+
+Mert az elérés **emberben** mér. Aki két napon látott minket, az a napi
+bontásban kétszer szerepel, a havi számban egyszer. A júliusi adatnál a napi
+értékek összege ~248 E volt, a valódi havi érték 139,7 E — a különbség 40%.
+És ez az arány hónapról hónapra változik, tehát képletet sem lehet rá csinálni.
+
+A dedup csak a Meta oldalán történhet meg, mert csak ő tudja, ki kicsoda.
+
+### A `--validate` végigmondja
+
+Nem kell fejből tudnod. A parancs kiírja, mi hiányzik, hol van, és miért:
+
+```
+Beszerezhető, de még nincs megadva — írd a client.yaml-be:
+  → facebook havi elérés
+      hol:  Business Suite → Eredmények → Nézők csempe, a hónapra állítva
+      miért: az elérés emberben mér, és aki két napon látott minket, egy ember
+
+  monthly_reach:
+    facebook: <szám>
+```
+
+---
+
+## 6. A második hónaptól — mihez képest viszonyít
+
+Ez a rész magától megy, de érdemes tudni, **mi alapján**.
+
+### Amit tenned kell: egy fájlmásolás
+
+```
+clients/larus/2026-07/report_data.json   →   clients/larus/2026-08/previous.json
+```
+
+Vagyis: **a múlt havi `report_data.json` átmásolva `previous.json` néven** az új
+hónap mappájába. Ennyi. Innentől minden változás kiszámolódik, és megjelennek a
+nyilak.
+
+### Amit a rendszer magától tud
+
+| | honnan |
+|---|---|
+| minden metrika előző havi értéke | `previous.json` → `channels.<csatorna>.totals` |
+| **a követőszám** | a múlt havi állomány **+** az idei hónap új követései |
+
+A követőszámot tehát **nem kell újra leolvasnod**. De csak akkor, ha:
+
+- a `previous.json` a **közvetlenül** megelőző hónapé, **és**
+- azon a csatornán van napi követés-adat
+
+**Ha kihagysz egy hónapot, a lánc elszakad.** A júliusi riportból a szeptemberi
+állomány nem jön ki, mert a közte eltelt idő gyarapodását senki nem mérte.
+Ilyenkor a rendszer újra kéri, és megmondja, miért:
+
+```
+hiányzik a követőszám (facebook).
+A previous.json a(z) 2026-07 hónapé, nem a közvetlenül megelőzőé (2026-08).
+A köztes idő gyarapodását senki nem mérte, tehát nem lehet továbbszámolni.
+```
+
+Instagramon a lánc **mindig** szakad: ott nincs napi követés-csempe, tehát
+minden hónapban leolvasod. A Facebookon nem.
+
+A `--validate` mindig kiírja, honnan tudja a számot:
+
+```
+Követők facebook  10005 (az előző hónap állományából továbbszámolva (+5 új követés))
+Követők instagram 4615 (client.yaml)
+```
+
+Ha valami elcsúszott, ezen a soron látod meg.
+
+### Ha nincs előző havi riport, de számokat tudsz
+
+Az összehasonlító oldalakon szaggatott keretű mezők jelennek meg. Ezekbe
+beírhatod az előző havi értékeket — **mínusszal és százalékkal is**. A Business
+Suite csempéi a százalékos változást amúgy is kiírják.
+
+---
+
+## 7. Amit a riportban csinálhatsz
 
 Nyisd meg böngészőben (dupla kattintás a fájlra).
 
@@ -178,7 +301,7 @@ A szaggatott keretek, a szerkesztő-jelölések és a megjegyzés-gombok
 
 ---
 
-## 6. Ha hibaüzenetet kapsz
+## 8. Ha hibaüzenetet kapsz
 
 Minden hibaüzenet megmondja, **mi a baj és mit tegyél**. A leggyakoribbak:
 
@@ -189,6 +312,25 @@ Minden hibaüzenet megmondja, **mi a baj és mit tegyél**. A leggyakoribbak:
 | *nem azonosítható fájl* | valami idegen került az `input` mappába |
 | *két … export van a mappában* | a régit töröld, különben az adat megkétszereződne |
 | *a csempe nem árulja el, melyik csatornáé* | az üzenet ad egy kimásolható sort |
+| *a teszt-fixture, nem ügyfélmappa* | riportot nem a `tests/` alól készítünk |
+
+### Ha egy poszt helyén „kép nem elérhető" áll
+
+A képek a **ZoomSphere** exportból jönnek, a számok a **Meta** exportból. Ha egy
+poszt közvetlenül a felületen ment ki, nem a ZoomSphere-en keresztül, akkor a
+teljesítménye megvan, a kreatívja nincs.
+
+A `--validate` név szerint felsorolja őket:
+
+```
+⚠ kreatív nélküli poszt (helyőrző lesz a riportban — a ZoomSphere nem tud róla,
+  tehát nem azon keresztül ment ki):
+  · Láttatok már ilyen szépet? 🐟 Süllőpofa…
+```
+
+Ha a poszt bekerül a kiemeltek közé, két lehetőség van: vagy visszamented a
+képet a Facebookról és a következő hónaptól a ZoomSphere-ben is felviszed, vagy
+elfogadod a helyőrzőt.
 
 Ha elakadsz, másold be az üzenetet a chatbe.
 
