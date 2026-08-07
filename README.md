@@ -21,7 +21,7 @@ de nem becsüli meg.
 
 ## 1. Telepítés — egyszer, összesen
 
-Claude Code-ban írd be:
+### Claude Code-ban
 
 ```
 /plugin marketplace add Hello-agency-hun/hello-social-riport
@@ -29,6 +29,21 @@ Claude Code-ban írd be:
 
 Ennyi. Nem kell se Python-tudás, se parancssor — a továbbiakban Claude-dal
 beszélgetsz, ő futtatja a parancsokat.
+
+### Codexben vagy más agentben
+
+```bash
+git clone https://github.com/Hello-agency-hun/hello-social-riport.git
+cd hello-social-riport && pip install -e .
+```
+
+Az agent az `AGENTS.md`-ből magától megtudja, mi a dolga. Nincs
+`/hello-report` parancs — prózában kéred: *„csinálj riportot a Larusnak
+júliusra"*.
+
+Egy különbség: ha az agent hálózat nélküli homokozóban fut (a Codex alapból
+ilyen), a kreatívok nem töltődnek le. A számok és a szöveg ugyanazok, a képek
+helyén helyőrző áll. Az ügyfélnek kiküldendő riporthoz engedd a hálózatot.
 
 ---
 
@@ -231,6 +246,11 @@ python tools/extract_logo.py "<brand guide.pdf>"  # logó → SVG
 python tools/import_previous.py "<riport.pdf>"    # előző havi számok, javaslatként
 python tools/build_styleguide.py                  # design rendszer dokumentum
 ```
+
+Az agentek belépési pontjai: `skills/hello-report/SKILL.md` (Claude Code) és
+`AGENTS.md` (Codex és társai). Az utóbbi **útvonaljelző, nem második leírás** —
+a `tests/test_agent_docs.py` őrzi, hogy ne hízzon párhuzamos eljárássá, és hogy
+minden hivatkozott fájl létezzen.
 
 A design rendszer élő referenciája:
 `skills/hello-report/references/design-system.html` — nyisd meg böngészőben.
