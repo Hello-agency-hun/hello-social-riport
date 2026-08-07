@@ -4,7 +4,11 @@
     "period": "2026-07",
     "currency": "EUR",
     "language": "hu",
-    "comparison_headline": "value"
+    "comparison_headline": "value",
+    "coverage_start": "2026-07-01",
+    "coverage_end": "2026-07-31",
+    "coverage_partial": false,
+    "coverage_spread": []
   },
   "content": {
     "total": 29,
@@ -2148,6 +2152,9 @@
         "results": 13
       }
     }
+  },
+  "comparison_health": {
+    "status": "none"
   },
   "cross": {
     "posts_total": 31,

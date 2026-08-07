@@ -1,8 +1,13 @@
 import csv
 from datetime import datetime
+from pathlib import Path
 
-from pipeline.detect import DAILY_METRICS
-from pipeline.errors import MissingColumnError, UnknownSourceError
+from pipeline.detect import DAILY_METRICS, DAILY_REACH_TILES
+from pipeline.errors import (
+    DailyReachNotUsable,
+    MissingColumnError,
+    UnknownSourceError,
+)
 from pipeline.labels import PAGE_FIELDS
 from pipeline.schema import DailySeries, ParsedSource
 from pipeline.textio import read_lines
@@ -28,13 +33,18 @@ def _unknown_metric_help(path, metric: str) -> str:
     )
     hint = "" if known else '   # vagy "instagram" — ez a csempe nem árulja el'
 
+    # A kulcs a fájl neve, nem a csempéé: ugyanaz a csempenév mindkét
+    # csatornán előfordulhat, és akkor a névre kulcsolt beállítás a két
+    # letöltés közül nem tudna választani.
     return (
         f"{path}: a(z) {metric!r} csempe nem árulja el, melyik csatornáé.\n"
         "Nézd meg, a Business Suite → Eredmények melyik fülén töltötted le, és "
         "másold a client.yaml végére:\n\n"
         "daily_metric_overrides:\n"
-        f'  "{metric}": ["{known or "facebook"}", "{field}"]{hint}\n\n'
-        f"Választható mezőnevek: {', '.join(sorted(PAGE_FIELDS))}"
+        f'  "{Path(path).name}": ["{known or "facebook"}", "{field}"]{hint}\n\n'
+        f"Választható mezőnevek: {', '.join(sorted(PAGE_FIELDS))}\n"
+        "(A kulcs lehet a csempe neve is, de ha ugyanaz a csempe mindkét "
+        "csatornán szerepel, akkor csak a fájlnév különbözteti meg őket.)"
     )
 
 
@@ -50,9 +60,27 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
 
     lookup = dict(DAILY_METRICS)
     lookup.update(overrides or {})
-    if metric not in lookup:
+
+    # A csempenév nem mindig egyedi: a Mammutnál a `Megtekintések` csempe
+    # mindkét csatornán ugyanígy hívják, tehát egyetlen névre kulcsolt
+    # beállítás mindkét fájlt ugyanarra a csatornára tenné — az egyik görbe
+    # csendben a másik alá kerülne. Ezért a fájlnév erősebb kulcs, mint a
+    # csempenév: az különbözteti meg a két letöltést.
+    resolved = lookup.get(Path(path).name) or lookup.get(metric)
+    if resolved is None:
+        if metric in DAILY_REACH_TILES:
+            # Nem hiba, hanem fölösleg — és ezt meg kell mondani, nem
+            # mezőnevekkel dobálózni.
+            raise DailyReachNotUsable(
+                f"{path}: a(z) {metric!r} napi csempéjére nincs szükség.\n"
+                "A napi elérés nem összegezhető: aki két napon látott minket, "
+                "egy ember, tehát a napok összege mindig több a valóságnál.\n"
+                "A havi számot a csempe FEJLÉCÉRŐL olvasd le, és írd a "
+                "client.yaml `monthly_reach` szakaszába.\n"
+                "Ezt a fájlt vedd ki az input mappából."
+            )
         raise UnknownSourceError(_unknown_metric_help(path, metric))
-    channel, field = lookup[metric]
+    channel, field = resolved
 
     points = []
     for row in csv.reader(lines[2:]):

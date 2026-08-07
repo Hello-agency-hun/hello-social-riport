@@ -72,6 +72,28 @@ def test_the_median_is_used_not_the_average():
     # Átlaggal ez 0,2 körül lenne, és mind a négy gyengének látszana.
 
 
+def test_both_cohorts_get_a_place_on_the_page():
+    """A Mammut-próbán Facebookon mind a hat kártya organikus lett — pedig öt
+    poszt kapott hirdetést. Az adat helyes volt, a bemutatás hamis: a
+    Facebook-oldalra nézve úgy tűnt, egyetlen forint hirdetés sem ment ki."""
+    strong_organic = [post(reach=100, reactions=30 + i) for i in range(9)]
+    weak_boosted = [
+        post(reach=5000, reactions=10 + i, paid={"spend": 12.0}) for i in range(5)
+    ]
+    scored = performance.score_posts(strong_organic + weak_boosted)
+
+    chosen = performance.balanced(scored, limit=6)
+    assert len(chosen) == 6
+    assert any(p["score"]["boosted"] for p in chosen), "hirdetett poszt is kell"
+    assert any(not p["score"]["boosted"] for p in chosen), "organikus is kell"
+
+
+def test_a_single_cohort_still_fills_the_page():
+    """Ha nincs hirdetett poszt, ne maradjon üres hely."""
+    scored = performance.score_posts([post(reach=100, reactions=5 + i) for i in range(8)])
+    assert len(performance.balanced(scored, limit=6)) == 6
+
+
 def test_the_real_data_says_the_reach_leader_is_not_the_best_post():
     """A Larus júliusában a legnagyobb elérésű poszt (Séfünk ajánlata, 9 046)
     a látók 0,27%-át mozdította meg; a Gambas Pil-Pil az 5,55%-át."""

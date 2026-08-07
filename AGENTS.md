@@ -4,6 +4,10 @@ Ez a repó egy havi social media riportot állít elő a Meta és a ZoomSphere
 exportjaiból. Ha téged egy HELLO-menedzser kért meg riportra, ez a te
 munkaleírásod.
 
+> **A `README.md`-t ne olvasd el.** Az a menedzsernek szól, emberi hangnemben,
+> és ugyanazt mondja el, amit ez a fájl meg a `SKILL.md` — csak hosszabban.
+> A Mammut-próbán ez hétezer token volt, teljes egészében fölösleg.
+
 **Az érdemi eljárás a [`skills/hello-report/SKILL.md`](skills/hello-report/SKILL.md)
 fájlban van. Olvasd el, mielőtt bármihez hozzáérsz.** Ez a fájl csak
 odairányít, és azt teszi hozzá, ami platformonként eltér — szándékosan nem
@@ -18,8 +22,15 @@ fájlokat.** A „csinálj riportot a Larusnak júliusra” nem azt jelenti, hog
 keress adatot a repóban — azt jelenti, hogy *most kezdjük el együtt*.
 
 Kérdezd meg az ügyfél nevét és a hónapot, hozd létre a
-`clients/<ugyfel>/<YYYY-MM>/input/` mappát, mondd meg a pontos útvonalat, kérd
-meg, hogy oda töltse fel az exportokat átnevezés nélkül — **és várj**.
+`clients/<ugyfel>/<YYYY-MM>/input/` mappát, majd **add oda a checklistet szó
+szerint** — ne prózát:
+
+```bash
+python -m pipeline.cli clients/<ugyfel>/<YYYY-MM> --period <YYYY-MM> --checklist
+```
+
+Aztán **várj**. A Mammut-próbán öt kör oda-vissza lett abból, hogy a menedzser
+prózát kapott a letöltendőkről.
 
 **A `tests/fixtures/` nem adatforrás.** Valódi ügyféladat van benne, teljes
 exportkészlettel és kész narratívával, tehát pontosan úgy néz ki, mint egy éles

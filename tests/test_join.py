@@ -104,3 +104,29 @@ def test_stories_are_not_turned_into_posts(input_file):
         campaigns=[],
     )
     assert all(post.post_type != "story" for post in result.posts)
+
+
+def test_client_prefix_is_stripped_from_the_boost_name():
+    """`Mammut_Bejegyzés: „…”` — az ügyfél előtagja a boost neve előtt áll.
+
+    Amíg a levágás a sor elejéhez volt kötve, az előtag bennmaradt a kulcsban,
+    és egyetlen boost sem talált posztot: a hirdetett posztok organikusként
+    jelentek volna meg, hirdetési költség nélkül.
+    """
+    from pipeline.join import normalize_caption
+
+    assert normalize_caption("Mammut_Bejegyzés: „Nyáron is irány a Mammut!”") == (
+        normalize_caption("Bejegyzés: „Nyáron is irány a Mammut!”")
+    )
+    assert normalize_caption("Mammut_Instagram-bejegyzés: Hangolódj a nyári…") == (
+        normalize_caption("Instagram-bejegyzés: Hangolódj a nyári…")
+    )
+
+
+def test_a_caption_that_merely_mentions_the_word_is_left_alone():
+    """A levágás nem ehet bele a poszt szövegébe."""
+    from pipeline.join import normalize_caption
+
+    assert normalize_caption("Ez a bejegyzés: nyári nyitvatartás") == (
+        "ez a bejegyzés: nyári nyitvatartás"
+    )

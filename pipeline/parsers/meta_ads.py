@@ -33,11 +33,20 @@ def _number(value: str) -> float:
         return 0.0
 
 
+# A boost nevét a Meta a bejegyzés típusából állítja elő, de az ügyfelek egy
+# része saját előtaggal nevezi a kampányait — a Mammut júliusi exportjában
+# minden sor `Mammut_Bejegyzés: …` alakban jött. A sor elejéhez kötött
+# felismerés ilyenkor egyetlen boostot sem talál, és a hirdetett posztok
+# csendben kimaradnak a rangsorból. Az előtag határa marad kötelező, hogy egy
+# prózai „…bejegyzés:” a kampánynév közepén ne váljon boosttá.
+BOOST_PATTERN = re.compile(
+    "(?:^|[_\\-—:/ ])(" + "|".join(re.escape(p) for p in BOOST_PREFIXES) + ")"
+)
+
+
 def _boost_channel(name: str) -> str | None:
-    for prefix, channel in BOOST_PREFIXES.items():
-        if name.startswith(prefix):
-            return channel
-    return None
+    match = BOOST_PATTERN.search(name.strip())
+    return BOOST_PREFIXES[match.group(1)] if match else None
 
 
 def parse(path) -> ParsedSource:

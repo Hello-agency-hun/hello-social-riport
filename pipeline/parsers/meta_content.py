@@ -46,7 +46,12 @@ def parse(path) -> ParsedSource:
                 channel=_channel(permalink),
                 post_id=row["Bejegyzésazonosító"].strip(),
                 published=published,
-                caption=row.get("Cím", "").strip(),
+                # A Facebook exportban a poszt szövege a „Cím", az Instagram
+                # exportjában viszont nincs ilyen oszlop — ott a „Leírás". Amíg
+                # csak a „Cím"-et néztük, minden Instagram-poszt szöveg nélkül
+                # maradt, és mivel a boostokat szöveg alapján illesztjük, egy
+                # instagramos hirdetett poszt sem kapta meg a költését.
+                caption=(row.get("Cím") or row.get("Leírás") or "").strip(),
                 permalink=permalink,
                 post_type=row.get("Bejegyzés típusa", "").strip(),
                 reach=_number(row.get("Elérés", "")),

@@ -6,6 +6,11 @@ class UnknownSourceError(PipelineError):
     """Nem azonosítható bemeneti fájl."""
 
 
+class DailyReachNotUsable(PipelineError):
+    """Napi elérés-csempe került be. Nem hiba, csak fölösleg — a napi elérés
+    nem összegezhető, a havi számot a csempe fejlécéről kell leolvasni."""
+
+
 class WrongFormatError(PipelineError):
     """A fájl tartalma jó lehet, csak nem a várt formátumban van."""
 

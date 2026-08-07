@@ -144,6 +144,45 @@ def ranked(posts: list[dict]) -> list[dict]:
     return sorted(scored, key=lambda p: -(p["score"]["vs_typical"] or 0))
 
 
+def balanced(posts: list[dict], limit: int = 6) -> list[dict]:
+    """A riportba kerülő posztok — mindkét mezőnyből.
+
+    A `ranked` önmagában monokultúrát adhat, és a Mammut-próbán adott is:
+    Facebookon mind a hat kártya organikus lett (pedig öt poszt kapott
+    hirdetést), Instagramon mind a hat hirdetett (pedig kilenc organikus volt).
+    Az ok kézenfekvő: ahol az egyik mezőny mediánja alacsony, ott annak a
+    mezőnynek a tagjai kapnak nagy szorzót.
+
+    Az adat így is helyes, a **bemutatás** viszont hamis: a Facebook-oldalra
+    nézve úgy tűnt, egyetlen forint hirdetés sem ment ki — miközben az első
+    oldalon ott a költés.
+
+    Ezért a helyeket arányosan osztjuk a két mezőny között, de legalább egyet
+    mindkettőnek adunk, ha van jelöltje. A sorrend a listán belül változatlanul
+    teljesítmény szerint megy.
+    """
+    order = ranked(posts)
+    if not order:
+        return []
+
+    boosted = [p for p in order if p["score"]["boosted"]]
+    organic = [p for p in order if not p["score"]["boosted"]]
+    if not boosted or not organic:
+        return order[:limit]
+
+    # Arányos elosztás, de mindkét mezőny kap legalább egy helyet.
+    share = round(limit * len(boosted) / (len(boosted) + len(organic)))
+    for_boosted = max(1, min(limit - 1, share))
+    picked = boosted[:for_boosted] + organic[: limit - for_boosted]
+
+    # Ha az egyik mezőnyből kevesebb jelölt volt, a maradékot a másik tölti fel.
+    if len(picked) < limit:
+        rest = [p for p in order if p not in picked]
+        picked += rest[: limit - len(picked)]
+
+    return sorted(picked, key=lambda p: -(p["score"]["vs_typical"] or 0))
+
+
 def findings(posts: list[dict]) -> dict:
     """Amit a rangsorból érdemes elmondani — a narratívának.
 

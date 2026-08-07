@@ -45,9 +45,20 @@ A sorrend:
 1. **Kérdezd meg az ügyfél nevét és a hónapot**, ha nem egyértelmű.
 2. **Hozd létre a mappát**: `clients/<ugyfel>/<YYYY-MM>/input/`, és **mondd meg
    a pontos útvonalat**.
-3. **Kérd meg, hogy töltse fel az exportokat ebbe a mappába**, átnevezés
-   nélkül. Ha nem tudja, mit kell letöltenie, ekkor töltsd be az
-   `references/export-guide.md`-t.
+3. **Add oda a checklistet, szó szerint** — ne prózát:
+
+   ```bash
+   python -m pipeline.cli clients/<ugyfel>/<YYYY-MM> --period <YYYY-MM> --checklist
+   ```
+
+   Ez konfiguráció nélkül is fut, és a `client.yaml`-ből szűkül, ha már van.
+   **Másold be a kimenetét egy az egyben.** A menedzser nem olvas el négy
+   bekezdést, mielőtt letölt — kipipál. A Mammut-próbán öt kör oda-vissza lett
+   abból, hogy prózát kapott: a Tartalom exportok kimaradtak, a ZoomSphere
+   PDF-ként jött, az Ads XLSX-ként.
+
+   Az `references/export-guide.md`-t csak akkor töltsd be, ha valamelyik
+   ponthoz külön magyarázat kell.
 4. **Várj.** Ne találgass, ne építs félkész adatból.
 5. Amikor szól, hogy kész, indulhat az 1. lépés.
 

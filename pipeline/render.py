@@ -47,6 +47,36 @@ def _period_hu(period: str) -> str:
     return f"{year}. {MONTHS_HU[int(month) - 1]}"
 
 
+def _period_range(period: str) -> str:
+    """`2026-07` → `2026-07-01 – 2026-07-31`.
+
+    A korábbi, kézzel készült riportok nem naptári hónapot fedtek: a készítő
+    metrikánként más napon nyitotta meg a Business Suite csempéit, így egy
+    dokumentumon belül keveredtek a hónap huszonegyedikei és harmincegyedikei
+    állapotok. Az átálláskor az ügyfél ezért ugrást fog látni — a riportnak ki
+    kell mondania, mit mért, különben a különbség megmagyarázhatatlan.
+    """
+    from calendar import monthrange
+
+    year, month = (int(part) for part in period.split("-"))
+    last = monthrange(year, month)[1]
+    return f"{year}-{month:02d}-01 – {year}-{month:02d}-{last}"
+
+
+def _measured_range(meta: dict) -> str:
+    """A ténylegesen mért időszak, a forrásfájlokból.
+
+    Nem a naptári hónapot írjuk ki, hanem ameddig az adat ér. A menedzser nem
+    mindig a hónap utolsó napján tölt le; ha ilyenkor teljes hónapot
+    állítanánk, a következő havi összehasonlítás csendben torz lenne.
+    """
+    start = meta.get("coverage_start")
+    end = meta.get("coverage_end")
+    if not start or not end:
+        return _period_range(meta["period"])
+    return f"{start} – {end}"
+
+
 def _environment() -> Environment:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES)),
@@ -127,7 +157,7 @@ def render(
         # Teljesítmény szerint, nem elérés szerint. Elérés szerint rangsorolni
         # annyi volna, mint költés szerint: amelyik posztra a legtöbb pénz ment,
         # az lenne elöl — ez tautológia, nem megállapítás. Lásd `performance.py`.
-        ranked = performance.ranked(block["posts"])
+        ranked = performance.balanced(block["posts"], limit=6)
         if not ranked:
             # Nincs mért elérés ezen a csatornán — marad a régi sorrend, hogy
             # a boostolt posztok legalább megjelenjenek.
@@ -183,6 +213,8 @@ def render(
         logo_lockup=logo("hello-lockup"),
         logo_mark=logo("hello-mark"),
         period_hu=_period_hu(data["meta"]["period"]),
+        period_range=_measured_range(data["meta"]),
+        coverage_partial=data["meta"].get("coverage_partial", False),
         generated=date.today().isoformat(),
         charts={
             "reach_split": charts.donut(

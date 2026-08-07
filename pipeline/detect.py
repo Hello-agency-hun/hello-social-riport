@@ -11,6 +11,25 @@ DAILY_METRICS = {
     "Instagram-profilfelkeresések": ("instagram", "visits"),
     "Instagramos hivatkozáskattintások": ("instagram", "link_clicks"),
     "Interakció tartalmaknál": ("instagram", "interactions"),
+    # A Mammut-próbán derült ki, hogy ez a csempe létezik. Addig a rendszer
+    # kézi override-ot kért rá, a README pedig azt állította, hogy Instagramon
+    # „nincs napi követés-csempe" — ezért a követőszám-lánc ott sosem indult el.
+    "Instagram-követések": ("instagram", "follows"),
+}
+
+# Napi elérés-csempék. NEM hiba, ha bekerülnek — logikus, hogy a menedzser
+# letölti őket, hiszen a havi eléréshez pont ezt a csempét kell megnyitni.
+# Forrásként viszont használhatatlanok: a napi elérés nem összegezhető, mert
+# aki két napon látott minket, egy ember. A havi számot a csempe fejlécéről
+# kell leolvasni. Ezért felismerjük és szelíden elutasítjuk, nem hibázunk
+# rajtuk egy értelmezhetetlen mezőnév-listával.
+DAILY_REACH_TILES = {
+    "Nézők",
+    "Elérés",
+    "Facebook-nézők",
+    "Instagram-elérés",
+    "Facebook-elérés",
+    "Instagram-nézők",
 }
 
 
@@ -60,7 +79,10 @@ def identify(path: Path) -> Source:
 
         if looks_like_zoomsphere(path):
             return Source(path, "zoomsphere")
-        return Source(path, "unknown")
+        # Nem ZoomSphere, de akkor is táblázat: a Mammut-próbán az Ads-export
+        # jött XLSX-ként. „Ismeretlen fájl" itt haszontalan válasz — a tartalma
+        # jó, csak CSV-vé kell menteni.
+        return Source(path, "spreadsheet")
 
     lines = read_lines(path)
     if not lines:

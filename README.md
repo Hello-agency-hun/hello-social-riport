@@ -247,8 +247,10 @@ A previous.json a(z) 2026-07 hónapé, nem a közvetlenül megelőzőé (2026-08
 A köztes idő gyarapodását senki nem mérte, tehát nem lehet továbbszámolni.
 ```
 
-Instagramon a lánc **mindig** szakad: ott nincs napi követés-csempe, tehát
-minden hónapban leolvasod. A Facebookon nem.
+Ez mindkét csatornán működik, ha a napi **Követők** csempét letöltötted —
+Instagramon is van ilyen, `Instagram-követések` néven. Ha egy ügyfélnél
+valamelyik hiányzik, ott a rendszer újra elkéri a követőszámot, és megmondja,
+miért.
 
 A `--validate` mindig kiírja, honnan tudja a számot:
 

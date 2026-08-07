@@ -81,3 +81,35 @@ def test_file_without_daily_rows_raises(tmp_path):
     )
     with pytest.raises(PipelineError, match="egyetlen napi sort sem"):
         parse(empty)
+
+
+def test_override_can_be_keyed_by_file_name(tmp_path):
+    """Két csatorna, egy csempenév — a névre kulcsolt override kevés.
+
+    A Mammutnál a `Megtekintések` csempe mindkét csatornán ugyanígy hívják.
+    Egyetlen csempenév-kulccsal mindkét fájl ugyanarra a csatornára került
+    volna: az egyik görbe csendben a másik alá.
+    """
+    fb = _write(tmp_path / "Megtekintések.csv", 'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","7"\n')
+    ig = _write(tmp_path / "Megtekintések-2.csv", 'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","5"\n')
+    overrides = {
+        "Megtekintések.csv": ("facebook", "views"),
+        "Megtekintések-2.csv": ("instagram", "views"),
+    }
+    assert parse(fb, overrides=overrides).payload.channel == "facebook"
+    assert parse(ig, overrides=overrides).payload.channel == "instagram"
+
+
+def test_file_name_override_wins_over_the_metric_name(tmp_path):
+    both = _write(tmp_path / "Megtekintések-2.csv", 'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","5"\n')
+    overrides = {
+        "Megtekintések": ("facebook", "views"),
+        "Megtekintések-2.csv": ("instagram", "views"),
+    }
+    assert parse(both, overrides=overrides).payload.channel == "instagram"
+
+
+def test_ambiguous_metric_help_offers_the_file_name_key(tmp_path):
+    odd = _write(tmp_path / "Megtekintések-2.csv", 'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","5"\n')
+    with pytest.raises(UnknownSourceError, match="Megtekintések-2.csv"):
+        parse(odd)

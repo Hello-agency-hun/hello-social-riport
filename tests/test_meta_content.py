@@ -37,3 +37,40 @@ def test_period_spans_july(input_file):
         date(2026, 7, 1),
         date(2026, 7, 31),
     )
+
+
+def test_instagram_caption_comes_from_the_description_column(tmp_path):
+    """Az Instagram Tartalom exportjában nincs „Cím" oszlop.
+
+    A poszt szövege ott a „Leírás". Amíg csak a „Cím"-et olvastuk, minden
+    Instagram-poszt szöveg nélkül maradt — és mivel a boostokat a szöveg
+    alapján illesztjük, egyetlen instagramos hirdetett poszt sem kapta meg a
+    költését. A riportban organikusként látszottak volna.
+    """
+    csv_path = tmp_path / "ig.csv"
+    csv_path.write_text(
+        "Bejegyzésazonosító,Fiókazonosító,Leírás,"
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés\n"
+        "181,178,Hangolódj a nyári vízparti hangulatra,"
+        '"07/03/2026 10:00","https://www.instagram.com/reel/AAA/",REEL,10,5\n',
+        encoding="utf-8",
+    )
+    post = parse(csv_path).payload[0]
+    assert post.channel == "instagram"
+    assert post.caption == "Hangolódj a nyári vízparti hangulatra"
+
+
+def test_facebook_title_still_wins_over_the_description(tmp_path):
+    """A Facebook exportban mindkét oszlop létezik — a viselkedés nem változhat."""
+    csv_path = tmp_path / "fb.csv"
+    csv_path.write_text(
+        'Bejegyzésazonosító,Oldalazonosító,"Oldal neve",Cím,Leírás,'
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés\n"
+        '148,100,"Mammut","A poszt szövege","hosszabb leírás",'
+        '"07/03/2026 10:00","https://www.facebook.com/100_148",POST,10,5\n',
+        encoding="utf-8",
+    )
+    post = parse(csv_path).payload[0]
+    assert post.caption == "A poszt szövege"

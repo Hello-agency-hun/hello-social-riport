@@ -1,4 +1,5 @@
 import json
+from calendar import monthrange
 from dataclasses import asdict, is_dataclass
 from datetime import date
 from pathlib import Path
@@ -12,6 +13,7 @@ from pipeline.errors import (
     DuplicateSourceError,
     MissingConfigError,
     NarrativeError,
+    UnmatchedBoostError,
     WrongFormatError,
     NoSourceError,
     UnknownSourceError,
@@ -32,8 +34,11 @@ SINGLETON_SOURCES = {
 # vagy régi Excelt tölt le — ilyenkor nem az a válasz, hogy „ismeretlen fájl",
 # hanem az, hogy mit lehet vele kezdeni.
 CONVERTIBLE = {
-    "pdf": "PDF. Ha ez a ZoomSphere-export, töltsd le XLSX-ként; ha nem megy, "
-    "ki tudom nyerni belőle a táblázatot.",
+    "spreadsheet": "XLSX, de nem ZoomSphere-export. Ha ez a Meta Ads-export, "
+    "mentsd CSV-ként (vagy szólj, és átalakítom) — a tartalma jó.",
+    "pdf": "PDF. Ha ez a ZoomSphere-export, akkor újra kell tölteni XLSX-ként: "
+    "a PDF elvileg sem elég, mert nincs benne poszt-azonosító és kép-URL. Ha "
+    "előző havi riport, akkor a `tools/import_previous.py` való rá.",
     "legacy_office": "régi Office-formátum (.xls/.doc). Mentsd el XLSX-ként "
     "vagy CSV-ként, vagy szólj, és átalakítom.",
     "office": "Word- vagy más Office-dokumentum, nem táblázat-export.",
@@ -105,6 +110,100 @@ def _missing(seen: dict, content_channels: dict, daily_channels: set, client: di
     return gaps
 
 
+# E fölött az arány fölött az illesztetlenség már nem lábjegyzet, hanem hiba.
+UNMATCHED_BOOST_LIMIT = 0.5
+
+# Ennyi nap eltérés a források záródátuma között még nem gyanús: egy csempe
+# aznap még nem frissült. Ennél több már azt jelenti, hogy a letöltések nem
+# ugyanakkor készültek.
+COVERAGE_SPREAD_LIMIT = 2
+
+
+def _coverage(per_source: dict, period: str) -> dict:
+    """A riport tényleges időszaka — a forrásfájlokból mérve.
+
+    A menedzser nem mindig a hónap utolsó napján tölt le, és a Business Suite
+    csempéi külön-külön zárulnak. A Mammut korábbi, kézi riportjaiban emiatt
+    metrikánként hét-tíz nappal eltérő záródátumok keveredtek egyetlen
+    dokumentumban — és ez sehol nem látszott.
+
+    Ha a riport a naptári hónapot állítja, miközben az adat huszonnegyedikéig
+    tart, akkor a következő havi összehasonlítás torz lesz, és senki nem tudja
+    meg, miért. Ezért kimérjük, és kiírjuk.
+    """
+    year, month = (int(part) for part in period.split("-"))
+    first = date(year, month, 1)
+    last = date(year, month, monthrange(year, month)[1])
+
+    # Csak a napi csempékből mérünk. Azokban egy sor egy mért nap, tehát a
+    # legutolsó sor megmondja, meddig tart a mérés. A Tartalom- és az
+    # Ads-export ezzel szemben DEKLARÁLT időszakot ad (a jelentés kezdete és
+    # vége), ami akkor is a teljes hónap, ha az adat rövidebb — abból nem
+    # derülne ki, hogy a menedzser huszonnegyedikén töltött le.
+    daily = {
+        name: window
+        for name, (kind, window) in per_source.items()
+        if kind == "meta_daily" and window and window[1]
+    }
+    if not daily:
+        return {"coverage_start": first.isoformat(), "coverage_end": last.isoformat(),
+                "coverage_partial": False, "coverage_spread": []}
+
+    start = min(window[0] for window in daily.values())
+    end = max(window[1] for window in daily.values())
+
+    # Ha az egyes csempék más napon zárulnak, az pont az a hiba, amit a
+    # korábbi kézi riportokban találtunk: egy dokumentumban keverednek a
+    # különböző napokon lekérdezett állapotok.
+    spread = sorted(
+        (name, window[1].isoformat())
+        for name, window in daily.items()
+        if (end - window[1]).days > COVERAGE_SPREAD_LIMIT
+    )
+
+    return {
+        "coverage_start": max(start, first).isoformat(),
+        "coverage_end": min(end, last).isoformat(),
+        "coverage_partial": end < last,
+        "coverage_spread": [{"file": name, "end": value} for name, value in spread],
+    }
+
+
+def _check_boost_matching(joined, campaigns: list) -> None:
+    """A boost-illesztés aránya nem lábjegyzet, hanem adathitelességi kérdés.
+
+    A Mammut-próbán MINDEN boost illesztetlen maradt (egy elrontott előtag-regex
+    miatt), és a build ettől még „sikeresen" lefutott. Pedig a riport két
+    központi száma — a boost-szorzó és a szerves átlagelérés — pontosan erre az
+    illesztésre épül: ha egy hirdetett poszt nem kapja meg a költését,
+    organikusként számít bele az átlagba. A javítás után a szorzó 2,5×-ről
+    4,7×-re változott. Mindkét szám hihető volt; az egyik hamis.
+
+    Egy-két illesztetlen boost normális (a poszt korábbi hónapban jelent meg).
+    A többség viszont azt jelenti, hogy a párosítás elromlott.
+    """
+    boosts = [c for c in campaigns if getattr(c, "is_boost", False)]
+    if not boosts:
+        return
+    ratio = len(joined.unmatched_boosts) / len(boosts)
+    if ratio <= UNMATCHED_BOOST_LIMIT:
+        return
+
+    names = "\n".join(f"  · {c.name}" for c in joined.unmatched_boosts[:6])
+    more = len(joined.unmatched_boosts) - 6
+    raise UnmatchedBoostError(
+        f"a boostok {ratio:.0%}-a nem talált posztot "
+        f"({len(joined.unmatched_boosts)} a {len(boosts)}-ból):\n{names}"
+        + (f"\n  · …és még {more}" if more > 0 else "")
+        + "\n\nEnnyi illesztetlenség mellett a boost-szorzó és a szerves "
+        "átlagelérés is hamis lenne: a hirdetett posztok organikusként "
+        "számítanának bele.\n"
+        "Nézd meg: (1) a Tartalom exportok ugyanarra a hónapra szólnak-e, "
+        "(2) mindkét csatornáról megvannak-e, (3) a kampánynevek tényleg a "
+        "poszt szövegét tartalmazzák-e."
+    )
+
+
 def _obtainable(channels: dict, config: dict) -> list[dict]:
     """Amit a Meta nem exportál, de a felületén ott van, és még nincs megadva."""
     given = config.get("monthly_reach") or {}
@@ -156,6 +255,7 @@ def build(directory: Path, period: str) -> dict:
     unknown: list[str] = []
     screenshots: list[str] = []
     wrong_format: list[tuple[str, str]] = []
+    coverage: dict[str, tuple] = {}
     seen: dict[str, str] = {}
     content_channels: dict[str, str] = {}
 
@@ -208,6 +308,11 @@ def build(directory: Path, period: str) -> dict:
             continue
 
         guards.check_period(source.kind, parsed.period, period)
+        # Meddig ér az adat? A menedzser nem mindig a hónap utolsó napján tölt
+        # le, és a Business Suite csempéi külön-külön zárulnak. Ha ezt nem
+        # mérjük ki, a riport a teljes hónapot állítja — és a következő
+        # hónaphoz képest torz lesz az összehasonlítás, magyarázat nélkül.
+        coverage[source.path.name] = (source.kind, parsed.period)
         hints.update({k: v for k, v in parsed.client_hints.items() if v})
 
     if wrong_format:
@@ -239,6 +344,7 @@ def build(directory: Path, period: str) -> dict:
     guards.check_client(hints, client)
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
+    _check_boost_matching(joined, campaigns)
 
     channels = kpi.channel_blocks(
         series=series, posts=joined.posts, campaigns=campaigns
@@ -272,6 +378,9 @@ def build(directory: Path, period: str) -> dict:
                 "comparison_headline": config.get("report", {}).get(
                     "comparison_headline", "value"
                 ),
+                # Meddig ér ténylegesen az adat — a fájlokból mérve, nem a
+                # naptárból feltételezve.
+                **_coverage(coverage, period),
             },
             "content": kpi.content_summary(items),
             # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
@@ -303,6 +412,11 @@ def build(directory: Path, period: str) -> dict:
             # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
             "follower_origin": follower_origin,
             "paid": kpi.paid_totals(campaigns),
+            # Illeszkedik-e az előző havi adat a mostanihoz? Rés, átfedés vagy
+            # ismeretlen időszak esetén a „változás" nem változás.
+            "comparison_health": compare.coverage_check(
+                previous, _coverage(coverage, period)
+            ),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),

@@ -47,3 +47,26 @@ def test_result_types_are_preserved(input_file):
 
 def test_period(input_file):
     assert parse(input_file("Kampányok")).period == (date(2026, 7, 1), date(2026, 7, 31))
+
+
+def test_boost_prefix_is_found_after_a_client_prefix():
+    """A Meta a boost nevét gyakran az ügyfél saját előtagja mögé teszi.
+
+    A Mammut júliusi exportjában minden kampány `Mammut_Bejegyzés: …`
+    alakban jött. Amíg a felismerés a sor elejéhez kötött, egyetlen boost sem
+    azonosítódott — a hirdetett posztok csendben kimaradtak a rangsorból.
+    """
+    from pipeline.parsers.meta_ads import _boost_channel
+
+    assert _boost_channel("Mammut_Bejegyzés: „Nyáron is irány a Mammut!”") == "facebook"
+    assert _boost_channel("Mammut_Instagram-bejegyzés: Hangolódj a nyári…") == "instagram"
+    assert _boost_channel("Bejegyzés: hagyományos alak") == "facebook"
+    assert _boost_channel("Instagram-bejegyzés: hagyományos alak") == "instagram"
+
+
+def test_always_on_campaigns_are_still_not_boosts():
+    """A javítás nem teheti boosttá azt, ami nem az."""
+    from pipeline.parsers.meta_ads import _boost_channel
+
+    assert _boost_channel("Mammut_Always-on forgalomterelés") is None
+    assert _boost_channel("Nyári kampány — bejegyzések helyett") is None

@@ -6,6 +6,7 @@ from pathlib import Path
 import yaml
 
 from pipeline.build import build, load_narrative
+from pipeline.build import load_config as build_module_config
 from pipeline.errors import FixtureAsClientError, PipelineError
 from pipeline.textio import force_utf8_output
 
@@ -33,6 +34,22 @@ def _report_map(data: dict) -> str:
             f"{paid['spend']:.2f} {paid['currency']} "
             f"({quality['dropped_zero_campaign_rows']} nullás sor kiszűrve)",
             f"Napi metrikák   {channels}",
+            f"Mért időszak    {data['meta']['coverage_start']} – "
+            f"{data['meta']['coverage_end']}"
+            + ("   ⚠ a hónap még nem zárult le" if data["meta"]["coverage_partial"] else ""),
+            # Ha a források nem egyszerre zárultak, az pont az a hiba, amit a
+            # korábbi kézi riportokban találtunk: egy dokumentumban keverednek
+            # a különböző napokon lekérdezett állapotok.
+            (
+                "⚠ ezek a fájlok korábban zárulnak, mint a többi — nem "
+                "egyszerre töltötted le őket:\n"
+                + "\n".join(
+                    f"  · {item['file']} — {item['end']}"
+                    for item in data["meta"]["coverage_spread"]
+                )
+                if data["meta"].get("coverage_spread")
+                else ""
+            ),
             "",
             "\n".join(
                 f"Követők {name:<9} {data['audience'][name]['followers']} "
@@ -81,6 +98,12 @@ def _report_map(data: dict) -> str:
                 )
                 if data.get("obtainable")
                 else "Minden beszerezhető adat megvan."
+            ),
+            (
+                "⚠ az előző hónaphoz mérés bizonytalan — "
+                + data["comparison_health"]["message"]
+                if data.get("comparison_health", {}).get("message")
+                else ""
             ),
             "",
             (
@@ -187,11 +210,29 @@ def main(argv: list[str] | None = None) -> int:
         help="a review.json szövegjavításait beírja a narrative.json-be",
     )
     parser.add_argument(
+        "--checklist",
+        action="store_true",
+        help="a letöltendő fájlok kipipálható listája — ezzel kezdd",
+    )
+    parser.add_argument(
         "--allow-fixture",
         action="store_true",
         help="a teszt-fixture-ből is engedjen építeni — csak a teszteknek",
     )
     args = parser.parse_args(argv)
+
+    if args.checklist:
+        # Ez a folyamat legelső lépése, és nem igényel semmit: sem forrásfájlt,
+        # sem konfigurációt. Ha van `client.yaml`, abból szűkül a lista.
+        from pipeline import checklist
+
+        directory = Path(args.directory)
+        try:
+            client = (build_module_config(directory) or {}).get("client")
+        except PipelineError:
+            client = None
+        print(checklist.render(client, str(directory).replace("\\", "/")))
+        return 0
 
     try:
         _refuse_the_fixture(Path(args.directory), args.allow_fixture)

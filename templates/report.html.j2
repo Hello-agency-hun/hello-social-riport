@@ -18,6 +18,16 @@
   <div class="eyebrow">Social media riport</div>
   <h1>{{ data.meta.client }}</h1>
   <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_hu }}</h2>
+  {# A pontos időszak nem formaság. A korábbi, kézzel készült riportok
+     metrikánként hét-tíz nappal korábban zárultak — a készítő más napokon
+     nyitotta meg az egyes csempéket. Az ügyfél ezért ugrást fog látni az
+     átálláskor, és annak megmagyarázhatónak kell lennie. Ha a riport nem
+     mondja ki, mit mért, a magyarázat nem áll meg. #}
+  <p class="note" style="margin-top:10px">
+    Mért időszak: {{ period_range }}
+    {%- if coverage_partial %} · <strong>a hónap még nem zárult le</strong>,
+    az adatok eddig a napig tartanak{% endif %}
+  </p>
 </section>
 
 <section class="page">
@@ -183,8 +193,9 @@
     {% endfor %}
   </div>
   <p class="note" style="margin-top:auto">
-    Az adatok forrása a Meta Business Suite és a ZoomSphere hivatalos exportja.
-    Készült: {{ generated }}.
+    Mért időszak: <strong>{{ period_range }}</strong> — naptári hónap, elsejétől
+    a hónap utolsó napjáig. Az adatok forrása a Meta Business Suite és a
+    ZoomSphere hivatalos exportja. Készült: {{ generated }}.
   </p>
 </section>
 

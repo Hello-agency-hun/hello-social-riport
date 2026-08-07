@@ -4,7 +4,15 @@ from dataclasses import dataclass, field
 from pipeline.errors import UnmatchedBoostError
 from pipeline.schema import Campaign, ContentItem, Post
 
-BOOST_PREFIX = re.compile(r"^(Instagram-bejegyzés:|Bejegyzés:)\s*")
+# A Meta a boost nevét a bejegyzés típusából állítja elő, de az ügyfelek egy
+# része saját előtaggal nevezi a kampányait: `Mammut_Bejegyzés: „…”`. Amíg a
+# levágás a sor elejéhez volt kötve, az előtag bennmaradt a kulcsban, és a
+# boost nem talált posztot — a hirdetett poszt organikusként jelent volna meg,
+# költés nélkül. Az előtag rövid és elválasztóval zárul, a poszt szövegébe
+# ezért nem tud beleharapni.
+BOOST_PREFIX = re.compile(
+    r"^(?:[^\s:]{1,40}[_\-—:/])?(?:Instagram-bejegyzés|Bejegyzés):\s*"
+)
 MATCH_LENGTH = 30
 
 

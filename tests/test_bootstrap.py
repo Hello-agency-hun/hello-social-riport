@@ -43,7 +43,10 @@ def test_an_ambiguous_daily_tile_gets_a_pasteable_answer(fixture_dir, tmp_path):
     message = str(caught.value)
     assert "daily_metric_overrides:" in message, "a kimásolható szakasz"
     # A mezőnév kiolvasható a csempe magyar nevéből — azt nem kell találgatni.
-    assert '"Megtekintések": [' in message and '"views"' in message
+    # A kulcs viszont a fájl neve, nem a csempéé: ugyanez a csempe mindkét
+    # csatornán előfordulhat (a Mammutnál így is volt), és akkor a csempenévre
+    # kulcsolt beállítás a két letöltés közül nem tudna választani.
+    assert '"Megtekintések-2.csv": [' in message and '"views"' in message
     # A csatornát viszont ez a csempe tényleg nem árulja el. Nem tippelünk
     # helyette: mindkét lehetőség ott van, a döntés a menedzseré.
     assert "facebook" in message and "instagram" in message
