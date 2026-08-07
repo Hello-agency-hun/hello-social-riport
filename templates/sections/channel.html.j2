@@ -56,8 +56,9 @@
   <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
   <h2 style="margin-bottom:20px">Elérés szerinti sorrend</h2>
   {# A diagram a viewBox aránya szerint skálázódik; teljes szélességen hat
-     sávval kilógna a 16:9-es lapról. #}
-  <div class="fill"><div style="max-width:880px;margin:0 auto">
+     sávval kilógna a 16:9-es lapról. A korlátozást a `.chart-frame` adja —
+     inline `margin: 0 auto`-val ez a diagram 0×0-ra esett. #}
+  <div class="fill"><div class="chart-frame">
     {{ ranking[name] | safe }}
   </div></div>
 </section>

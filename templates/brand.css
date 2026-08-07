@@ -107,6 +107,19 @@ strong { color: var(--ink); font-weight: 700; }
 .page > .fill { flex: 1 1 auto; display: flex; flex-direction: column;
                 justify-content: center; }
 
+/* A diagramok `width`/`height` attribútum nélkül jönnek: a `viewBox` adja az
+   arányt, így a diagram a helyéhez skálázódik. Ehhez viszont a szélességnek
+   feloldhatónak kell lennie. Blokk-környezetben az; flex-elemként nem, ezért
+   itt rögzítjük. */
+.chart { display: block; width: 100%; height: auto; }
+
+/* Szélességben korlátozott, középre húzott diagram.
+   Flex-oszlopban a `margin: 0 auto` NEM erre való: az auto margók felszívják a
+   szabad helyet, és az elem a tartalmára zsugorodik — a tartalom pedig egy
+   olyan SVG, aminek a szélessége épp ebből következne. Az elérés-rangsor így
+   esett 0×0-ra: a diagram hibátlanul elkészült, csak nem volt hova kirajzolni. */
+.chart-frame { width: 100%; max-width: 880px; align-self: center; }
+
 .grid { display: grid; gap: 28px; align-content: center; }
 .panel { background: var(--paper-alt); border: 1px solid var(--rule);
          border-radius: 14px; padding: 26px; }
