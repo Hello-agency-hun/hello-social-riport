@@ -147,6 +147,11 @@
       <div class="stat-label">a boost szorzója</div>
     </div>
   </div>
+  {# Itt korábban négy üres, szaggatott doboz állt olyan adatokra, amiket a Meta
+     nem exportál. Az ügyfél ebből azt olvasta ki, hogy elfelejtettünk valamit.
+     Most az áll itt, amit MÉRÜNK — pontos névvel, hogy ne lehessen összekeverni
+     a havi eléréssel. Amit nem mérünk, arról a `--validate` szól, a
+     menedzsernek. #}
   <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:36px">
     {% for name, block in data.get("audience", {}).items() %}
     {% if block.followers %}
@@ -157,9 +162,15 @@
         {{ block.new_followers | signed }} a hónapban{% endif %}</div>
     </div>
     {% endif %}
-    {% endfor %}
-    {% for key, meta in manual_slots.items() %}
-    {{ slot(key, manual.get(key), meta.label, meta.hint) }}
+    {# Ha a menedzser megadta a havi elérést, az a legerősebb szám a lapon:
+       ez az egyetlen deduplikált érték, amit a Meta ad. #}
+    {% if block.monthly_reach %}
+    <div>
+      <div class="stat stat--sm">{{ block.monthly_reach | num }}</div>
+      <div class="stat-label">{{ name | channel }} havi elérés
+        {%- if block.reach_per_follower %} · {{ block.reach_per_follower | num(1) }}× a követőtábor{% endif %}</div>
+    </div>
+    {% endif %}
     {% endfor %}
   </div>
   <p class="note" style="margin-top:auto">

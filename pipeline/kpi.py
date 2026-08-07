@@ -50,7 +50,7 @@ def paid_totals(campaigns: list[Campaign]) -> dict:
     }
 
 
-def audience(channels: dict, followers: dict, manual: dict | None = None) -> dict:
+def audience(channels: dict, followers: dict, monthly_reach: dict | None = None) -> dict:
     """A közönség mérete és mozgása.
 
     A követőszám a `client.yaml`-ből jön (a Meta nem exportálja), az új követés
@@ -61,12 +61,12 @@ def audience(channels: dict, followers: dict, manual: dict | None = None) -> dic
     matematikailag nem áll elő: aki két napon látott minket, egy ember. Ha a
     menedzser beírja, kiszámoljuk, hányszorosát értük el a követőtábornak.
     """
-    manual = manual or {}
+    monthly_reach = monthly_reach or {}
     out = {}
     for name, block in channels.items():
         total = followers.get(name)
         gained = block.get("totals", {}).get("follows")
-        reach = manual.get(f"reach_{name}")
+        reach = monthly_reach.get(name)
 
         out[name] = {
             "followers": total,

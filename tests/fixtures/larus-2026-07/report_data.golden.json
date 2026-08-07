@@ -2014,6 +2014,20 @@
     "dropped_zero_campaign_rows": 16
   },
   "manual": {},
+  "obtainable": [
+    {
+      "key": "monthly_reach.facebook",
+      "label": "facebook havi elérés",
+      "hint": "Business Suite → Elérés csempe, a hónapra állítva",
+      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál"
+    },
+    {
+      "key": "monthly_reach.instagram",
+      "label": "instagram havi elérés",
+      "hint": "Business Suite → Elérés csempe, a hónapra állítva",
+      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál"
+    }
+  ],
   "missing": [
     "Instagram Tartalom export — enélkül nincs poszt-szintű elérés"
   ]

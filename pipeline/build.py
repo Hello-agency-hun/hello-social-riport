@@ -91,6 +91,23 @@ def _missing(seen: dict, content_channels: dict, daily_channels: set, client: di
     return gaps
 
 
+def _obtainable(channels: dict, config: dict) -> list[dict]:
+    """Amit a Meta nem exportál, de a felületén ott van, és még nincs megadva."""
+    given = config.get("monthly_reach") or {}
+    spec = manual.OBTAINABLE["monthly_reach"]
+
+    return [
+        {
+            "key": f"monthly_reach.{name}",
+            "label": f"{name} {spec['label']}",
+            "hint": spec["hint"],
+            "why": spec["why"],
+        }
+        for name in sorted(channels)
+        if not isinstance(given.get(name), int)
+    ]
+
+
 def load_narrative(directory: Path) -> dict | None:
     path = Path(directory) / "narrative.json"
     if not path.exists():
@@ -211,7 +228,9 @@ def build(directory: Path, period: str) -> dict:
             },
             # A követőszám nem díszlet: belőle jön a növekedési ütem, és — ha a
             # menedzser beírja a havi elérést — az elérés/követő arány is.
-            "audience": kpi.audience(channels, follower_counts, manual_values),
+            "audience": kpi.audience(
+                channels, follower_counts, config.get("monthly_reach") or {}
+            ),
             # Honnan tudjuk a követőszámot. A továbbszámolt értéket a
             # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
             "follower_origin": follower_origin,
@@ -228,6 +247,9 @@ def build(directory: Path, period: str) -> dict:
                 ),
             },
             "manual": manual_values,
+            # Ami nincs exportban, de a felületről leolvasható. Nem hiba, és nem
+            # is az ügyfélre tartozik — a menedzsernek szól, hogy tudjon róla.
+            "obtainable": _obtainable(channels, config),
             "missing": _missing(
                 seen,
                 content_channels,

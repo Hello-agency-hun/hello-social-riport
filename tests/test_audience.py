@@ -58,7 +58,7 @@ def test_monthly_reach_stays_manual_but_gets_used(fixture_dir):
     """A havi elérés napi értékek összegéből nem áll elő — aki két napon látott
     minket, egy ember. Amit a menedzser beír, azt viszont felhasználjuk."""
     channels = {"facebook": {"totals": {"follows": 5}}}
-    block = kpi.audience(channels, {"facebook": 4000}, {"reach_facebook": 18000})["facebook"]
+    block = kpi.audience(channels, {"facebook": 4000}, {"facebook": 18000})["facebook"]
 
     assert block["monthly_reach"] == 18000
     assert block["reach_per_follower"] == 4.5

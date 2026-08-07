@@ -49,6 +49,23 @@ def _report_map(data: dict) -> str:
                 else "Minden várt forrás megvan."
             ),
             "",
+            (
+                "Beszerezhető, de még nincs megadva — írd a client.yaml-be:\n"
+                + "\n".join(
+                    f"  → {item['label']}\n"
+                    f"      hol:  {item['hint']}\n"
+                    f"      miért: {item['why']}"
+                    for item in data["obtainable"]
+                )
+                + "\n\n  monthly_reach:\n"
+                + "\n".join(
+                    f"    {item['key'].split('.')[1]}: <szám>"
+                    for item in data["obtainable"]
+                )
+                if data.get("obtainable")
+                else "Minden beszerezhető adat megvan."
+            ),
+            "",
             "⚠ nem illesztett boost: "
             + (f"{len(unmatched)} db — " + "; ".join(unmatched) if unmatched else "nincs"),
         ]
