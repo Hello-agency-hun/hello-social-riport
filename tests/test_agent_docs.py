@@ -64,6 +64,19 @@ def test_the_sandbox_escape_hatch_is_documented():
     assert "helyőrző" in text
 
 
+@pytest.mark.parametrize("doc", [AGENTS, SKILL], ids=["AGENTS.md", "SKILL.md"])
+def test_both_docs_say_to_ask_before_building(doc):
+    """Codexen az agent egybol nekiugrott az epitesnek, es a teszt-fixture-bol
+    dolgozott — a riport hibatlan lett, csak nem arrol szolt, amit a menedzser
+    feltoltott. Mindket utmutatonak ki kell mondania a varakozast, mert egyik
+    agent sem biztos, hogy eljut a masikig."""
+    text = doc.read_text(encoding="utf-8")
+
+    assert "tests/fixtures/" in text, "nevezzuk meg, mi NEM adatforras"
+    assert "clients/<ugyfel>/<YYYY-MM>/input/" in text, "mondjuk meg, hova tegye"
+    assert "várj" in text.lower() or "Várj" in text
+
+
 def test_the_unbreakable_rules_are_named_for_agents_that_never_see_the_skill():
     """Ha az agent csak az AGENTS.md-ig jut, a három szabályt akkor is tudnia
     kell — különben a hibaüzenetek értelmetlennek látszanak neki."""

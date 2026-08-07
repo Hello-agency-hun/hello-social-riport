@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from pipeline.build import build, load_narrative
-from pipeline.errors import PipelineError
+from pipeline.errors import FixtureAsClientError, PipelineError
 from pipeline.textio import force_utf8_output
 
 
@@ -72,6 +72,30 @@ def _report_map(data: dict) -> str:
     )
 
 
+def _refuse_the_fixture(directory: Path, allowed: bool) -> None:
+    """A teszt-fixture valódi ügyféladat, és semmi nem különbözteti meg egy
+    éles munkamappától: van benne `client.yaml`, teljes exportkészlet és kész
+    narratíva.
+
+    Egy agent, akit megkérnek, hogy „csinálj riportot a Larusnak júliusra”,
+    rátalál, és épít belőle — ez meg is történt. A riport hibátlan lesz, csak
+    épp nem arról szól, amit a menedzser feltöltött, és ez sehol nem derül ki.
+    Ezért nem elég leírni, hogy ne tegye: nem szabad, hogy menjen.
+    """
+    if allowed:
+        return
+    parts = [part.lower() for part in Path(directory).resolve().parts]
+    if "fixtures" in parts and "tests" in parts:
+        raise FixtureAsClientError(
+            f"{directory} a teszt-fixture, nem ügyfélmappa.\n"
+            "Valódi ügyféladat van benne, de a tesztek kötötték le — riportot "
+            "nem ebből készítünk.\n"
+            "Hozz létre egy saját mappát (clients/<ugyfel>/<YYYY-MM>/input/), "
+            "és oda töltsd fel az exportokat.\n"
+            "(A teszteknek: --allow-fixture.)"
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     force_utf8_output()
     parser = argparse.ArgumentParser(prog="hello-report")
@@ -92,9 +116,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="a review.json szövegjavításait beírja a narrative.json-be",
     )
+    parser.add_argument(
+        "--allow-fixture",
+        action="store_true",
+        help="a teszt-fixture-ből is engedjen építeni — csak a teszteknek",
+    )
     args = parser.parse_args(argv)
 
     try:
+        _refuse_the_fixture(Path(args.directory), args.allow_fixture)
         data = build(Path(args.directory), period=args.period)
     except PipelineError as error:
         print(f"HIBA: {error}", file=sys.stderr)

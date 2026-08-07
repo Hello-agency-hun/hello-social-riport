@@ -14,6 +14,10 @@ class MissingConfigError(PipelineError):
     """Nincs `client.yaml` az ügyfél mappájában."""
 
 
+class FixtureAsClientError(PipelineError):
+    """Valaki a teszt-fixture-ből próbál éles riportot készíteni."""
+
+
 class NoSourceError(PipelineError):
     """A hónap mappájában egyetlen felismerhető forrásfájl sincs."""
 

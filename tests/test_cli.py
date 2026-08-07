@@ -17,13 +17,32 @@ def run(fixture_dir, tmp_path, *extra):
             "--html",
             str(tmp_path / "Riport.html"),
             "--offline",
+            "--allow-fixture",
             *extra,
         ]
     )
 
 
-def test_validate_prints_data_map(fixture_dir, capsys):
+def test_the_fixture_cannot_be_used_as_a_client_folder(fixture_dir, capsys):
+    """A fixture valódi ügyféladat, teljes exportkészlettel és kész
+    narratívával — semmi nem különbözteti meg egy éles munkamappától.
+
+    Egy agent, akit megkérnek, hogy „csinálj riportot a Larusnak júliusra”,
+    rátalál és épít belőle. Ez meg is történt Codexen: a riport hibátlan lett,
+    csak épp nem arról szólt, amit a menedzser feltöltött — és ez sehol nem
+    derült ki. Leírni, hogy ne tegye, nem elég."""
     exit_code = main([str(fixture_dir), "--period", "2026-07", "--validate"])
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "teszt-fixture, nem ügyfélmappa" in error
+    assert "clients/" in error, "mondjuk meg, hova tegye helyette"
+
+
+def test_validate_prints_data_map(fixture_dir, capsys):
+    exit_code = main(
+        [str(fixture_dir), "--period", "2026-07", "--validate", "--allow-fixture"]
+    )
     out = capsys.readouterr().out
     assert exit_code == 0
     assert "29 tartalom" in out
@@ -88,7 +107,7 @@ def test_render_writes_the_html(fixture_dir, tmp_path):
             str(fixture_dir), "--period", "2026-07",
             "--out", str(tmp_path / "report_data.json"),
             "--html", str(target),
-            "--offline",
+            "--offline", "--allow-fixture",
         ]
     )
     assert exit_code == 0

@@ -11,6 +11,20 @@ másolja meg a tartalmát. A repó már megbüntetett egyszer a duplikációért
 mappaábra két helyen szerepelt, és az egyik rossz helyre tette a
 `client.yaml`-t.
 
+## Mielőtt bármit csinálnál
+
+**Ne kezdj el riportot építeni addig, amíg a menedzser fel nem töltötte a
+fájlokat.** A „csinálj riportot a Larusnak júliusra” nem azt jelenti, hogy
+keress adatot a repóban — azt jelenti, hogy *most kezdjük el együtt*.
+
+Kérdezd meg az ügyfél nevét és a hónapot, hozd létre a
+`clients/<ugyfel>/<YYYY-MM>/input/` mappát, mondd meg a pontos útvonalat, kérd
+meg, hogy oda töltse fel az exportokat átnevezés nélkül — **és várj**.
+
+**A `tests/fixtures/` nem adatforrás.** Valódi ügyféladat van benne, teljes
+exportkészlettel és kész narratívával, tehát pontosan úgy néz ki, mint egy éles
+munkamappa. A CLI el is utasítja, ha onnan próbálsz építeni.
+
 ## A három szabály, amit sosem szabad megkerülni
 
 Ezeket a kód is kikényszeríti — nem emlékezetből kell tartanod őket —, de

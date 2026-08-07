@@ -33,6 +33,29 @@ biztosíték arra, hogy egy tetszetős, de hamis szám ne kerüljön ki az ügyf
 
 ## A menete
 
+### 0. Előbb kérdezz, csak utána dolgozz
+
+**Ne kezdj el riportot építeni addig, amíg a menedzser fel nem töltötte a
+fájlokat.** Ha valaki azt mondja, hogy „csinálj riportot a Larusnak júliusra",
+az nem azt jelenti, hogy keress adatot valahol a repóban — azt jelenti, hogy
+*most kezdjük el együtt*.
+
+A sorrend:
+
+1. **Kérdezd meg az ügyfél nevét és a hónapot**, ha nem egyértelmű.
+2. **Hozd létre a mappát**: `clients/<ugyfel>/<YYYY-MM>/input/`, és **mondd meg
+   a pontos útvonalat**.
+3. **Kérd meg, hogy töltse fel az exportokat ebbe a mappába**, átnevezés
+   nélkül. Ha nem tudja, mit kell letöltenie, ekkor töltsd be az
+   `references/export-guide.md`-t.
+4. **Várj.** Ne találgass, ne építs félkész adatból.
+5. Amikor szól, hogy kész, indulhat az 1. lépés.
+
+> **A `tests/fixtures/` NEM adatforrás.** Valódi ügyféladat van benne, teljes
+> exportkészlettel és kész narratívával — pontosan úgy néz ki, mint egy éles
+> munkamappa. Riportot soha nem ebből készítünk: a `--validate` és a build
+> el is utasítja. Ez a tesztek anyaga.
+
 ### 1. Nézd meg, mi van a mappában
 
 ```bash
