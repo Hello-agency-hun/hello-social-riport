@@ -1937,6 +1937,10 @@
       "reach_per_follower": null
     }
   },
+  "follower_origin": {
+    "facebook": "client.yaml",
+    "instagram": "client.yaml"
+  },
   "paid": {
     "spend": 472.71,
     "currency": "EUR",

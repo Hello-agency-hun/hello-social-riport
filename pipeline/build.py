@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import bootstrap, compare, guards, kpi, manual
+from pipeline import bootstrap, compare, followers, guards, kpi, manual
 from pipeline.detect import scan
 from pipeline.errors import (
     DuplicateSourceError,
@@ -55,39 +55,10 @@ def load_config(directory: Path) -> dict:
             f"nincs client.yaml itt: {path.parent}\n{lead}\n\n"
             f"{bootstrap.template(found)}"
         )
-    config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    _require_followers(path, config)
-    return config
-
-
-def _require_followers(path: Path, config: dict) -> None:
-    """A követőszám nélkül a növekedésről semmit nem lehet mondani.
-
-    Korábban ez a riport végén állt kitölthető mezőként, és pont ezért maradt
-    üresen: ott már senki nem megy vissza érte. Fél perc leolvasni a profilról,
-    tehát nem engedjük tovább nélküle — de megmondjuk, hol van.
-    """
-    client = config.get("client") or {}
-    followers = config.get("followers") or {}
-
-    wanted = []
-    if client.get("fb_page_id") or client.get("fb_page_name"):
-        wanted.append("facebook")
-    if client.get("ig_handle"):
-        wanted.append("instagram")
-
-    gaps = [name for name in wanted if not isinstance(followers.get(name), int)]
-    if not gaps:
-        return
-
-    lines = "\n".join(
-        f"  {name}: <{bootstrap.FOLLOWER_HINT[name]}>" for name in gaps
-    )
-    raise MissingConfigError(
-        f"hiányzik a követőszám ({', '.join(gaps)}) innen: {path}\n"
-        "Írd bele — a profilról leolvasható, és enélkül a növekedés nem "
-        "számolható:\n\nfollowers:\n" + lines
-    )
+    # A követőszámot itt még nem ellenőrizzük: lehet, hogy nem is kell megadni,
+    # mert az előző hónapból továbbszámolható. Ahhoz viszont a napi adat kell,
+    # ami csak a források beolvasása után áll elő. Lásd `followers.resolve`.
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
 # Mi hiányozhat, és mibe kerül. A varázsló ebből dolgozik: nem elég tudni,
@@ -208,6 +179,9 @@ def build(directory: Path, period: str) -> dict:
     )
     previous = compare.load_previous(directory)
     manual_values = manual.load_manual(directory)
+    follower_counts, follower_origin = followers.resolve(
+        config, channels, previous, period
+    )
 
     return _serialise(
         {
@@ -237,9 +211,10 @@ def build(directory: Path, period: str) -> dict:
             },
             # A követőszám nem díszlet: belőle jön a növekedési ütem, és — ha a
             # menedzser beírja a havi elérést — az elérés/követő arány is.
-            "audience": kpi.audience(
-                channels, config.get("followers") or {}, manual_values
-            ),
+            "audience": kpi.audience(channels, follower_counts, manual_values),
+            # Honnan tudjuk a követőszámot. A továbbszámolt értéket a
+            # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
+            "follower_origin": follower_origin,
             "paid": kpi.paid_totals(campaigns),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {

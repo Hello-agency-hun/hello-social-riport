@@ -3,7 +3,7 @@ import shutil
 import pytest
 import yaml
 
-from pipeline import kpi
+from pipeline import followers, kpi
 from pipeline.build import build
 from pipeline.errors import MissingConfigError
 
@@ -62,6 +62,74 @@ def test_monthly_reach_stays_manual_but_gets_used(fixture_dir):
 
     assert block["monthly_reach"] == 18000
     assert block["reach_per_follower"] == 4.5
+
+
+CONFIG = {"client": {"fb_page_id": "1", "ig_handle": "x"}}
+CHANNELS = {
+    "facebook": {"totals": {"follows": 5}},
+    "instagram": {"totals": {}},
+}
+
+
+def _prev(period, facebook=4187, instagram=1962):
+    return {
+        "meta": {"period": period},
+        "audience": {
+            "facebook": {"followers": facebook},
+            "instagram": {"followers": instagram},
+        },
+    }
+
+
+def test_the_second_month_does_not_ask_again(fixture_dir):
+    """A múlt havi állomány plusz a havi új követés kiadja a mostanit —
+    nem kell minden hónapban újra leolvasni a profilról."""
+    config = {"client": {"fb_page_id": "1"}}
+    resolved, origin = followers.resolve(
+        config, CHANNELS, _prev("2026-06"), period="2026-07"
+    )
+
+    assert resolved["facebook"] == 4187 + 5
+    assert "továbbszámolva" in origin["facebook"]
+
+
+def test_a_skipped_month_breaks_the_chain():
+    """Ha kimarad egy hónap, a köztes gyarapodást senki nem mérte. A júliusi
+    riportból a szeptemberi állomány nem jön ki."""
+    config = {"client": {"fb_page_id": "1"}}
+
+    with pytest.raises(MissingConfigError) as caught:
+        followers.resolve(config, CHANNELS, _prev("2026-07"), period="2026-09")
+
+    message = str(caught.value)
+    assert "nem a közvetlenül megelőzőé" in message
+    assert "2026-08" in message, "mondjuk meg, melyik hónap hiányzik"
+
+
+def test_a_channel_without_daily_follows_still_has_to_be_asked():
+    """Instagramon nincs napi követés-csempe: állomány + semmi = nem tudjuk."""
+    with pytest.raises(MissingConfigError) as caught:
+        followers.resolve(CONFIG, CHANNELS, _prev("2026-06"), period="2026-07")
+
+    message = str(caught.value)
+    assert "instagram" in message
+    assert "facebook" not in message, "amit tudunk, azt ne kérdezzük újra"
+
+
+def test_a_value_in_the_config_always_wins():
+    """Ha a menedzser leolvasta, azt használjuk — a továbbszámolás csak pótlék."""
+    config = {"client": {"fb_page_id": "1"}, "followers": {"facebook": 9999}}
+    resolved, origin = followers.resolve(
+        config, CHANNELS, _prev("2026-06"), period="2026-07"
+    )
+
+    assert resolved["facebook"] == 9999
+    assert origin["facebook"] == "client.yaml"
+
+
+def test_january_chains_back_to_december():
+    assert followers.previous_period("2026-01") == "2025-12"
+    assert followers.previous_period("2026-07") == "2026-06"
 
 
 def test_audience_survives_a_channel_with_no_follow_data():

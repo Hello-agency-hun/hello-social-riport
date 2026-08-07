@@ -32,6 +32,12 @@ def _report_map(data: dict) -> str:
             f"({quality['dropped_zero_campaign_rows']} nullás sor kiszűrve)",
             f"Napi metrikák   {channels}",
             "",
+            "\n".join(
+                f"Követők {name:<9} {data['audience'][name]['followers']} "
+                f"({origin})"
+                for name, origin in sorted(data.get("follower_origin", {}).items())
+            ),
+            "",
             f"Organic poszt átlagos elérése:  {cross['avg_reach_organic_post']}",
             f"Boostolt poszt átlagos elérése: {cross['avg_reach_boosted_post']}"
             f"  ({cross['reach_multiplier']}×)",
