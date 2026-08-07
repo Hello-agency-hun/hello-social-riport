@@ -29,15 +29,28 @@ Ezzel pontosan azt a torzítást engedtük volna vissza, ami miatt az egész
 pontozás készült. A kattintás hirdetési eredmény; a fizetett szekcióban a
 helye, nem a tartalmi rezonanciában.
 
-## Önmagához képest
+## Önmagához képest — és a hasonlókhoz
 
 A nyers arány még mindig félrevihet: egy kétszáz embert elért poszt könnyebben
-produkál magas százalékot, mint egy tízezres. Ezért minden posztot a **saját
-csatornája mediánjához** mérünk. Így derül ki az, amit keresünk: melyik ment
-nagyot *magához képest*, akkor is, ha abszolút értékben kicsi maradt.
+produkál magas százalékot, mint egy tízezres. Ezért minden posztot egy
+**medián** értékhez mérünk. Mediánt, nem átlagot: egyetlen kiugró poszt az
+átlagot felhúzza, és onnantól mindenki alulteljesítőnek látszik.
 
-Mediánt használunk, nem átlagot: egyetlen erősen boostolt poszt az átlagot
-felhúzza, és onnantól mindenki alulteljesítőnek látszik.
+**De nem a csatorna egészéhez mérünk, hanem a saját mezőnyéhez.** Ez a
+tanulság a PETI-próbából jött: ott mindkét csatornán *minden* hirdetett poszt a
+szerves posztok mögé került, és nem véletlenül. Egy boostolt poszt elérésében
+benne van a fizetett terjesztés is — egy hidegebb közönség, amelyik
+természetesen kevesebbet reagál. Ha az interakciót ezzel a nagyobb, kevertebb
+nevezővel osztjuk, a hirdetett posztot **automatikusan büntetjük**. Almát
+osztunk körtével, és a riportból úgy tűnik, mintha nem is hirdetnénk.
+
+Ezért két mezőny van: a boostolt posztokat a boostoltakhoz, a szerveseket a
+szervesekhez mérjük. Így a kérdés az lesz, ami érdekes: *a saját fajtájához
+képest hogyan teljesített?*
+
+Ha egy mezőnyben túl kevés poszt van ahhoz, hogy a mediánja jelentsen valamit
+(`MIN_COHORT`), visszaesünk a csatorna egészére — egyetlen poszt mediánja
+önmaga, abból nem lesz viszonyítási alap.
 """
 
 from statistics import median
@@ -71,6 +84,28 @@ def _engagement_rate(post: dict) -> float | None:
     return plain / reach
 
 
+# Ennyi poszt kell egy mezőnyhöz, hogy a mediánja jelentsen valamit.
+MIN_COHORT = 3
+
+
+def _cohort_medians(posts: list[dict]) -> dict[bool, float]:
+    """Külön viszonyítási alap a boostolt és a szerves mezőnynek."""
+    everything = [r for r in (_resonance(p) for p in posts) if r is not None]
+    overall = median(everything) if everything else 0.0
+
+    out = {}
+    for boosted in (True, False):
+        values = [
+            r
+            for r in (
+                _resonance(p) for p in posts if bool(p.get("paid")) is boosted
+            )
+            if r is not None
+        ]
+        out[boosted] = median(values) if len(values) >= MIN_COHORT else overall
+    return out
+
+
 def score_posts(posts: list[dict]) -> list[dict]:
     """Minden posztra rátesz egy `score` blokkot. A listát nem rendezi át.
 
@@ -78,29 +113,35 @@ def score_posts(posts: list[dict]) -> list[dict]:
     jellemzően ilyenek. Nullát adni helyette azt jelentené, hogy „mértük, és
     rossz volt", pedig nem mértük.
     """
-    resonances = [r for r in (_resonance(p) for p in posts) if r is not None]
-    typical = median(resonances) if resonances else 0.0
+    medians = _cohort_medians(posts)
 
     for post in posts:
         resonance = _resonance(post)
         if resonance is None:
             post["score"] = None
             continue
+        boosted = bool(post.get("paid"))
+        typical = medians[boosted]
         post["score"] = {
             "resonance": round(resonance, 5),
             "engagement_rate": round(_engagement_rate(post) or 0, 4),
             "weighted_interactions": weighted_interactions(post),
-            # Hányszorosa a csatorna szokásos teljesítményének.
+            # Hányszorosa a SAJÁT mezőnye szokásos teljesítményének.
             "vs_typical": round(resonance / typical, 2) if typical else None,
-            "boosted": bool(post.get("paid")),
+            "boosted": boosted,
         }
     return posts
 
 
 def ranked(posts: list[dict]) -> list[dict]:
-    """A pontozott posztok, legjobbtól lefelé. A pontozatlanok kimaradnak."""
+    """A pontozott posztok, legjobbtól lefelé. A pontozatlanok kimaradnak.
+
+    A rendezés a mezőnyön belüli teljesítmény szerint megy, nem a nyers arány
+    szerint — különben a boostolt posztok mindig hátraszorulnának, és a
+    riportból úgy tűnne, mintha nem is hirdetnénk.
+    """
     scored = [p for p in posts if p.get("score")]
-    return sorted(scored, key=lambda p: -p["score"]["resonance"])
+    return sorted(scored, key=lambda p: -(p["score"]["vs_typical"] or 0))
 
 
 def findings(posts: list[dict]) -> dict:

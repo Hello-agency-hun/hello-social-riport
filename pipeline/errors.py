@@ -6,6 +6,10 @@ class UnknownSourceError(PipelineError):
     """Nem azonosítható bemeneti fájl."""
 
 
+class WrongFormatError(PipelineError):
+    """A fájl tartalma jó lehet, csak nem a várt formátumban van."""
+
+
 class DuplicateSourceError(PipelineError):
     """Egy hónaphoz két azonos típusú forrásfájl került."""
 

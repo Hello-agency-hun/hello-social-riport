@@ -23,8 +23,37 @@ class Source:
     field: str | None = None
 
 
+# A mappába nem csak az kerül, amit kérünk. A menedzser letölti rossz
+# formátumban, vagy bedobja a Business Suite képernyőképeit is. Egyik sem hiba —
+# csak tudnunk kell, mi az, hogy értelmesen tudjunk szólni róla.
+SIGNATURES = [
+    (b"%PDF", "pdf"),
+    (b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", "legacy_office"),  # régi .xls/.doc
+    (b"\x89PNG\r\n\x1a\n", "screenshot"),
+    (b"\xff\xd8\xff", "screenshot"),
+    (b"GIF8", "screenshot"),
+    (b"RIFF", "screenshot"),  # webp
+]
+
+
+def sniff(path: Path) -> str | None:
+    """A fájl típusa a tartalma első bájtjaiból — a kiterjesztés hazudhat."""
+    try:
+        head = Path(path).open("rb").read(8)
+    except OSError:
+        return None
+    for magic, kind in SIGNATURES:
+        if head.startswith(magic):
+            return kind
+    return None
+
+
 def identify(path: Path) -> Source:
     path = Path(path)
+
+    sniffed = sniff(path)
+    if sniffed:
+        return Source(path, sniffed)
 
     if path.suffix.lower() == ".xlsx":
         from pipeline.parsers.zoomsphere import looks_like_zoomsphere

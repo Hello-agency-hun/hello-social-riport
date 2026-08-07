@@ -52,6 +52,20 @@ def _report_map(data: dict) -> str:
             ),
             "",
             (
+                # Ha a menedzser feltöltött képernyőképeket, azokról a hiányzó
+                # számok jó eséllyel leolvashatók. Ilyenkor NE kérjük tőle
+                # újra — nézzük meg. Ez az utasítás az agentnek szól.
+                "📷 "
+                + str(len(data["screenshots"]))
+                + " képernyőkép van a mappában:\n"
+                + "\n".join(f"  · {name}" for name in data["screenshots"])
+                + "\n  → Olvasd ki belőlük, ami hiányzik, MIELŐTT bármit "
+                "megkérdeznél a menedzsertől. Amit ezekről le lehet olvasni, "
+                "azt ne kérdezd meg tőle."
+                if data.get("screenshots")
+                else ""
+            ),
+            (
                 "Beszerezhető, de még nincs megadva — írd a client.yaml-be:\n"
                 + "\n".join(
                     f"  → {item['label']}\n      {item['hint']}"

@@ -33,11 +33,14 @@
        diát. #}
     {% if loop.first and shown[0][0].score %}
     <aside class="explainer">
-      <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá
-      (a hozzászólás és a megosztás nagyobb súllyal), a csatorna havi
-      középértékéhez mérve. A <strong>kétszeres</strong> kétszer annyi reakciót
-      jelent a szokásosnál. Azért nem elérés szerint rangsorolunk, mert az
-      elérést a hirdetési költés dönti el.
+      <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá —
+      a hozzászólás és a megosztás nagyobb súllyal. A <strong>kétszeres</strong>
+      kétszer annyi reakciót jelent a szokásosnál.
+      <br><br>
+      A támogatott posztokat a támogatottakhoz mérjük, a szerveseket a
+      szervesekhez: a hirdetés hidegebb közönséghez is eljut, ami természetes
+      módon kevesebbet reagál. Azért nem elérés szerint rangsorolunk, mert az
+      elérést a költés dönti el, nem a tartalom.
     </aside>
     {% endif %}
   </div>
@@ -55,7 +58,11 @@
         {# A sorrendet ez a szám indokolja. Enélkül önkényesnek látszik, hogy
            egy kétszáz elérésű poszt megelőz egy kilencezreset. #}
         {% if post.score %}
-        <tr><td>Rezonancia</td>
+        {# A szorzó mezőnyfüggő: a boostolt posztot a boostoltakhoz mérjük.
+           Enélkül két különböző jelentésű szám állna ugyanazon a néven. #}
+        <tr><td>Rezonancia<br>
+            <span class="note">{{ "a támogatottak közt" if post.score.boosted
+                                  else "a szervesek közt" }}</span></td>
             <td class="num"><strong>{{ post.score.vs_typical | num(1) }}×</strong></td></tr>
         <tr><td>Interakciós arány</td>
             <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>

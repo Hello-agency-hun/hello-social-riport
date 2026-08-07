@@ -75,6 +75,37 @@ Ha hibával áll meg, olvasd el az üzenetet — megnevezi a fájlt és a probl�
 A hiányt a `client.yaml` alapján állapítja meg: csak arról a csatornáról
 hiányol adatot, amiről a konfiguráció szerint van fiók.
 
+### 1b. Ha képernyőképeket is feltöltött
+
+A `--validate` így szól:
+
+```
+📷 2 képernyőkép van a mappában:
+  · business-suite-eleres.jpg
+  → Olvasd ki belőlük, ami hiányzik, MIELŐTT bármit megkérdeznél.
+```
+
+**Nézd meg őket.** A menedzser nem véletlenül tette be: a Business Suite
+csempéin ott a havi elérés, a követőszám és az előző hónaphoz mért változás.
+Ami ezekről leolvasható, azt **ne kérdezd meg tőle még egyszer** — írd be a
+`client.yaml`-be, és mondd meg neki, mit olvastál ki, hogy ellenőrizhesse.
+
+Ha a kép alapján bizonytalan vagy egy számban, azt kérdezd meg — de csak azt.
+
+### 1c. Ha rossz formátumú fájl került be
+
+```
+HIBA: nem a várt formátumban van néhány fájl:
+  · zoomsphere-export.pdf — PDF. Ha ez a ZoomSphere-export, töltsd le XLSX-ként…
+```
+
+Ne állj meg ennél. **Nézd meg a fájlt**: a PDF-ből és a régi Excelből ki tudod
+nyerni a táblázatot, és menteni CSV-ként az `input/` mappába. Utána töröld az
+eredetit, hogy ne ütközzön.
+
+Ha az átalakítás bizonytalan — mert a PDF elrontott táblázatot tartalmaz —,
+akkor kérd meg, hogy töltse le újra. De előbb próbáld meg.
+
 ### 2. Ha hiányzik forrásfájl
 
 Töltsd be a `references/export-guide.md`-t, és vezesd végig a menedzsert

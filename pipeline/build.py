@@ -12,6 +12,7 @@ from pipeline.errors import (
     DuplicateSourceError,
     MissingConfigError,
     NarrativeError,
+    WrongFormatError,
     NoSourceError,
     UnknownSourceError,
 )
@@ -25,6 +26,17 @@ from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere
 SINGLETON_SOURCES = {
     "zoomsphere": "ZoomSphere export",
     "meta_ads": "Meta Ads export",
+}
+
+# Nem a várt formátum, de a tartalma jó lehet. A menedzser véletlenül PDF-et
+# vagy régi Excelt tölt le — ilyenkor nem az a válasz, hogy „ismeretlen fájl",
+# hanem az, hogy mit lehet vele kezdeni.
+CONVERTIBLE = {
+    "pdf": "PDF. Ha ez a ZoomSphere-export, töltsd le XLSX-ként; ha nem megy, "
+    "ki tudom nyerni belőle a táblázatot.",
+    "legacy_office": "régi Office-formátum (.xls/.doc). Mentsd el XLSX-ként "
+    "vagy CSV-ként, vagy szólj, és átalakítom.",
+    "office": "Word- vagy más Office-dokumentum, nem táblázat-export.",
 }
 
 
@@ -142,6 +154,8 @@ def build(directory: Path, period: str) -> dict:
     ads_payload = None
     hints: dict[str, str] = {}
     unknown: list[str] = []
+    screenshots: list[str] = []
+    wrong_format: list[tuple[str, str]] = []
     seen: dict[str, str] = {}
     content_channels: dict[str, str] = {}
 
@@ -179,12 +193,31 @@ def build(directory: Path, period: str) -> dict:
         elif source.kind == "meta_daily":
             parsed = meta_daily.parse(source.path, overrides=overrides)
             series.append(parsed.payload)
+        elif source.kind == "screenshot":
+            # A menedzser gyakran bedobja a Business Suite képernyőképeit is.
+            # Ez nem szemét: ezekről olvasható le a havi elérés és a változás.
+            # Nem szabad hibának venni, és nem szabad megkérdezni tőle olyat,
+            # ami ezeken ott van.
+            screenshots.append(source.path.name)
+            continue
+        elif source.kind in CONVERTIBLE:
+            wrong_format.append((source.path.name, CONVERTIBLE[source.kind]))
+            continue
         else:
             unknown.append(source.path.name)
             continue
 
         guards.check_period(source.kind, parsed.period, period)
         hints.update({k: v for k, v in parsed.client_hints.items() if v})
+
+    if wrong_format:
+        lines = "\n".join(f"  · {name} — {what}" for name, what in wrong_format)
+        raise WrongFormatError(
+            "nem a várt formátumban van néhány fájl:\n" + lines + "\n\n"
+            "Ezeket nem tudom közvetlenül beolvasni. Két út van: töltsd le újra "
+            "a helyes formátumban (ez a biztosabb), vagy szólj, és átalakítom — "
+            "a PDF-ből és a régi Excelből ki tudom nyerni a táblázatot."
+        )
 
     if unknown:
         raise UnknownSourceError(
@@ -295,6 +328,10 @@ def build(directory: Path, period: str) -> dict:
             # Ami nincs exportban, de a felületről leolvasható. Nem hiba, és nem
             # is az ügyfélre tartozik — a menedzsernek szól, hogy tudjon róla.
             "obtainable": _obtainable(channels, config),
+            # A menedzser feltöltött képernyőképeket is. Ezekről a hiányzó
+            # számok jó eséllyel leolvashatók — ilyenkor nem kérdezünk, hanem
+            # megnézzük.
+            "screenshots": screenshots,
             "missing": _missing(
                 seen,
                 content_channels,

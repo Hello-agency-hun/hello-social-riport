@@ -25,6 +25,19 @@ meg, hogy oda töltse fel az exportokat átnevezés nélkül — **és várj**.
 exportkészlettel és kész narratívával, tehát pontosan úgy néz ki, mint egy éles
 munkamappa. A CLI el is utasítja, ha onnan próbálsz építeni.
 
+## Ami az input mappában lesz, azon túl, amit kértél
+
+**Képernyőképek.** A menedzser gyakran bedobja a Business Suite csempéiről
+készült képeket is. Ezek nem szemét: rajtuk van a havi elérés, a követőszám és
+az előző hónaphoz mért változás. A `--validate` felsorolja őket. **Nézd meg
+őket, mielőtt bármit megkérdeznél** — amit onnan le lehet olvasni, azt ne kérd
+el újra. Írd be a `client.yaml`-be, és mondd meg, mit olvastál ki.
+
+**Rossz formátum.** Ha PDF vagy régi `.xls` kerül be, a build megnevezi.
+Ne állj meg ennél: nyisd meg, nyerd ki belőle a táblázatot, mentsd CSV-ként az
+`input/` mappába, és töröld az eredetit. Csak akkor kérj újratöltést, ha az
+átalakítás bizonytalan.
+
 ## A három szabály, amit sosem szabad megkerülni
 
 Ezeket a kód is kikényszeríti — nem emlékezetből kell tartanod őket —, de

@@ -1512,7 +1512,7 @@
             "resonance": 0.01333,
             "engagement_rate": 0.0133,
             "weighted_interactions": 2,
-            "vs_typical": 2.24,
+            "vs_typical": 3.76,
             "boosted": false
           }
         },
@@ -1555,7 +1555,7 @@
             "resonance": 0.01508,
             "engagement_rate": 0.0121,
             "weighted_interactions": 30,
-            "vs_typical": 2.53,
+            "vs_typical": 1.51,
             "boosted": true
           }
         },
@@ -1580,7 +1580,7 @@
             "resonance": 0.01835,
             "engagement_rate": 0.0183,
             "weighted_interactions": 2,
-            "vs_typical": 3.08,
+            "vs_typical": 5.17,
             "boosted": false
           }
         },
@@ -1607,7 +1607,7 @@
             "resonance": 0.01562,
             "engagement_rate": 0.0156,
             "weighted_interactions": 1,
-            "vs_typical": 2.62,
+            "vs_typical": 4.41,
             "boosted": false
           }
         },
@@ -1648,7 +1648,7 @@
             "resonance": 0.00376,
             "engagement_rate": 0.0027,
             "weighted_interactions": 34,
-            "vs_typical": 0.63,
+            "vs_typical": 0.38,
             "boosted": true
           }
         },
@@ -1703,7 +1703,7 @@
             "resonance": 0.02,
             "engagement_rate": 0.02,
             "weighted_interactions": 4,
-            "vs_typical": 3.35,
+            "vs_typical": 5.64,
             "boosted": false
           }
         },
@@ -1799,7 +1799,7 @@
             "resonance": 0.00484,
             "engagement_rate": 0.0048,
             "weighted_interactions": 10,
-            "vs_typical": 0.81,
+            "vs_typical": 0.49,
             "boosted": true
           }
         },
@@ -1853,7 +1853,7 @@
             "resonance": 0.00709,
             "engagement_rate": 0.0071,
             "weighted_interactions": 1,
-            "vs_typical": 1.19,
+            "vs_typical": 2.0,
             "boosted": false
           }
         },
@@ -1922,7 +1922,7 @@
             "resonance": 0.06422,
             "engagement_rate": 0.0555,
             "weighted_interactions": 266,
-            "vs_typical": 10.77,
+            "vs_typical": 6.45,
             "boosted": true
           }
         },
@@ -1976,7 +1976,7 @@
             "resonance": 0.01143,
             "engagement_rate": 0.0114,
             "weighted_interactions": 2,
-            "vs_typical": 1.92,
+            "vs_typical": 3.22,
             "boosted": false
           }
         }
@@ -2052,7 +2052,7 @@
         "caption": "Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐",
         "post_type": "Fényképek",
         "reach": 4142,
-        "vs_typical": 10.77,
+        "vs_typical": 6.45,
         "engagement_rate": 0.0555,
         "boosted": true
       },
@@ -2061,7 +2061,7 @@
         "caption": "Séfünk ajánlata! 😎",
         "post_type": "Hivatkozások",
         "reach": 9046,
-        "vs_typical": 0.63,
+        "vs_typical": 0.38,
         "engagement_rate": 0.0027,
         "boosted": true
       },
@@ -2070,7 +2070,7 @@
         "caption": "Mert közösen a legjobb! ❤️",
         "post_type": "Fényképek",
         "reach": 200,
-        "vs_typical": 3.35,
+        "vs_typical": 5.64,
         "engagement_rate": 0.02,
         "boosted": false
       },
@@ -2191,6 +2191,7 @@
       "why": "az elérés emberben mér, és aki két napon látott minket, egy ember — a napi és a poszt-szintű értékek összege ezért mindig több a valóságnál. A deduplikáció csak a Meta oldalán történhet meg, tehát ezt az egy számot nem lehet kiszámolni, csak leolvasni."
     }
   ],
+  "screenshots": [],
   "missing": [
     "Instagram Tartalom export — enélkül nincs poszt-szintű elérés"
   ]
