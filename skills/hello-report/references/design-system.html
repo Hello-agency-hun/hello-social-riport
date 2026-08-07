@@ -87,7 +87,7 @@ strong { color: var(--ink); font-weight: 700; }
 
    A magasság a kártya többi sorával együtt van beállítva: a rezonancia és az
    interakciós arány két új sort hozott, és 240px-nél a lap túlcsordult. */
-.thumb { display: block; width: 100%; height: 224px;
+.thumb { display: block; width: 100%; height: 212px;
          object-fit: contain; border-radius: 8px; background: var(--rule); }
 
 /* A poszt-kártya tartalma nem nőhet túl az oldalon: a kép fix, a szöveg két
@@ -149,16 +149,9 @@ strong { color: var(--ink); font-weight: 700; }
                font-weight: 700; color: var(--brand-rose); }
 .delta-pct { font-weight: 500; color: var(--ink-soft); }
 
-/* Fogalommagyarázat a főcím mellett. Egy nem közismert mérőszámot egyszer el
-   kell magyarázni, de nem ér meg egy külön diát. */
-.title-row { display: flex; align-items: flex-start; gap: 36px; }
-.title-row h2 { flex: 1 1 auto; }
-.explainer { flex: 0 0 380px; background: var(--paper-alt);
-             border-left: 3px solid var(--brand-rose); border-radius: 0 10px 10px 0;
-             padding: 16px 18px; font-size: 13px; line-height: 1.5;
-             color: var(--ink-soft); }
-.explainer strong { color: var(--ink); }
-.grid--tight .thumb { height: 156px; }
+/* A rezonanciát korábban egy kis szövegdoboz magyarázta a főcím mellett. A
+   mezőny-bontás óta három dolgot kell elmondani, nem egyet, és az egy dobozban
+   olvashatatlan — ezért kapott önálló módszertani oldalt a rangsor elé. */
 
 .rule { height: 1px; background: var(--rule); }
 .accent { color: var(--accent); }

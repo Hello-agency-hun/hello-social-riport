@@ -16,39 +16,66 @@
 </section>
 {% endif %}
 
+{# Módszertani oldal a rangsor elé — egyszer, az első csatornánál.
+
+   Korábban ez egy kis magyarázódoboz volt a főcím mellett. Kinőtte magát: a
+   mezőny-bontás óta három dolgot kell elmondani, nem egyet, és egy
+   szövegdobozban ez olvashatatlan. Az ügyfél különben a nagy elérésű posztot
+   keresi elöl, nem találja, és a riportot hibásnak látja. #}
+{% if name == methodology_channel %}
+<section class="page">
+  <div class="eyebrow">Módszertan</div>
+  <h2 style="margin-bottom:12px">Mi alapján válogattuk ki ezeket a posztokat?</h2>
+  <p class="note" style="margin-bottom:28px;max-width:900px">
+    Nem elérés szerint — az ugyanis nem a tartalomról szól.
+  </p>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="panel">
+      <div class="stat stat--sm accent">1</div>
+      <h3 style="margin:10px 0 8px">Az elérést a költés dönti el</h3>
+      <p class="note">
+        Amelyik posztra több hirdetési pénz megy, azt többen látják. Ha elérés
+        szerint rangsorolnánk, a lista azt mutatná meg, mire költöttünk a
+        legtöbbet — nem azt, mi működött.
+      </p>
+    </div>
+    <div class="panel">
+      <div class="stat stat--sm accent">2</div>
+      <h3 style="margin:10px 0 8px">Ezért azt nézzük, ki reagált</h3>
+      <p class="note">
+        <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá.
+        A hozzászólás és a megosztás nagyobb súllyal számít, mint egy reakció —
+        egy lájk egy koppintás, egy megosztás a saját név.
+      </p>
+    </div>
+    <div class="panel">
+      <div class="stat stat--sm accent">3</div>
+      <h3 style="margin:10px 0 8px">Hasonlót a hasonlóhoz</h3>
+      <p class="note">
+        A hirdetés hidegebb közönséghez is eljut, ami természetes módon
+        kevesebbet reagál. Ezért a támogatott posztokat a támogatottakhoz, a
+        szerveseket a szervesekhez mérjük — a kártyán ott is áll, melyikről van szó.
+      </p>
+    </div>
+  </div>
+  <p class="note" style="margin-top:28px;max-width:900px">
+    A <strong>kétszeres</strong> tehát azt jelenti: kétszer annyian reagáltak,
+    mint egy szokásos posztnál — a saját mezőnyén belül. Mindkét mezőnyből
+    kerül poszt a listára, hogy a kép ne dőljön el egyik irányba sem.
+  </p>
+</section>
+{% endif %}
+
 {% for chunk in shown %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
   {# Nem „legnagyobb elérésű”: azt a költés dönti el. A sorrend a rezonancia
      szerint megy — azok közül, akik látták, hányan reagáltak. #}
-  <div class="title-row">
-    <h2 style="margin-bottom:24px">
-      {{ "A legjobban teljesítő posztok" if shown[0][0].score else
-         ("A legnagyobb elérésű posztok" if shown[0][0].reach else "A hónap támogatott posztjai") }}
-    </h2>
-    {# A rezonancia nem közismert mérőszám. Ha nem mondjuk meg, mit jelent és
-       miért ez szerint rangsorolunk, az ügyfél a nagy elérésű posztot fogja
-       keresni elöl, és a riportot hibásnak látja. Egyszer, az első ilyen
-       oldalon — nem külön dián, mert egy fogalommagyarázat nem ér meg egy
-       diát. #}
-    {% if loop.first and shown[0][0].score %}
-    <aside class="explainer">
-      <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá —
-      a hozzászólás és a megosztás nagyobb súllyal. A <strong>kétszeres</strong>
-      kétszer annyi reakciót jelent a szokásosnál.
-      <br><br>
-      A támogatott posztokat a támogatottakhoz mérjük, a szerveseket a
-      szervesekhez: a hirdetés hidegebb közönséghez is eljut, ami természetes
-      módon kevesebbet reagál. Azért nem elérés szerint rangsorolunk, mert az
-      elérést a költés dönti el, nem a tartalom.
-    </aside>
-    {% endif %}
-  </div>
-  {# A magyarázódoboz elveszi a helyet a kreatívoktól. Azon az egy oldalon
-     kisebb bélyegképekkel dolgozunk — ez kevesebb kárt okoz, mint egy külön
-     dia vagy egy túlcsorduló lap. #}
-  <div class="grid{{ ' grid--tight' if loop.first and shown[0][0].score else '' }}"
-       style="grid-template-columns:repeat(3,1fr)">
+  <h2 style="margin-bottom:24px">
+    {{ "A legjobban teljesítő posztok" if shown[0][0].score else
+       ("A legnagyobb elérésű posztok" if shown[0][0].reach else "A hónap támogatott posztjai") }}
+  </h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
     <div class="panel">
       <img class="thumb" src="{{ post.thumb }}" alt="">

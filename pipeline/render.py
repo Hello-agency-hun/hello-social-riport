@@ -210,6 +210,17 @@ def render(
         trends=trends,
         channel_posts=channel_posts,
         ranking=ranking,
+        # A módszertani oldal egyszer szerepel, az első olyan csatorna előtt,
+        # ahol egyáltalán van pontozott poszt. Vakon az első csatornához kötve
+        # kimaradna, ha épp azon nincs mért elérés.
+        methodology_channel=next(
+            (
+                name
+                for name, chunks in channel_posts.items()
+                if chunks and chunks[0] and chunks[0][0].get("score")
+            ),
+            None,
+        ),
         narrative=resolved,
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),

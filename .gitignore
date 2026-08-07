@@ -11,3 +11,7 @@ clients/*/*/Riport.html
 # A próbafutás beágyazott klónja — valós ügyféladat, nem való a repóba.
 user_jorney_trial/
 user_journey_trial/
+
+# Ugyfel-riportok minta gyanant: a repo gyokereben pontosan ugy neznek ki,
+# mint egy adatforras, es egy agent forrasnak nezheti oket.
+*.pdf
