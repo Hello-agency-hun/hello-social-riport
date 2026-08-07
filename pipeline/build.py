@@ -181,7 +181,7 @@ def _check_boost_matching(joined, campaigns: list) -> None:
 
     A Mammut-próbán MINDEN boost illesztetlen maradt (egy elrontott előtag-regex
     miatt), és a build ettől még „sikeresen" lefutott. Pedig a riport két
-    központi száma — a boost-szorzó és a szerves átlagelérés — pontosan erre az
+    központi száma — a boost-szorzó és az organikus átlagelérés — pontosan erre az
     illesztésre épül: ha egy hirdetett poszt nem kapja meg a költését,
     organikusként számít bele az átlagba. A javítás után a szorzó 2,5×-ről
     4,7×-re változott. Mindkét szám hihető volt; az egyik hamis.
@@ -202,7 +202,7 @@ def _check_boost_matching(joined, campaigns: list) -> None:
         f"a boostok {ratio:.0%}-a nem talált posztot "
         f"({len(joined.unmatched_boosts)} a {len(boosts)}-ból):\n{names}"
         + (f"\n  · …és még {more}" if more > 0 else "")
-        + "\n\nEnnyi illesztetlenség mellett a boost-szorzó és a szerves "
+        + "\n\nEnnyi illesztetlenség mellett a boost-szorzó és az organikus "
         "átlagelérés is hamis lenne: a hirdetett posztok organikusként "
         "számítanának bele.\n"
         "Nézd meg: (1) a Tartalom exportok ugyanarra a hónapra szólnak-e, "

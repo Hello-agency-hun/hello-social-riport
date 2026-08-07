@@ -122,7 +122,7 @@ mert megmondja, mit kellene legközelebb megtámogatni.
 
 Példa arra, hogyan lehet ezt leírni szám kiírása nélkül:
 
-> A hónap legnagyobb elérésű bejegyzése a látók
+> A hónap legnagyobb elérésű bejegyzése a nézők
 > {performance.facebook.reach_leader.engagement_rate|pct}-át mozdította meg; a
 > Gambas Pil-Pil ételfotója ugyanennek a többszörösét,
 > {performance.facebook.top.engagement_rate|pct}-ot. Az elérést tehát a
@@ -139,6 +139,16 @@ kevés emberhez jutott el, de akikhez igen, azok reagáltak.
 
 **Ne nevezd „legnépszerűbbnek" a legnagyobb elérésű posztot.** Az elérést a
 költés dönti el; a népszerűséget a rezonancia.
+
+### Szóhasználat
+
+Két szót következetesen használunk, mert a Meta felülete is így hívja őket, és
+a menedzser is ezen a nyelven beszél az ügyféllel:
+
+| ezt írd | ezt ne |
+|---|---|
+| **nézők** (akikhez eljutott a poszt) | „látók" |
+| **organikus** (támogatás nélküli) | „szerves" |
 
 ## Amire érdemes figyelni ennél az adatnál
 

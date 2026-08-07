@@ -34,7 +34,7 @@
       <div class="stat stat--sm accent">1</div>
       <h3 style="margin:10px 0 8px">Az elérést a költés dönti el</h3>
       <p class="note">
-        Amelyik posztra több hirdetési pénz megy, azt többen látják. Ha elérés
+        Amelyik posztra több hirdetési pénz megy, ahhoz több néző jut el. Ha elérés
         szerint rangsorolnánk, a lista azt mutatná meg, mire költöttünk a
         legtöbbet — nem azt, mi működött.
       </p>
@@ -43,7 +43,7 @@
       <div class="stat stat--sm accent">2</div>
       <h3 style="margin:10px 0 8px">Ezért azt nézzük, ki reagált</h3>
       <p class="note">
-        <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá.
+        <strong>Rezonancia:</strong> a posztot látó nézők közül hányan reagáltak rá.
         A hozzászólás és a megosztás nagyobb súllyal számít, mint egy reakció —
         egy lájk egy koppintás, egy megosztás a saját név.
       </p>
@@ -53,8 +53,9 @@
       <h3 style="margin:10px 0 8px">Hasonlót a hasonlóhoz</h3>
       <p class="note">
         A hirdetés hidegebb közönséghez is eljut, ami természetes módon
-        kevesebbet reagál. Ezért a támogatott posztokat a támogatottakhoz, a
-        szerveseket a szervesekhez mérjük — a kártyán ott is áll, melyikről van szó.
+        kevesebbet reagál. Ezért a támogatott posztokat a támogatottakhoz, az
+        organikusakat az organikusakhoz mérjük — a kártyán ott is áll, melyikről
+        van szó.
       </p>
     </div>
   </div>
@@ -89,7 +90,7 @@
            Enélkül két különböző jelentésű szám állna ugyanazon a néven. #}
         <tr><td>Rezonancia<br>
             <span class="note">{{ "a támogatottak közt" if post.score.boosted
-                                  else "a szervesek közt" }}</span></td>
+                                  else "az organikusok közt" }}</span></td>
             <td class="num"><strong>{{ post.score.vs_typical | num(1) }}×</strong></td></tr>
         <tr><td>Interakciós arány</td>
             <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>

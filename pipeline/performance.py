@@ -38,14 +38,14 @@ produkál magas százalékot, mint egy tízezres. Ezért minden posztot egy
 
 **De nem a csatorna egészéhez mérünk, hanem a saját mezőnyéhez.** Ez a
 tanulság a PETI-próbából jött: ott mindkét csatornán *minden* hirdetett poszt a
-szerves posztok mögé került, és nem véletlenül. Egy boostolt poszt elérésében
+organikus posztok mögé került, és nem véletlenül. Egy boostolt poszt elérésében
 benne van a fizetett terjesztés is — egy hidegebb közönség, amelyik
 természetesen kevesebbet reagál. Ha az interakciót ezzel a nagyobb, kevertebb
 nevezővel osztjuk, a hirdetett posztot **automatikusan büntetjük**. Almát
 osztunk körtével, és a riportból úgy tűnik, mintha nem is hirdetnénk.
 
-Ezért két mezőny van: a boostolt posztokat a boostoltakhoz, a szerveseket a
-szervesekhez mérjük. Így a kérdés az lesz, ami érdekes: *a saját fajtájához
+Ezért két mezőny van: a boostolt posztokat a boostoltakhoz, a organikusakat az
+organikusakhoz mérjük. Így a kérdés az lesz, ami érdekes: *a saját fajtájához
 képest hogyan teljesített?*
 
 Ha egy mezőnyben túl kevés poszt van ahhoz, hogy a mediánja jelentsen valamit
@@ -89,7 +89,7 @@ MIN_COHORT = 3
 
 
 def _cohort_medians(posts: list[dict]) -> dict[bool, float]:
-    """Külön viszonyítási alap a boostolt és a szerves mezőnynek."""
+    """Külön viszonyítási alap a boostolt és az organikus mezőnynek."""
     everything = [r for r in (_resonance(p) for p in posts) if r is not None]
     overall = median(everything) if everything else 0.0
 
