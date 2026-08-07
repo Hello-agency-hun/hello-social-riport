@@ -128,9 +128,16 @@ strong { color: var(--ink); font-weight: 700; }
    ugyanaz a pink. Egy csökkenést pirosra festeni ítélet volna, márpedig nem
    minden visszaesés rossz hír: a hirdetési költés csökkenése például nem az.
    A riport a számot mutatja meg, az értékelés a szövegben van. */
-.delta { color: var(--brand-rose); font-weight: 900; }
-/* Nincs mihez mérni — ez nem nulla változás, hanem adathiány. */
-.delta--flat { color: var(--rule); }
+/* A `margin-right` nélkül a nyíl odaragad a számhoz, és egy tizedesjel
+   benyomását kelti. A `line-height: 1` azért kell, mert a `.stat` alulra
+   igazít: enélkül a jel a saját sormagasságában lebegne a szám fölött. */
+.delta { color: var(--brand-rose); font-weight: 900;
+         margin-right: .12em; line-height: 1; }
+/* Mértük, és nem mozdult — ettől még adat, nem hiány. */
+.delta--flat { color: var(--ink-soft); }
+/* Nincs mihez mérni. Ez nem nulla változás, hanem adathiány, ezért halvány
+   és más jel: egy jellel a kettő egybemosódna. */
+.delta--none { color: var(--rule); }
 
 .rule { height: 1px; background: var(--rule); }
 .accent { color: var(--accent); }

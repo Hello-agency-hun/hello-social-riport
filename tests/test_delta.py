@@ -39,7 +39,28 @@ def test_both_directions_use_the_same_colour():
 
 
 def test_an_unchanged_value_gets_no_arrow(compared):
-    assert 'aria-label="változatlan">·' in compared
+    assert 'aria-label="változatlan">–' in compared
+
+
+def test_unchanged_and_unknown_are_not_the_same_sign(compared):
+    """A „mértük és nem mozdult” meg a „nincs mihez mérni” két különböző dolog.
+    Egy jellel a kettő egybemosódna, és az adathiány úgy nézne ki, mint egy
+    mért nulla."""
+    from pipeline.render import stylesheet
+
+    assert 'class="delta delta--flat"' in compared
+    assert 'class="delta delta--none"' not in compared, "van összehasonlítási alap"
+
+    css = stylesheet()
+    assert ".delta--flat { color: var(--ink-soft)" in css
+    assert ".delta--none { color: var(--rule)" in css
+
+
+def test_the_arrow_does_not_touch_the_number():
+    """Szóköz nélkül a nyíl tizedesjel benyomását kelti."""
+    from pipeline.render import stylesheet
+
+    assert "margin-right: .12em" in stylesheet()
 
 
 def test_the_change_is_written_out_with_its_sign(compared):

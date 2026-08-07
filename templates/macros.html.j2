@@ -4,16 +4,18 @@
    hirdetési költés csökkenése például nem az). A riport a számot mutatja meg,
    az értékelés a szövegben van.
 
-   A `·` az adathiány jele — nem nulla változás, hanem hogy nincs mihez mérni. #}
+   A „változatlan” és a „nincs mihez mérni” két különböző dolog, ezért két
+   különböző jel: a gondolatjel azt mondja, hogy mértük és nem mozdult; a pont
+   azt, hogy nincs összehasonlítási alapunk. Egy jellel a kettő egybemosódna. #}
 {% macro delta(diff) %}
 {%- if diff is none -%}
-<span class="delta delta--flat" aria-label="nincs összehasonlítási alap">·</span>
+<span class="delta delta--none" aria-label="nincs összehasonlítási alap">·</span>
 {%- elif diff > 0 -%}
 <span class="delta delta--up" aria-label="növekedés">↑</span>
 {%- elif diff < 0 -%}
 <span class="delta delta--down" aria-label="csökkenés">↓</span>
 {%- else -%}
-<span class="delta delta--flat" aria-label="változatlan">·</span>
+<span class="delta delta--flat" aria-label="változatlan">–</span>
 {%- endif -%}
 {% endmacro %}
 

@@ -157,9 +157,14 @@
     {% if block.followers %}
     <div>
       <div class="stat stat--sm">{{ block.followers | num }}</div>
-      <div class="stat-label">{{ name | channel }} követő
-        {%- if block.new_followers %} · {{ delta(block.new_followers) }}
-        {{ block.new_followers | signed }} a hónapban{% endif %}</div>
+      {# A felirat egy sor, a másodlagos infó alatta. Egy sorba fűzve a
+         hosszabbak kettétörnek, és a csempék nem állnak egy vonalban. #}
+      <div class="stat-label">{{ name | channel }} követő</div>
+      {% if block.new_followers %}
+      <p class="note" style="margin-top:6px">
+        {{ delta(block.new_followers) }} {{ block.new_followers | signed }} a hónapban
+      </p>
+      {% endif %}
     </div>
     {% endif %}
     {# Ha a menedzser megadta a havi elérést, az a legerősebb szám a lapon:
@@ -167,8 +172,12 @@
     {% if block.monthly_reach %}
     <div>
       <div class="stat stat--sm">{{ block.monthly_reach | num }}</div>
-      <div class="stat-label">{{ name | channel }} havi elérés
-        {%- if block.reach_per_follower %} · {{ block.reach_per_follower | num(1) }}× a követőtábor{% endif %}</div>
+      <div class="stat-label">{{ name | channel }} havi elérés</div>
+      {% if block.reach_per_follower %}
+      <p class="note" style="margin-top:6px">
+        {{ block.reach_per_follower | num(1) }}× a követőtábor
+      </p>
+      {% endif %}
     </div>
     {% endif %}
     {% endfor %}
