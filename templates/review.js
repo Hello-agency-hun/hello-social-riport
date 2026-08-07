@@ -5,12 +5,32 @@
   var stored = JSON.parse(localStorage.getItem(KEY) || "{}");
   var comments = stored.comments || [];
 
+  // A beírt szám kiolvasása. Régebben `replace(/[^0-9]/g, "")` volt, ami
+  // LETÖRÖLTE a mínuszjelet: aki „-87"-et írt be, 87-et kapott, néma
+  // előjelváltással. Egy csökkenés növekedésként került volna az ügyfélhez.
+  //
+  // Amit elfogadunk:
+  //   -87        előjeles egész
+  //   1 234      ezres tagolással (sima és nem törhető szóköz is)
+  //   -25,4%     magyar tizedesvessző és százalékjel
+  //   -25.4      angol tizedespont
+  function readNumber(raw) {
+    var text = String(raw || "")
+      .replace(/[\s ]/g, "")
+      .replace(/[−–—]/g, "-") // valódi mínuszjel és gondolatjelek
+      .replace(",", ".")
+      .replace("%", "");
+    if (!/^-?\d+(\.\d+)?$/.test(text)) return null;
+    var value = parseFloat(text);
+    return isNaN(value) ? null : value;
+  }
+  window.__helloReadNumber = readNumber; // teszthez
+
   function collect() {
     var manual = {};
     document.querySelectorAll("[data-manual]").forEach(function (field) {
-      var raw = field.querySelector(".manual-input").textContent;
-      var value = parseInt(raw.replace(/[^0-9]/g, ""), 10);
-      if (!isNaN(value)) manual[field.dataset.manual] = value;
+      var value = readNumber(field.querySelector(".manual-input").textContent);
+      if (value !== null) manual[field.dataset.manual] = value;
     });
 
     var edits = {};

@@ -167,11 +167,20 @@ def line_chart(
 
 
 def bar_chart(
-    items: list[tuple[str, float]], label: str, colour: str = "var(--brand-rose)"
+    items: list[tuple[str, float]],
+    label: str,
+    colour: str = "var(--brand-rose)",
+    value_format=None,
 ) -> str:
-    """Vízszintes oszlopok, értékkel a végükön."""
+    """Vízszintes oszlopok, értékkel a végükön.
+
+    A `value_format` azért kell, mert a diagram nem csak darabszámot mutathat:
+    a teljesítmény-rangsor szorzót ír ki (`3,4×`), és ott az ezres tagolás
+    értelmetlen volna.
+    """
     if not items:
         return _empty(label)
+    fmt = value_format or _thousands
 
     top = max(value for _, value in items) or 1
     row = 46
@@ -188,7 +197,7 @@ def bar_chart(
             f'<rect class="bar" x="0" y="{y + 22}" width="{width:.1f}" height="14" '
             f'rx="7" fill="{colour}"/>'
             f'<text x="{width + 10:.1f}" y="{y + 34}" font-size="13" font-weight="700" '
-            f'fill="var(--ink)">{_thousands(value)}</text>'
+            f'fill="var(--ink)">{_escape(fmt(value))}</text>'
         )
     parts.append("</svg>")
     return "".join(parts)

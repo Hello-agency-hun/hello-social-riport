@@ -15,8 +15,17 @@
 {%- elif diff < 0 -%}
 <span class="delta delta--down" aria-label="csökkenés">↓</span>
 {%- else -%}
-<span class="delta delta--flat" aria-label="változatlan">–</span>
+{# Gondolatjel volt itt, és mínuszjelnek látszott: úgy tűnt, mintha csökkent
+   volna, pedig épp hogy nem mozdult. Karika, a nyilak színében. #}
+<span class="delta delta--flat" aria-label="változatlan">○</span>
 {%- endif -%}
+{% endmacro %}
+
+{# A változás nagysága, előjellel. A nyíl iránya önmagában nem elég: a szám
+   mellől hiányzó mínuszjel miatt egy csökkenés növekedésnek olvasható. #}
+{% macro delta_value(diff, pct) %}
+<span class="delta-value">{{ diff | signed }}{% if pct is not none %}
+  <span class="delta-pct">{{ pct | num(1) }}%</span>{% endif %}</span>
 {% endmacro %}
 
 {% macro slot(key, value, label, hint) %}

@@ -99,6 +99,47 @@ Ugyanaz az adat, de állítást tesz, és eljut oda, ami a döntést befolyásol
   nem tudjuk. Ne írd le.
 - **Túl hosszú blokkok.** A riport nézhető, nem olvasandó. Egy oldal egy gondolat.
 
+## A `performance` blokk — itt vannak a kész felismerések
+
+A riportadat `performance.<csatorna>` szakasza nem nyers szám, hanem **már
+megtalált összefüggés**. Ha valamelyik igaz, azt írd is meg — ezekért olvas az
+ügyfél riportot.
+
+| mező | mit jelent | mikor érdemes írni róla |
+|---|---|---|
+| `top_is_reach_leader` | ugyanaz-e a legnagyobb elérésű és a legjobban teljesítő poszt | ha **hamis**, az önmagában megállapítás |
+| `top` | a legjobban teljesítő poszt | mindig |
+| `reach_leader` | a legnagyobb elérésű | ha eltér a `top`-tól |
+| `best_unboosted` | a támogatás nélküli mezőny legjobbja | ha `best_unboosted_beats_typical` igaz |
+| `median_engagement_rate` | a csatorna szokásos szintje | viszonyítási alapnak |
+
+### A legfontosabb minta
+
+Ha a **`top_is_reach_leader` hamis**, akkor a legnagyobb elérésű poszt nem a
+legjobb poszt. Ez majdnem mindig ugyanazt jelenti: **a költés vitte az elérést,
+a tartalom pedig máshol működött.** Ez erős, cselekvésre váltható megállapítás,
+mert megmondja, mit kellene legközelebb megtámogatni.
+
+Példa arra, hogyan lehet ezt leírni szám kiírása nélkül:
+
+> A hónap legnagyobb elérésű bejegyzése a látók
+> {performance.facebook.reach_leader.engagement_rate|pct}-át mozdította meg; a
+> Gambas Pil-Pil ételfotója ugyanennek a többszörösét,
+> {performance.facebook.top.engagement_rate|pct}-ot. Az elérést tehát a
+> támogatás adta, a rezonanciát a kreatív — és a kettő nem ugyanaz a poszt volt.
+
+### A másik minta
+
+Ha `best_unboosted_beats_typical` igaz, van egy poszt, ami **támogatás nélkül
+ment nagyot magához képest**. Ez a következő hónap legjobb boost-jelöltje, és
+érdemes név szerint kiemelni. A kis elérés itt nem gyengeség: azt jelenti, hogy
+kevés emberhez jutott el, de akikhez igen, azok reagáltak.
+
+### Amit ne csinálj
+
+**Ne nevezd „legnépszerűbbnek" a legnagyobb elérésű posztot.** Az elérést a
+költés dönti el; a népszerűséget a rezonancia.
+
 ## Amire érdemes figyelni ennél az adatnál
 
 - Az **„oldal összes" nem organikus** — a fizetett aktivitás eredménye is benne

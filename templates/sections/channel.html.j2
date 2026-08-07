@@ -19,16 +19,47 @@
 {% for chunk in shown %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
-  <h2 style="margin-bottom:24px">
-    {{ "A legnagyobb elérésű posztok" if shown[0][0].reach else "A hónap támogatott posztjai" }}
-  </h2>
-  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+  {# Nem „legnagyobb elérésű”: azt a költés dönti el. A sorrend a rezonancia
+     szerint megy — azok közül, akik látták, hányan reagáltak. #}
+  <div class="title-row">
+    <h2 style="margin-bottom:24px">
+      {{ "A legjobban teljesítő posztok" if shown[0][0].score else
+         ("A legnagyobb elérésű posztok" if shown[0][0].reach else "A hónap támogatott posztjai") }}
+    </h2>
+    {# A rezonancia nem közismert mérőszám. Ha nem mondjuk meg, mit jelent és
+       miért ez szerint rangsorolunk, az ügyfél a nagy elérésű posztot fogja
+       keresni elöl, és a riportot hibásnak látja. Egyszer, az első ilyen
+       oldalon — nem külön dián, mert egy fogalommagyarázat nem ér meg egy
+       diát. #}
+    {% if loop.first and shown[0][0].score %}
+    <aside class="explainer">
+      <strong>Rezonancia:</strong> a posztot látók közül hányan reagáltak rá
+      (a hozzászólás és a megosztás nagyobb súllyal), a csatorna havi
+      középértékéhez mérve. A <strong>kétszeres</strong> kétszer annyi reakciót
+      jelent a szokásosnál. Azért nem elérés szerint rangsorolunk, mert az
+      elérést a hirdetési költés dönti el.
+    </aside>
+    {% endif %}
+  </div>
+  {# A magyarázódoboz elveszi a helyet a kreatívoktól. Azon az egy oldalon
+     kisebb bélyegképekkel dolgozunk — ez kevesebb kárt okoz, mint egy külön
+     dia vagy egy túlcsorduló lap. #}
+  <div class="grid{{ ' grid--tight' if loop.first and shown[0][0].score else '' }}"
+       style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
     <div class="panel">
       <img class="thumb" src="{{ post.thumb }}" alt="">
       <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
       <div class="rule" style="margin:12px 0"></div>
       <table style="font-size:14px">
+        {# A sorrendet ez a szám indokolja. Enélkül önkényesnek látszik, hogy
+           egy kétszáz elérésű poszt megelőz egy kilencezreset. #}
+        {% if post.score %}
+        <tr><td>Rezonancia</td>
+            <td class="num"><strong>{{ post.score.vs_typical | num(1) }}×</strong></td></tr>
+        <tr><td>Interakciós arány</td>
+            <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>
+        {% endif %}
         {% if post.reach %}
         <tr><td>Elérés</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
         {% endif %}
@@ -41,9 +72,10 @@
         {% if post.reactions %}
         <tr><td>Reakció</td><td class="num">{{ post.reactions | num }}</td></tr>
         {% endif %}
-        {% if post.clicks %}
-        <tr><td>Kattintás</td><td class="num">{{ post.clicks | num }}</td></tr>
-        {% endif %}
+        {# A kattintás-sor szándékosan nincs itt. Boostolt posztnál a kattintások
+           zömét a hirdetés hozza, tehát ugyanaz a torzítás van benne, ami miatt
+           a pontozásból is kivettük: a legnagyobb hirdetés látszana a
+           legnépszerűbbnek. A kattintás a fizetett szekcióba tartozik. #}
       </table>
     </div>
     {% endfor %}
@@ -54,7 +86,11 @@
 {% if ranking.get(name) %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }} · kiemelt tartalmak</div>
-  <h2 style="margin-bottom:20px">Elérés szerinti sorrend</h2>
+  <h2 style="margin-bottom:8px">Teljesítmény a szokásoshoz képest</h2>
+  <p class="note" style="margin-bottom:16px">
+    Azok közül, akik látták, hányan reagáltak — a csatorna havi mediánjához mérve.
+    Így a hirdetési költés nem torzítja a sorrendet.
+  </p>
   {# A diagram a viewBox aránya szerint skálázódik; teljes szélességen hat
      sávval kilógna a 16:9-es lapról. A korlátozást a `.chart-frame` adja —
      inline `margin: 0 auto`-val ez a diagram 0×0-ra esett. #}

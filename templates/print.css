@@ -6,9 +6,22 @@
 }
 
 @media print {
+  /* A böngésző nyomtatáskor ALAPÉRTELMEZÉSBEN eldobja a háttérszíneket és a
+     háttérképeket — tintát spórol vele. Papíron ez ésszerű, PDF-ben viszont
+     azt jelenti, hogy a HELLO meleg törtfehér alapja fehérre vált, a panelek
+     kerete eltűnik, és a márkából nem marad semmi.
+
+     A `print-color-adjust: exact` mondja meg, hogy ezek a színek nem díszek,
+     hanem a dokumentum részei. A `-webkit-` előtag a Chrome és az Edge miatt
+     kell, a PDF-mentés ott történik. */
+  html, body, .page, .panel, .manual-slot, .pdf-button, .delta, .bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   body { background: var(--paper); }
   .page {
     margin: 0;
+    background: var(--paper);
     page-break-after: always;
     break-after: page;
     box-shadow: none;

@@ -1,7 +1,26 @@
 import pytest
 
+from pipeline.build import load_narrative
 from pipeline.errors import NarrativeError
 from pipeline.narrative import BLOCKS, resolve, resolve_all
+
+
+def test_a_broken_narrative_json_names_the_likely_cause(tmp_path):
+    """A narratívát kézzel is szerkesztik, és a magyar idézőjel könnyen
+    egyenessel záródik — az pedig lezárja a JSON-stringet. Ez élesben meg is
+    történt, és nyers stack trace jött rá."""
+    (tmp_path / "narrative.json").write_text(
+        '{"executive_summary": "a „Mert közösen a legjobb" bejegyzés"}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(NarrativeError) as caught:
+        load_narrative(tmp_path)
+
+    message = str(caught.value)
+    assert "nem érvényes JSON" in message
+    assert "sor" in message, "mondjuk meg, hol"
+    assert "idézőjel" in message, "mondjuk meg a valószínű okot"
 
 DATA = {
     "meta": {"client": "Larus Étterem", "period": "2026-07"},

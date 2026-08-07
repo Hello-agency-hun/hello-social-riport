@@ -6,10 +6,12 @@ from pathlib import Path
 import yaml
 
 from pipeline import bootstrap, compare, followers, guards, kpi, manual
+from pipeline import performance as performance_mod
 from pipeline.detect import scan
 from pipeline.errors import (
     DuplicateSourceError,
     MissingConfigError,
+    NarrativeError,
     NoSourceError,
     UnknownSourceError,
 )
@@ -115,7 +117,18 @@ def load_narrative(directory: Path) -> dict | None:
     path = Path(directory) / "narrative.json"
     if not path.exists():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        # A narratívát kézzel is szerkesztik, és a magyar idézőjel könnyen
+        # egyenessel záródik — az pedig lezárja a JSON-stringet. A nyers
+        # traceback ilyenkor semmit nem mond arról, mit kell javítani.
+        raise NarrativeError(
+            f"{path} nem érvényes JSON: {error.msg} "
+            f"({error.lineno}. sor, {error.colno}. karakter).\n"
+            "Gyakori ok: magyar idézőjelet nyitottál („), de egyenessel zártad "
+            '(") — az lezárja a szöveget. A helyes záró: ”'
+        ) from error
 
 
 def build(directory: Path, period: str) -> dict:
@@ -197,6 +210,15 @@ def build(directory: Path, period: str) -> dict:
     channels = kpi.channel_blocks(
         series=series, posts=joined.posts, campaigns=campaigns
     )
+    channels = _serialise(channels)
+    # A pontozás a szerializált posztokon fut: szótárakkal dolgozik, és a
+    # `score` blokk is oda kerül vissza. Elérés szerint rangsorolni annyi volna,
+    # mint költés szerint — lásd `performance.py`.
+    performance = {}
+    for name, block in channels.items():
+        performance[name] = performance_mod.findings(
+            performance_mod.score_posts(block["posts"])
+        )
     previous = compare.load_previous(directory)
     manual_values = manual.load_manual(directory)
     follower_counts, follower_origin = followers.resolve(
@@ -210,11 +232,21 @@ def build(directory: Path, period: str) -> dict:
                 "period": period,
                 "currency": ads_payload.currency if ads_payload else "EUR",
                 "language": config.get("report", {}).get("language", "hu"),
+                # Mi legyen a nagy szám az összehasonlító oldalakon: a hónap
+                # végeredménye (`value`) vagy a változás mértéke (`change`).
+                # Kampányriportnál a második erősebb. A menedzser ezt
+                # megjegyzésben szokta kérni, ezért kapcsoló, nem sablonátírás.
+                "comparison_headline": config.get("report", {}).get(
+                    "comparison_headline", "value"
+                ),
             },
             "content": kpi.content_summary(items),
             # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
             # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
             "channels": channels,
+            # Melyik poszt teljesített jól — nem elérés, hanem rezonancia
+            # szerint. A narratíva ebből tud állítást tenni.
+            "performance": performance,
             # Az előző időszak jöhet a múlt havi report_data.json-ból
             # (`previous.json`), vagy — az első hónapban — a menedzser kézi
             # beviteléből. Ha egyik sincs, a blokk üres, és a riport

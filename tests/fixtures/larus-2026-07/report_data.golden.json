@@ -3,7 +3,8 @@
     "client": "Larus Étterem",
     "period": "2026-07",
     "currency": "EUR",
-    "language": "hu"
+    "language": "hu",
+    "comparison_headline": "value"
   },
   "content": {
     "total": 29,
@@ -551,7 +552,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -573,7 +575,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -593,7 +596,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -613,7 +617,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -634,7 +639,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -654,7 +660,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -674,7 +681,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -708,7 +716,8 @@
             "channel": "instagram",
             "is_boost": true
           },
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -743,7 +752,8 @@
             "channel": "instagram",
             "is_boost": true
           },
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -763,7 +773,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -783,7 +794,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -803,7 +815,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -837,7 +850,8 @@
             "channel": "instagram",
             "is_boost": true
           },
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -871,7 +885,8 @@
             "channel": "instagram",
             "is_boost": true
           },
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         },
         {
           "channel": "instagram",
@@ -891,7 +906,8 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": false
+          "organic_measured": false,
+          "score": null
         }
       ],
       "boosts": [
@@ -1491,7 +1507,14 @@
           "clicks": 6,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.01333,
+            "engagement_rate": 0.0133,
+            "weighted_interactions": 2,
+            "vs_typical": 2.24,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1527,7 +1550,14 @@
             "channel": "facebook",
             "is_boost": true
           },
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.01508,
+            "engagement_rate": 0.0121,
+            "weighted_interactions": 30,
+            "vs_typical": 2.53,
+            "boosted": true
+          }
         },
         {
           "channel": "facebook",
@@ -1545,7 +1575,14 @@
           "clicks": 3,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.01835,
+            "engagement_rate": 0.0183,
+            "weighted_interactions": 2,
+            "vs_typical": 3.08,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1565,7 +1602,14 @@
           "clicks": 2,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.01562,
+            "engagement_rate": 0.0156,
+            "weighted_interactions": 1,
+            "vs_typical": 2.62,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1599,7 +1643,14 @@
             "channel": "facebook",
             "is_boost": true
           },
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.00376,
+            "engagement_rate": 0.0027,
+            "weighted_interactions": 34,
+            "vs_typical": 0.63,
+            "boosted": true
+          }
         },
         {
           "channel": "facebook",
@@ -1620,7 +1671,14 @@
           "clicks": 1,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1640,7 +1698,14 @@
           "clicks": 5,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.02,
+            "engagement_rate": 0.02,
+            "weighted_interactions": 4,
+            "vs_typical": 3.35,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1660,7 +1725,14 @@
           "clicks": 1,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1680,7 +1752,14 @@
           "clicks": 4,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1715,7 +1794,14 @@
             "channel": "facebook",
             "is_boost": true
           },
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.00484,
+            "engagement_rate": 0.0048,
+            "weighted_interactions": 10,
+            "vs_typical": 0.81,
+            "boosted": true
+          }
         },
         {
           "channel": "facebook",
@@ -1735,7 +1821,14 @@
           "clicks": 1,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1755,7 +1848,14 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.00709,
+            "engagement_rate": 0.0071,
+            "weighted_interactions": 1,
+            "vs_typical": 1.19,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1775,7 +1875,14 @@
           "clicks": 0,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1810,7 +1917,14 @@
             "channel": "facebook",
             "is_boost": true
           },
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.06422,
+            "engagement_rate": 0.0555,
+            "weighted_interactions": 266,
+            "vs_typical": 10.77,
+            "boosted": true
+          }
         },
         {
           "channel": "facebook",
@@ -1830,7 +1944,14 @@
           "clicks": 3,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.0,
+            "engagement_rate": 0,
+            "weighted_interactions": 0,
+            "vs_typical": 0.0,
+            "boosted": false
+          }
         },
         {
           "channel": "facebook",
@@ -1850,7 +1971,14 @@
           "clicks": 4,
           "link_clicks": 0,
           "paid": null,
-          "organic_measured": true
+          "organic_measured": true,
+          "score": {
+            "resonance": 0.01143,
+            "engagement_rate": 0.0114,
+            "weighted_interactions": 2,
+            "vs_typical": 1.92,
+            "boosted": false
+          }
         }
       ],
       "boosts": [
@@ -1915,6 +2043,38 @@
           "is_boost": true
         }
       ]
+    }
+  },
+  "performance": {
+    "instagram": {},
+    "facebook": {
+      "top": {
+        "caption": "Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐",
+        "post_type": "Fényképek",
+        "reach": 4142,
+        "vs_typical": 10.77,
+        "engagement_rate": 0.0555,
+        "boosted": true
+      },
+      "median_engagement_rate": 0.006,
+      "reach_leader": {
+        "caption": "Séfünk ajánlata! 😎",
+        "post_type": "Hivatkozások",
+        "reach": 9046,
+        "vs_typical": 0.63,
+        "engagement_rate": 0.0027,
+        "boosted": true
+      },
+      "top_is_reach_leader": false,
+      "best_unboosted": {
+        "caption": "Mert közösen a legjobb! ❤️",
+        "post_type": "Fényképek",
+        "reach": 200,
+        "vs_typical": 3.35,
+        "engagement_rate": 0.02,
+        "boosted": false
+      },
+      "best_unboosted_beats_typical": true
     }
   },
   "comparison": {

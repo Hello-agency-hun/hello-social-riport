@@ -9,6 +9,11 @@ GOLDEN = Path(__file__).parent / "fixtures" / "larus-2026-07" / "report_data.gol
 
 
 @pytest.fixture
+def data():
+    return json.loads(GOLDEN.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
 def compared(tmp_path):
     """A fixture-ben nincs previous.json, tehát nincs mihez mérni. Az összeha-
     sonlító oldalt csak úgy tudjuk megnézni, ha adunk neki előző hónapot."""
@@ -39,7 +44,32 @@ def test_both_directions_use_the_same_colour():
 
 
 def test_an_unchanged_value_gets_no_arrow(compared):
-    assert 'aria-label="változatlan">–' in compared
+    """Gondolatjel volt itt, és mínuszjelnek látszott: úgy tűnt, mintha
+    csökkent volna, pedig épp hogy nem mozdult."""
+    assert 'aria-label="változatlan">○' in compared
+    assert "változatlan\">–" not in compared
+
+
+def test_the_change_is_shown_with_its_sign_next_to_the_headline(compared):
+    """A nyíl iránya önmagában nem elég. Ha a szám mellől hiányzik a
+    mínuszjel, egy csökkenés növekedésnek olvasható."""
+    assert 'class="delta-value"' in compared
+    assert "−87" in compared
+
+
+def test_the_headline_can_show_the_change_instead_of_the_result(data, tmp_path):
+    """Kampányriportnál nem az a kérdés, hol tartunk, hanem hogy mennyit
+    mozdult. A menedzser ezt megjegyzésben kéri, ezért kapcsoló."""
+    from pipeline.render import render
+
+    data["meta"]["comparison_headline"] = "change"
+    data["comparison"] = {
+        "facebook": {"visits": {"now": 1525, "before": 1113, "diff": 412, "pct": 37.0}}
+    }
+    html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "Felkeresések változása" in html
+    assert "1 525 a hónapban".replace(" ", "\xa0") in html.replace(" ", "\xa0")
 
 
 def test_unchanged_and_unknown_are_not_the_same_sign(compared):

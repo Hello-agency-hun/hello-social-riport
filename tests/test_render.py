@@ -68,8 +68,12 @@ def test_stylesheet_is_not_html_escaped(html):
 
 def test_client_supplied_text_is_still_escaped(data, tmp_path):
     """A stíluslap `| safe`, de a poszt-szövegek nem lehetnek azok."""
+    from pipeline import performance
+
+    # A ténylegesen megjelenített posztot kell megmérgezni. A legnagyobb
+    # elérésű már nem az: a rangsor rezonancia szerint megy, nem költés szerint.
     facebook = data["channels"]["facebook"]["posts"]
-    top = max(facebook, key=lambda post: post["reach"])
+    top = performance.ranked(facebook)[0]
     top["caption"] = "<script>alert(1)</script>"
     html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
     assert "<script>alert(1)</script>" not in html
@@ -275,10 +279,24 @@ def test_trend_curves_do_not_all_use_the_same_colour(html):
         assert token in html
 
 
-def test_the_reach_ranking_page_is_back(html):
+def test_the_ranking_page_is_back(html):
     """A poszt-szövegekkel felsorolt, oldalra fordított oszlopdiagram."""
-    assert "Elérés szerinti sorrend" in html
+    assert "Teljesítmény a szokásoshoz képest" in html
     assert 'class="bar"' in html
+
+
+def test_the_ranking_is_not_ordered_by_reach(html):
+    """Elérés szerint rangsorolni annyi, mint költés szerint: amelyik posztra a
+    legtöbb pénz ment, az lenne elöl. A Larus júliusában a legnagyobb elérésű
+    poszt (Séfünk ajánlata, 9 046) a rezonancia-rangsorban a tizedik."""
+    ranking = html[html.index("Teljesítmény a szokásoshoz képest") :]
+    ranking = ranking[: ranking.index("</section>")]
+
+    assert "Gambas Pil-Pil" in ranking, "a legjobban teljesítő poszt"
+    assert "Séfünk ajánlata" not in ranking, (
+        "a legnagyobb elérésű poszt nem tartozik a legjobbak közé — "
+        "a látók negyed százaléka reagált rá"
+    )
 
 
 def test_list_items_in_the_evaluation_are_editable(data, tmp_path):

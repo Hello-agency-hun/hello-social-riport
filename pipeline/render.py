@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pipeline import charts, images, labels
 from pipeline import manual as manual_module
+from pipeline import performance
 from pipeline import narrative as narrative_module
 from pipeline.assets import TEMPLATES, logo, stylesheet
 
@@ -123,7 +124,14 @@ def render(
     channel_posts = {}
     ranking: dict[str, str] = {}
     for name, block in data.get("channels", {}).items():
-        ranked = sorted(block["posts"], key=lambda post: -post["reach"])
+        # Teljesítmény szerint, nem elérés szerint. Elérés szerint rangsorolni
+        # annyi volna, mint költés szerint: amelyik posztra a legtöbb pénz ment,
+        # az lenne elöl — ez tautológia, nem megállapítás. Lásd `performance.py`.
+        ranked = performance.ranked(block["posts"])
+        if not ranked:
+            # Nincs mért elérés ezen a csatornán — marad a régi sorrend, hogy
+            # a boostolt posztok legalább megjelenjenek.
+            ranked = sorted(block["posts"], key=lambda post: -post["reach"])
         selected = [post for post in ranked if post["reach"]][:6]
         if not selected:
             # Ezen a csatornán nincs mért elérés — a boostoltakat emeljük ki,
@@ -137,13 +145,20 @@ def render(
         channel_posts[name] = _balanced_chunks(selected)
         # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,
         # amit a kártyák oldalanként háromra bontva nem tudnak.
-        if any(post["reach"] for post in selected):
+        # A diagram azt mutatja, hányszorosa a poszt a csatorna szokásos
+        # teljesítményének — nem az elérést, mert azt a költés dönti el.
+        measured = [post for post in selected if post.get("score")]
+        if measured:
             ranking[name] = charts.bar_chart(
                 [
-                    (labels.shorten(post["caption"], 44) or "(nincs szöveg)", post["reach"])
-                    for post in selected
+                    (
+                        labels.shorten(post["caption"], 44) or "(nincs szöveg)",
+                        post["score"]["vs_typical"] or 0,
+                    )
+                    for post in measured
                 ],
-                label=f"{labels.channel(name)} — elérés szerinti sorrend",
+                label=f"{labels.channel(name)} — teljesítmény a szokásoshoz képest",
+                value_format=lambda value: _number(value, 1) + "×",
             )
 
     template = _environment().get_template("report.html.j2")

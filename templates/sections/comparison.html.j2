@@ -1,4 +1,18 @@
-{% from "macros.html.j2" import slot, delta %}
+{% from "macros.html.j2" import slot, delta, delta_value %}
+{#
+  Mi legyen a nagy szám? Ez ügyfélenként más:
+
+  `value`  (alapértelmezés) — a hónap végeredménye a nagy szám, alatta a
+           változás. Havi állapotriportnál ez a természetes.
+  `change` — a VÁLTOZÁS a nagy szám, alatta a végeredmény. Kampányriportnál ez
+           erősebb: ott nem az a kérdés, hol tartunk, hanem hogy mennyit
+           mozdult.
+
+  Átállítani a client.yaml-ben: `report.comparison_headline: change`.
+  A menedzser ezt megjegyzésben szokta kérni, ezért kell kapcsolónak lennie és
+  nem sablonátírásnak.
+#}
+{% set headline = data.meta.get("comparison_headline", "value") %}
 {% for name, block in data.comparison.items() %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
@@ -6,12 +20,21 @@
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for key, d in block.items() %}
     <div class="panel">
+      {% if headline == "change" %}
+      <div class="stat">{{ delta(d.diff) }} {{ d.diff | signed }}</div>
+      <div class="stat-label">{{ key | field }} változása</div>
+      <p class="note" style="margin-top:8px">
+        {{ d.now | num }} a hónapban · előző hónap: {{ d.before | num }}
+        {%- if d.pct is not none %} · {{ d.pct | num(1) }}%{% endif %}
+      </p>
+      {% else %}
       <div class="stat">{{ delta(d.diff) }} {{ d.now | num }}</div>
       <div class="stat-label">{{ key | field }}</div>
-      <p class="note" style="margin-top:8px">
-        előző hónap: {{ d.before | num }}
-        {%- if d.pct is not none %} · {{ d.diff | signed }} ({{ d.pct | num(1) }}%){% endif %}
-      </p>
+      {# Az előjeles változás a nagy szám alatt, nem a jegyzetben elrejtve: a
+         nyíl iránya önmagában nem elég, a mínuszjelnek látszania kell. #}
+      {{ delta_value(d.diff, d.pct) }}
+      <p class="note" style="margin-top:6px">előző hónap: {{ d.before | num }}</p>
+      {% endif %}
     </div>
     {% endfor %}
     {% if not block %}
@@ -20,7 +43,8 @@
          "prev_" ~ name ~ "_" ~ key,
          none,
          (key | field) ~ " — előző hónap",
-         "A múlt havi riportból; vagy másold be a previous.json-t"
+         "A múlt havi riportból; vagy másold be a previous.json-t. Mínusz és
+          százalék is beírható."
        ) }}
     {% endfor %}
     {% endif %}
