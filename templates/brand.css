@@ -123,6 +123,14 @@ strong { color: var(--ink); font-weight: 700; }
 .grid { display: grid; gap: 28px; align-content: center; }
 .panel { background: var(--paper-alt); border: 1px solid var(--rule);
          border-radius: 14px; padding: 26px; }
+/* Változásjelző. Az irányt a NYÍL mutatja, nem a szín — ezért mindkét irány
+   ugyanaz a pink. Egy csökkenést pirosra festeni ítélet volna, márpedig nem
+   minden visszaesés rossz hír: a hirdetési költés csökkenése például nem az.
+   A riport a számot mutatja meg, az értékelés a szövegben van. */
+.delta { color: var(--brand-rose); font-weight: 900; }
+/* Nincs mihez mérni — ez nem nulla változás, hanem adathiány. */
+.delta--flat { color: var(--rule); }
+
 .rule { height: 1px; background: var(--rule); }
 .accent { color: var(--accent); }
 

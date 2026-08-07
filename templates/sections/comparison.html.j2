@@ -1,4 +1,4 @@
-{% from "macros.html.j2" import slot %}
+{% from "macros.html.j2" import slot, delta %}
 {% for name, block in data.comparison.items() %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
@@ -6,12 +6,11 @@
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for key, d in block.items() %}
     <div class="panel">
-      <div class="stat {{ 'accent' if d.diff > 0 else '' }}">
-        {{ '↑' if d.diff > 0 else ('↓' if d.diff < 0 else '·') }} {{ d.now | num }}
-      </div>
+      <div class="stat">{{ delta(d.diff) }} {{ d.now | num }}</div>
       <div class="stat-label">{{ key | field }}</div>
       <p class="note" style="margin-top:8px">
-        előző hónap: {{ d.before | num }}{% if d.pct is not none %} · {{ d.pct | num(1) }}%{% endif %}
+        előző hónap: {{ d.before | num }}
+        {%- if d.pct is not none %} · {{ d.diff | signed }} ({{ d.pct | num(1) }}%){% endif %}
       </p>
     </div>
     {% endfor %}

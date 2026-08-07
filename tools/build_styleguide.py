@@ -202,6 +202,29 @@ def build() -> str:
     'kiemelt blokk.</p></div>',
 )}
 {_example(
+    "Változásjelző",
+    '<div class="grid" style="grid-template-columns:repeat(3,1fr)">'
+    '<div class="panel"><div class="stat">'
+    '<span class="delta delta--up">↑</span> 1 525</div>'
+    '<div class="stat-label">Felkeresések</div>'
+    '<p class="note" style="margin-top:8px">előző hónap: 1 113 · +412 (37,0%)</p></div>'
+    '<div class="panel"><div class="stat">'
+    '<span class="delta delta--down">↓</span> 255</div>'
+    '<div class="stat-label">Interakciók</div>'
+    '<p class="note" style="margin-top:8px">előző hónap: 342 · −87 (−25,4%)</p></div>'
+    '<div class="panel"><div class="stat">'
+    '<span class="delta delta--flat">·</span> 634</div>'
+    '<div class="stat-label">Felkeresések</div>'
+    '<p class="note" style="margin-top:8px">nincs előző havi adat</p></div></div>',
+    "Minden kiszámolt változás mellett ott a nyíl. Az irányt a <b>nyíl</b> "
+    "mutatja, nem a szín — ezért mindkét irány ugyanaz a pink. Egy csökkenést "
+    "pirosra festeni ítélet volna, márpedig nem minden visszaesés rossz hír: a "
+    "hirdetési költés csökkenése például nem az. A riport a számot mutatja meg, "
+    "az értékelés a szövegben van. A halvány <code>·</code> nem nulla változás, "
+    "hanem adathiány. A mínusz valódi mínuszjel (−), nem kötőjel: a kötőjel a "
+    "számjegyek mellett elvész.",
+)}
+{_example(
     "Kézi adatmező",
     '<div class="grid" style="grid-template-columns:1fr 1fr">'
     '<div class="manual-slot" data-manual="reach_facebook">'

@@ -25,6 +25,18 @@ def _number(value, digits: int = 0) -> str:
     return text.replace(",", " ").replace(".", ",")
 
 
+def _signed(value, digits: int = 0) -> str:
+    """Előjeles változás: `+412` vagy `−87`.
+
+    A mínusz valódi mínuszjel (U+2212), nem kötőjel — a kötőjel a számjegyek
+    mellett elvész, és egy csökkenés úgy néz ki, mintha növekedés volna.
+    """
+    if value is None:
+        return "–"
+    text = _number(abs(value), digits)
+    return f"+{text}" if value > 0 else (f"−{text}" if value < 0 else text)
+
+
 def _money(value, currency: str) -> str:
     return f"{_number(value, 2)} {currency}"
 
@@ -48,6 +60,7 @@ def _environment() -> Environment:
     env.filters["channel"] = labels.channel
     env.filters["ptype"] = labels.post_type
     env.filters["short"] = labels.shorten
+    env.filters["signed"] = _signed
     return env
 
 

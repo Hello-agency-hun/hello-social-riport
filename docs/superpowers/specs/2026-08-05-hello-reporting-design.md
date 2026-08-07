@@ -440,15 +440,19 @@ A benchmark PDF rajzoló-utasításaiból mért használati arányok alapján:
 
 ```css
 --ink:        #0A0A0A;   /* elsődleges szöveg */
+/* Változásjelző: minden kiszámolt változás mellett pink nyíl áll, az irányt a
+   nyíl mutatja, nem a szín. Egy csökkenést pirosra festeni ítélet volna, és nem
+   minden visszaesés rossz hír — a hirdetési költés csökkenése például nem az.
+   A `·` nem nulla változás, hanem adathiány, ezért halvány. */
 --ink-soft:   #6B665D;   /* másodlagos szöveg — meleg szürke */
 --rule:       #E4E0D8;   /* keretek, panelek, elválasztók — meleg homok */
 --paper:      #FFFDF9;   /* oldal alapszín — meleg törtfehér */
 --paper-alt:  #FAFAFA;   /* váltakozó panelháttér */
 --accent:     #4CD892;   /* Aquamarine — a fő akcentus */
---brand-rose: #FF33CC;   /* ritka kiemelés */
+--brand-rose: #FF33CC;   /* változásjelző nyilak, rangsor-diagram */
 --brand-sun:  #FFFA8E;   /* ritka kiemelés */
 --brand-pink: #FF91E7;   /* ritka kiemelés */
---brand-red:  #FF321D;   /* figyelmeztetés, negatív változás */
+--brand-red:  #FF321D;   /* figyelmeztetés — a menedzsernek, nem az ügyfélnek */
 --brand-blue: #025CC6;   /* tartalék adatsor-szín */
 ```
 

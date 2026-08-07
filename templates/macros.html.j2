@@ -1,3 +1,22 @@
+{# Változásjelző nyíl. Minden kiszámolt változás mellett ez áll — az irányt a
+   nyíl mutatja, nem a szín. Ezért mindkét irány ugyanaz a pink: egy csökkenést
+   pirosra festeni ítélet volna, márpedig nem minden visszaesés rossz hír (a
+   hirdetési költés csökkenése például nem az). A riport a számot mutatja meg,
+   az értékelés a szövegben van.
+
+   A `·` az adathiány jele — nem nulla változás, hanem hogy nincs mihez mérni. #}
+{% macro delta(diff) %}
+{%- if diff is none -%}
+<span class="delta delta--flat" aria-label="nincs összehasonlítási alap">·</span>
+{%- elif diff > 0 -%}
+<span class="delta delta--up" aria-label="növekedés">↑</span>
+{%- elif diff < 0 -%}
+<span class="delta delta--down" aria-label="csökkenés">↓</span>
+{%- else -%}
+<span class="delta delta--flat" aria-label="változatlan">·</span>
+{%- endif -%}
+{% endmacro %}
+
 {% macro slot(key, value, label, hint) %}
 {% if value is not none %}
 <div class="panel">

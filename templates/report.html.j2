@@ -1,4 +1,4 @@
-{% from "macros.html.j2" import slot %}
+{% from "macros.html.j2" import slot, delta %}
 <!doctype html>
 <html lang="{{ data.meta.language }}">
 <head>
@@ -153,7 +153,8 @@
     <div>
       <div class="stat stat--sm">{{ block.followers | num }}</div>
       <div class="stat-label">{{ name | channel }} követő
-        {%- if block.new_followers %} · +{{ block.new_followers | num }} a hónapban{% endif %}</div>
+        {%- if block.new_followers %} · {{ delta(block.new_followers) }}
+        {{ block.new_followers | signed }} a hónapban{% endif %}</div>
     </div>
     {% endif %}
     {% endfor %}
