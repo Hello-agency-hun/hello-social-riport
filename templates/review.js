@@ -76,18 +76,71 @@
     page.appendChild(button);
   });
 
+  function payload() {
+    return JSON.stringify(collect(), null, 2);
+  }
+
+  // Letöltés: mindig működik, de a fájl a Letöltések mappába esik, onnan a
+  // hónap mappájába kell másolni. Tartaléknak marad.
   var save = document.createElement("button");
   save.className = "pdf-button no-print";
   save.style.right = "190px";
   save.textContent = "Mentés";
   save.onclick = function () {
-    var blob = new Blob([JSON.stringify(collect(), null, 2)], {
-      type: "application/json",
-    });
+    var blob = new Blob([payload()], { type: "application/json" });
     var link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "review.json";
     link.click();
   };
   document.body.appendChild(save);
+
+  // Mentés a mappába: a lap egyszer elkéri a `review.json`-t, utána minden
+  // további mentés oda megy. Így nincs letöltés-bemásolás oda-vissza — a
+  // menedzser csak annyit mond, hogy mentett, és a riport újraépíthető.
+  // A böngésző nem enged fájlt írni kérdezés nélkül, ezért kell az első bökés.
+  if (window.showSaveFilePicker) {
+    var handle = null;
+    var direct = document.createElement("button");
+    direct.className = "pdf-button no-print";
+    direct.style.right = "330px";
+    direct.textContent = "Mentés a mappába";
+
+    direct.onclick = function () {
+      var chain = handle
+        ? Promise.resolve(handle)
+        : window.showSaveFilePicker({
+            suggestedName: "review.json",
+            types: [
+              {
+                description: "A hónap mappájába, a report_data.json mellé",
+                accept: { "application/json": [".json"] },
+              },
+            ],
+          });
+
+      chain
+        .then(function (chosen) {
+          handle = chosen;
+          return chosen.createWritable();
+        })
+        .then(function (stream) {
+          return stream.write(payload()).then(function () {
+            return stream.close();
+          });
+        })
+        .then(function () {
+          direct.textContent = "Mentve ✓ — szólj Claude-nak";
+          setTimeout(function () {
+            direct.textContent = "Mentés a mappába";
+          }, 4000);
+        })
+        .catch(function (error) {
+          // A megszakított fájlválasztó nem hiba — a menedzser meggondolta magát.
+          if (error && error.name === "AbortError") return;
+          direct.textContent = "Nem sikerült — használd a Mentés gombot";
+        });
+    };
+    document.body.appendChild(direct);
+  }
 })();

@@ -1921,6 +1921,22 @@
     "instagram": {},
     "facebook": {}
   },
+  "audience": {
+    "instagram": {
+      "followers": 1962,
+      "new_followers": null,
+      "growth": null,
+      "monthly_reach": null,
+      "reach_per_follower": null
+    },
+    "facebook": {
+      "followers": 4187,
+      "new_followers": 5,
+      "growth": 0.0012,
+      "monthly_reach": null,
+      "reach_per_follower": null
+    }
+  },
   "paid": {
     "spend": 472.71,
     "currency": "EUR",

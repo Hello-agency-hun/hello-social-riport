@@ -181,8 +181,17 @@ def test_quality_block_still_records_everything(data):
 
 
 def test_summary_page_shows_the_six_key_numbers(html):
-    assert "A hónap mérlege" in html
+    # Nem „KPI” és nem „mérleg”: nem minden ügyfélnél van kimondott vállalás,
+    # egy számtáblát célként feltüntetni pedig olyat ígér, amit nem vállaltunk.
+    assert "A hónap fókusza" in html
     assert "a boost szorzója" in html
+
+
+def test_the_follower_count_is_on_the_page_with_its_movement(html):
+    """A követőszám a `client.yaml`-ből jön, és nem magában áll: mellette ott
+    van, mennyit mozdult a hónapban."""
+    assert "Facebook követő" in html
+    assert "+5 a hónapban" in html
 
 
 def test_pages_are_balanced_so_no_card_is_left_alone():

@@ -4,6 +4,12 @@ client:
   fb_page_name: "Larus Étterem"
   ig_handle: "larusetterem"
 
+# A hónap végi követőszám. Egyik exportban sincs benne — a `Követők.csv` napi
+# *új* követést ad, nem az állományt —, a profilról viszont leolvasható.
+followers:
+  facebook: 4187
+  instagram: 1962
+
 report:
   language: hu
   currency: EUR

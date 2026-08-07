@@ -118,7 +118,9 @@
 
 <section class="page">
   <div class="eyebrow">Összefoglaló</div>
-  <h2 style="margin-bottom:40px">A hónap mérlege</h2>
+  {# Nem „KPI”: nem minden ügyfélnél van kimondott vállalás, és egy
+     számtáblát célként feltüntetni olyat ígér, amit nem vállaltunk. #}
+  <h2 style="margin-bottom:40px">A hónap fókusza</h2>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     <div>
       <div class="stat">{{ data.content.total }}</div>
@@ -145,7 +147,16 @@
       <div class="stat-label">a boost szorzója</div>
     </div>
   </div>
-  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:32px">
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:36px">
+    {% for name, block in data.get("audience", {}).items() %}
+    {% if block.followers %}
+    <div>
+      <div class="stat stat--sm">{{ block.followers | num }}</div>
+      <div class="stat-label">{{ name | channel }} követő
+        {%- if block.new_followers %} · +{{ block.new_followers | num }} a hónapban{% endif %}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
     {% for key, meta in manual_slots.items() %}
     {{ slot(key, manual.get(key), meta.label, meta.hint) }}
     {% endfor %}

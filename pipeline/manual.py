@@ -19,15 +19,10 @@ SLOTS = {
         "label": "Instagram havi elérés",
         "hint": "Business Suite → Elérés csempe, havi időszakra állítva",
     },
-    "followers_facebook": {
-        "label": "Facebook követők",
-        "hint": "Business Suite → Közönség; a következő hónapban már automatikus",
-    },
-    "followers_instagram": {
-        "label": "Instagram követők",
-        "hint": "Business Suite → Közönség; a következő hónapban már automatikus",
-    },
 }
+# A követőszám nem itt van: a `client.yaml` kéri be, a munka elején. Kitölthető
+# mezőként a riport végén állt, és pont ezért maradt mindig üresen — oda már
+# senki nem megy vissza. Lásd `bootstrap.FOLLOWER_HINT`.
 
 
 def load_manual(directory: Path) -> dict:

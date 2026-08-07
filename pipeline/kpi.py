@@ -50,6 +50,41 @@ def paid_totals(campaigns: list[Campaign]) -> dict:
     }
 
 
+def audience(channels: dict, followers: dict, manual: dict | None = None) -> dict:
+    """A közönség mérete és mozgása.
+
+    A követőszám a `client.yaml`-ből jön (a Meta nem exportálja), az új követés
+    a napi CSV-ből. Kettejükből lesz a növekedési ütem — enélkül a követőszám
+    csak egy szám a lapon, amiből semmi nem következik.
+
+    A havi elérés továbbra is kézi adat, mert napi értékek összegéből
+    matematikailag nem áll elő: aki két napon látott minket, egy ember. Ha a
+    menedzser beírja, kiszámoljuk, hányszorosát értük el a követőtábornak.
+    """
+    manual = manual or {}
+    out = {}
+    for name, block in channels.items():
+        total = followers.get(name)
+        gained = block.get("totals", {}).get("follows")
+        reach = manual.get(f"reach_{name}")
+
+        out[name] = {
+            "followers": total,
+            "new_followers": gained,
+            # A hónap eleji állomány a mostaniból és a gyarapodásból jön ki.
+            "growth": (
+                round(gained / (total - gained), 4)
+                if total and gained and total > gained
+                else None
+            ),
+            "monthly_reach": reach,
+            "reach_per_follower": (
+                round(reach / total, 2) if reach and total else None
+            ),
+        }
+    return out
+
+
 def cross_channel(posts: list[Post]) -> dict:
     """A riport csúcspontja: mennyit ér a boost.
 

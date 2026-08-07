@@ -23,6 +23,15 @@ PLACEHOLDERS = {
     "currency": "EUR",
 }
 
+# A követőszám egyik exportban sincs benne — a `Követők.csv` napi *új* követést
+# ad, nem az állományt —, viszont bárki leolvassa a profilról fél perc alatt.
+# Ezért nem kitölthető mezőként várjuk a riport végén, ahol elsikkad, hanem itt
+# kérjük be, a munka elején: enélkül a növekedés nem számolható ki.
+FOLLOWER_HINT = {
+    "facebook": "a Facebook-oldal fejlécében, vagy Business Suite → Közönség",
+    "instagram": "az Instagram-profil fejlécében",
+}
+
 
 def _first_row(path: Path) -> dict[str, str]:
     reader = csv.DictReader(io.StringIO(read_text(path), newline=""))
@@ -85,6 +94,11 @@ def template(found: dict[str, str]) -> str:
         f'  fb_page_id: "{values["fb_page_id"]}"\n'
         f'  fb_page_name: "{values["fb_page_name"]}"\n'
         f'  ig_handle: "{values["ig_handle"]}"\n'
+        "\n"
+        "# Követőszám a hónap végén — a profilról olvasható le.\n"
+        "followers:\n"
+        f"  facebook: <{FOLLOWER_HINT['facebook']}>\n"
+        f"  instagram: <{FOLLOWER_HINT['instagram']}>\n"
         "\n"
         "report:\n"
         "  language: hu\n"
