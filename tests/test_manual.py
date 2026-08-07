@@ -33,8 +33,20 @@ def test_everything_obtainable_says_where_and_why():
     """A `--validate` ebből dolgozik. Nem elég tudni, hogy hiányzik — azt is meg
     kell mondani, hol van, és miért nem tudjuk kiszámolni helyette."""
     for key, spec in OBTAINABLE.items():
-        assert spec["hint"], f"{key}: nincs megadva, hol van"
         assert spec["why"], f"{key}: nincs megadva, miért nem számolható"
+        for channel, hint in spec["hint"].items():
+            assert hint, f"{key}/{channel}: nincs megadva, hol van"
+
+
+def test_the_reach_tile_is_named_per_channel():
+    """A Facebookon nincs „Elérés” csempe — ott „Nézők” a neve ugyanannak.
+    Egyetlen közös útmutató a rossz csempéhez küldi a menedzsert, és a
+    „Megtekintések”-et hozza el, ami megjelenést mér, nem embert."""
+    hint = OBTAINABLE["monthly_reach"]["hint"]
+
+    assert "Nézők" in hint["facebook"]
+    assert "Megtekintések" in hint["facebook"], "a tévedést nevezzük is meg"
+    assert "Elérés" in hint["instagram"]
 
 
 @pytest.fixture

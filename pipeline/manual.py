@@ -25,13 +25,27 @@ SLOTS: dict[str, dict] = {}
 
 # Ami beszerezhető, de nem exportálható. A `--validate` ebből sorolja fel, mi
 # hiányzik még — a menedzsernek, nem az ügyfélnek.
+    # A csempe neve csatornánként MÁS, és ez félrevezet. A Facebookon nincs
+    # „Elérés” csempe: ott ugyanezt „Nézők” néven adja a Meta („azon Meta-fiókok
+    # száma, amelyek legalább egyszer megnézték a tartalmaidat”). Aki az Elérést
+    # keresi, nem találja, és a rossz csempét („Megtekintések”) hozza el —
+    # az viszont megjelenést mér, nem embert, és nagyságrenddel nagyobb.
+FIND_MONTHLY_REACH = {
+    "facebook": "Business Suite → Eredmények → **Nézők** csempe, a hónapra "
+    "állítva. A Facebookon ez az elérés neve — „Elérés” csempe nincs, a "
+    "„Megtekintések” pedig mást mér (megjelenést, nem embert).",
+    "instagram": "Business Suite → Eredmények → **Elérés** csempe, a hónapra "
+    "állítva.",
+}
+
 OBTAINABLE = {
     "monthly_reach": {
         "label": "havi elérés",
-        "hint": "Business Suite → Elérés csempe, a hónapra állítva",
+        "hint": FIND_MONTHLY_REACH,
         "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az "
         "elérés emberben mér, és aki két napon látott minket, egy ember — "
-        "a napi vagy poszt-szintű értékek összege mindig több a valóságnál",
+        "a napi vagy poszt-szintű értékek összege mindig több a valóságnál "
+        "(júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)",
     },
 }
 

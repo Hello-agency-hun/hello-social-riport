@@ -100,11 +100,14 @@ def _obtainable(channels: dict, config: dict) -> list[dict]:
         {
             "key": f"monthly_reach.{name}",
             "label": f"{name} {spec['label']}",
-            "hint": spec["hint"],
+            # Csatornánként más csempéből jön, és a nevük nem egyezik. Egyetlen
+            # közös útmutató a rossz csempéhez küldené a menedzsert.
+            "hint": spec["hint"][name],
             "why": spec["why"],
         }
         for name in sorted(channels)
         if not isinstance(given.get(name), int)
+        if name in spec["hint"]
     ]
 
 

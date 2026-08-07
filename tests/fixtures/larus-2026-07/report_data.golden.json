@@ -2018,14 +2018,14 @@
     {
       "key": "monthly_reach.facebook",
       "label": "facebook havi elérés",
-      "hint": "Business Suite → Elérés csempe, a hónapra állítva",
-      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál"
+      "hint": "Business Suite → Eredmények → **Nézők** csempe, a hónapra állítva. A Facebookon ez az elérés neve — „Elérés” csempe nincs, a „Megtekintések” pedig mást mér (megjelenést, nem embert).",
+      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál (júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)"
     },
     {
       "key": "monthly_reach.instagram",
       "label": "instagram havi elérés",
-      "hint": "Business Suite → Elérés csempe, a hónapra állítva",
-      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál"
+      "hint": "Business Suite → Eredmények → **Elérés** csempe, a hónapra állítva.",
+      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál (júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)"
     }
   ],
   "missing": [
