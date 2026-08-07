@@ -37,6 +37,19 @@ git clone https://github.com/Hello-agency-hun/hello-social-riport.git
 cd hello-social-riport && pip install -e .
 ```
 
+> **Windowson klónozz rövid útvonalra** — például `C:\munka\` alá, ne mélyen a
+> Dokumentumok valamelyik almappájába. A teszt-fixture fájlnevei hosszúak (a
+> Meta és a ZoomSphere adja őket, és nem nevezzük át azokat), és mély mappával
+> együtt átléphetik a Windows 260 karakteres korlátját. Ilyenkor ez a hiba jön:
+>
+> ```
+> error: unable to create file tests/fixtures/... : Filename too long
+> fatal: unable to checkout working tree
+> ```
+>
+> Vagy klónozz feljebb, vagy engedd fel a korlátot egyszer:
+> `git config --global core.longpaths true`
+
 Az agent az `AGENTS.md`-ből magától megtudja, mi a dolga. Nincs
 `/hello-report` parancs — prózában kéred: *„csinálj riportot a Larusnak
 júliusra"*.
