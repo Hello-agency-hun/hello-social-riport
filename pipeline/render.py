@@ -138,9 +138,20 @@ def render(
             # mert azokról van mért fizetett adatunk.
             selected = [post for post in ranked if post.get("paid")][:6]
         for post in selected:
-            uris = images.embed(
-                post["creatives"][:1], cache_dir=cache_dir, fetcher=fetcher
-            )
+            sources = post["creatives"][:1]
+            # Ha a ZoomSphere nem tud a posztról (közvetlenül a felületen ment
+            # ki), a kreatív hiányzik, de a Facebook `og:image`-e megvan.
+            # Kiegészítés, nem forrás: ha nem jön össze, marad a helyőrző, és a
+            # `--validate` akkor is felsorolja a posztot.
+            if not sources and post.get("permalink"):
+                fallback = images.creative_from_permalink(
+                    post["permalink"], fetcher=fetcher
+                )
+                if fallback:
+                    sources = [fallback]
+                    post["creative_from_permalink"] = True
+
+            uris = images.embed(sources, cache_dir=cache_dir, fetcher=fetcher)
             post["thumb"] = uris[0] if uris else images.PLACEHOLDER
         channel_posts[name] = _balanced_chunks(selected)
         # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,

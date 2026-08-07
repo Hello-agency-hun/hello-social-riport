@@ -320,7 +320,17 @@ A képek a **ZoomSphere** exportból jönnek, a számok a **Meta** exportból. H
 poszt közvetlenül a felületen ment ki, nem a ZoomSphere-en keresztül, akkor a
 teljesítménye megvan, a kreatívja nincs.
 
-A `--validate` név szerint felsorolja őket:
+**A rendszer ilyenkor megpróbálja pótolni**: elkéri a poszt nyitóképét a
+Facebook oldaláról (`og:image`), a Meta exportjában szereplő linken keresztül.
+A legtöbb esetben ez működik, és nem is látod, hogy volt hiány.
+
+Két feltétele van, és mindkettő kicsúszhat alólunk:
+
+- az oldalnak **nyilvánosnak** kell lennie
+- a Facebooknak továbbra is ki kell adnia ezt a metaadatot
+
+Ezért ez **kiegészítés, nem forrás.** Ha nem megy, marad a helyőrző, és a
+`--validate` akkor is felsorolja a posztot:
 
 ```
 ⚠ kreatív nélküli poszt (helyőrző lesz a riportban — a ZoomSphere nem tud róla,
@@ -328,9 +338,8 @@ A `--validate` név szerint felsorolja őket:
   · Láttatok már ilyen szépet? 🐟 Süllőpofa…
 ```
 
-Ha a poszt bekerül a kiemeltek közé, két lehetőség van: vagy visszamented a
-képet a Facebookról és a következő hónaptól a ZoomSphere-ben is felviszed, vagy
-elfogadod a helyőrzőt.
+A tartós megoldás az, ha a poszt a ZoomSphere-en keresztül megy ki. Ott a
+kreatív eredeti felbontásban van meg, a Facebook nyitóképe pedig tömörített.
 
 Ha elakadsz, másold be az üzenetet a chatbe.
 

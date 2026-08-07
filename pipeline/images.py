@@ -11,6 +11,8 @@ nem tölt le újra semmit.
 import base64
 import hashlib
 import io
+import re
+from html import unescape
 from pathlib import Path
 from typing import Callable
 
@@ -41,6 +43,37 @@ def fetch(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": "hello-reporting"})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
         return response.read()
+
+
+OG_IMAGE = re.compile(r'og:image"?\s+content="([^"]+)"')
+
+
+def creative_from_permalink(
+    permalink: str, fetcher: Callable[[str], bytes] = fetch
+) -> str | None:
+    """A poszt nyitóképe a Facebook `og:image` metaadatából.
+
+    Akkor kell, ha a ZoomSphere nem tud a posztról — mert közvetlenül a
+    felületen ment ki —, de a Meta Tartalom exportja igen. Ilyenkor a
+    teljesítménye megvan, a kreatívja nincs, és a riportban helyőrző állna.
+
+    Kimérve: a Facebook a `hello-reporting` néven is kiadja az `og:` mezőket;
+    **nem kell a saját crawlerének kiadnunk magunkat**. Böngésző-User-Agenttel
+    viszont 400-at ad, tehát ezek a mezők kifejezetten gépi olvasásra szólnak.
+
+    Két feltétele van, és mindkettő kicsúszhat alólunk: az oldal legyen
+    nyilvános, és a Facebook adja továbbra is ezt a metaadatot. Ezért ez
+    **kiegészítés, nem forrás** — ha nem megy, marad a helyőrző, és a
+    `--validate` akkor is felsorolja a posztot.
+    """
+    if not permalink or "facebook.com" not in permalink:
+        return None
+    try:
+        page = fetcher(permalink).decode("utf-8", errors="replace")
+    except Exception:
+        return None
+    found = OG_IMAGE.search(page)
+    return unescape(found.group(1)) if found else None
 
 
 def to_data_uri(raw: bytes, max_width: int = MAX_WIDTH) -> str:
