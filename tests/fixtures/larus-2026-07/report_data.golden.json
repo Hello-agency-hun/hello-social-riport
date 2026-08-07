@@ -2177,7 +2177,9 @@
     ],
     "posts_total": 31,
     "posts_measured": 16,
+    "posts_with_spend": 8,
     "unmatched_boosts": [],
+    "earlier_posts_boosted_now": [],
     "unmatched_content": [
       "1508309508006534"
     ],
@@ -2199,6 +2201,63 @@
     }
   ],
   "screenshots": [],
+  "inventory": [
+    {
+      "file": "Felkeresések-2.csv",
+      "as": "instagram / visits",
+      "detail": "összeg 634"
+    },
+    {
+      "file": "Felkeresések.csv",
+      "as": "facebook / visits",
+      "detail": "összeg 1 525"
+    },
+    {
+      "file": "Hivatkozáskattintások-2.csv",
+      "as": "instagram / link_clicks",
+      "detail": "összeg 389"
+    },
+    {
+      "file": "Hivatkozáskattintások.csv",
+      "as": "facebook / link_clicks",
+      "detail": "összeg 1 227"
+    },
+    {
+      "file": "Interakciók-2.csv",
+      "as": "instagram / interactions",
+      "detail": "összeg 255"
+    },
+    {
+      "file": "Interakciók.csv",
+      "as": "facebook / interactions",
+      "detail": "összeg 345"
+    },
+    {
+      "file": "Jul-01-2026_Jul-31-2026_916860337511681.csv",
+      "as": "Tartalom",
+      "detail": "16 facebook"
+    },
+    {
+      "file": "Követők.csv",
+      "as": "facebook / follows",
+      "detail": "összeg 5"
+    },
+    {
+      "file": "Larus-Étterem-Kampányok-2026.-júl.-1.-2026.-júl.-31..csv",
+      "as": "Meta Ads",
+      "detail": "13 kampány (8 boost), EUR"
+    },
+    {
+      "file": "Megtekintések-2.csv",
+      "as": "instagram / views",
+      "detail": "összeg 22 483"
+    },
+    {
+      "file": "export_Larus Étterem Social media Scheduler_2026-08-05T14_11_43.966Z.xlsx",
+      "as": "ZoomSphere",
+      "detail": "29 elem"
+    }
+  ],
   "missing": [
     "Instagram Tartalom export — enélkül nincs poszt-szintű elérés"
   ]

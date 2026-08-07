@@ -174,12 +174,14 @@ def render(
             # Kiegészítés, nem forrás: ha nem jön össze, marad a helyőrző, és a
             # `--validate` akkor is felsorolja a posztot.
             if not sources and post.get("permalink"):
-                fallback = images.creative_from_permalink(
+                fallback, why = images.creative_from_permalink(
                     post["permalink"], fetcher=fetcher
                 )
+                # Az indoklást akkor is eltesszük, ha sikerült: a menedzser
+                # csak így tudja eldönteni, érdemes-e kézzel pótolni a képet.
+                post["creative_recovery"] = why
                 if fallback:
                     sources = [fallback]
-                    post["creative_from_permalink"] = True
 
             uris = images.embed(sources, cache_dir=cache_dir, fetcher=fetcher)
             post["thumb"] = uris[0] if uris else images.PLACEHOLDER

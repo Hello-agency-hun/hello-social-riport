@@ -99,6 +99,18 @@
     </tr>
     {% endfor %}
   </table>
+  {# Valódi költés, ami eddig teljesen kimaradt a riportból: a poszt egy
+     korábbi hónapban jelent meg, a hirdetés viszont ebben a hónapban futott
+     rá. Poszt-kártya nem tartozik hozzá — de a pénz elment, és az ügyfél
+     látja a számlán. #}
+  {% if data.quality.earlier_posts_boosted_now %}
+  <p class="note" style="margin-top:20px">
+    Ebből <strong>{{ data.quality.earlier_posts_boosted_now | length }}</strong>
+    hirdetés korábbi hónapban megjelent bejegyzést támogatott
+    ({{ data.quality.earlier_posts_boosted_now | sum(attribute="spend") | money(currency) }}).
+    A költésük ebben a hónapban merült fel, ezért a fenti összegben szerepel.
+  </p>
+  {% endif %}
   <p class="note" style="margin-top:auto">
     Az eredménytípusok külön sorokban szerepelnek, mert mást mérnek — összegük
     nem értelmezhető.

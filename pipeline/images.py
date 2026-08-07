@@ -50,7 +50,7 @@ OG_IMAGE = re.compile(r'og:image"?\s+content="([^"]+)"')
 
 def creative_from_permalink(
     permalink: str, fetcher: Callable[[str], bytes] = fetch
-) -> str | None:
+) -> tuple[str | None, str]:
     """A poszt nyitóképe a Facebook `og:image` metaadatából.
 
     Akkor kell, ha a ZoomSphere nem tud a posztról — mert közvetlenül a
@@ -65,15 +65,26 @@ def creative_from_permalink(
     nyilvános, és a Facebook adja továbbra is ezt a metaadatot. Ezért ez
     **kiegészítés, nem forrás** — ha nem megy, marad a helyőrző, és a
     `--validate` akkor is felsorolja a posztot.
+
+    `(url, indoklás)` párt ad vissza. Az indoklás azért kell, mert a
+    Mammut-próbán mindhárom pótlási kísérlet eredménytelen maradt, és nem
+    derült ki, miért — így a menedzser nem tudta eldönteni, érdemes-e kézzel
+    pótolni a képet.
     """
-    if not permalink or "facebook.com" not in permalink:
-        return None
+    if not permalink:
+        return None, "nincs permalink a poszthoz"
+    if "facebook.com" not in permalink:
+        return None, "nem Facebook-link (Instagramnál nincs og:image)"
     try:
         page = fetcher(permalink).decode("utf-8", errors="replace")
-    except Exception:
-        return None
+    except Exception as error:
+        return None, f"az oldal nem érhető el ({type(error).__name__})"
+    if not page.strip():
+        return None, "üres válasz (offline mód?)"
     found = OG_IMAGE.search(page)
-    return unescape(found.group(1)) if found else None
+    if not found:
+        return None, "nincs og:image a lapon (nem nyilvános oldal?)"
+    return unescape(found.group(1)), "megvan"
 
 
 def to_data_uri(raw: bytes, max_width: int = MAX_WIDTH) -> str:

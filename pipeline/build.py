@@ -1,5 +1,6 @@
 import json
 from calendar import monthrange
+from collections import Counter
 from dataclasses import asdict, is_dataclass
 from datetime import date
 from pathlib import Path
@@ -36,9 +37,15 @@ SINGLETON_SOURCES = {
 CONVERTIBLE = {
     "spreadsheet": "XLSX, de nem ZoomSphere-export. Ha ez a Meta Ads-export, "
     "mentsd CSV-ként (vagy szólj, és átalakítom) — a tartalma jó.",
-    "pdf": "PDF. Ha ez a ZoomSphere-export, akkor újra kell tölteni XLSX-ként: "
-    "a PDF elvileg sem elég, mert nincs benne poszt-azonosító és kép-URL. Ha "
-    "előző havi riport, akkor a `tools/import_previous.py` való rá.",
+    "pdf": "PDF. Két eset van, és mást kell tenni velük:\n"
+    "      · ZoomSphere-export → töltsd le újra XLSX-ként. A PDF elvileg sem "
+    "elég: nincs benne poszt-azonosító és kép-URL.\n"
+    "      · korábbi havi riport → NEM az input mappába való. Tedd a hónap "
+    "mappájába, és futtasd rá:\n"
+    "          python tools/import_previous.py <fájl>\n"
+    "        Ez javaslatot ír ki, nem previous.json-t — a számokat neked kell "
+    "jóváhagynod. Vigyázz: a kézzel készült riportok időszaka gyakran nem "
+    "naptári hónap, és akkor a belőlük számolt változás nem változás.",
     "legacy_office": "régi Office-formátum (.xls/.doc). Mentsd el XLSX-ként "
     "vagy CSV-ként, vagy szólj, és átalakítom.",
     "office": "Word- vagy más Office-dokumentum, nem táblázat-export.",
@@ -256,6 +263,10 @@ def build(directory: Path, period: str) -> dict:
     screenshots: list[str] = []
     wrong_format: list[tuple[str, str]] = []
     coverage: dict[str, tuple] = {}
+    # „Így értelmeztem a mappát" — a Mammut-próba hét csúszástípusából négy
+    # teljesen néma volt: a rendszer nem hibázott, csak rosszul párosított.
+    # A hiány jelentése nem elég; a saját értelmezésünket is jelentenünk kell.
+    inventory: list[tuple[str, str, str]] = []
     seen: dict[str, str] = {}
     content_channels: dict[str, str] = {}
 
@@ -272,12 +283,37 @@ def build(directory: Path, period: str) -> dict:
         if source.kind == "zoomsphere":
             parsed = zoomsphere.parse(source.path)
             items = parsed.payload
+            inventory.append(
+                (source.path.name, "ZoomSphere", f"{len(parsed.payload)} elem")
+            )
         elif source.kind == "meta_ads":
             parsed = meta_ads.parse(source.path)
             ads_payload = parsed.payload
             campaigns = parsed.payload.campaigns
+            boosts = sum(1 for c in campaigns if c.is_boost)
+            inventory.append(
+                (
+                    source.path.name,
+                    "Meta Ads",
+                    f"{len(campaigns)} kampány ({boosts} boost), "
+                    f"{parsed.payload.currency}",
+                )
+            )
         elif source.kind == "meta_content":
             parsed = meta_content.parse(source.path)
+            by_channel = Counter(post.channel for post in parsed.payload)
+            empty = sum(1 for post in parsed.payload if not post.caption.strip())
+            inventory.append(
+                (
+                    source.path.name,
+                    "Tartalom",
+                    ", ".join(f"{n} {c}" for c, n in sorted(by_channel.items()))
+                    # Az üres poszt-szöveg NÉMA hiba: nem áll meg tőle semmi,
+                    # csak a boost-illesztés hiúsul meg, mert az szöveg alapján
+                    # megy. A Mammutnál minden IG-poszt így jött be.
+                    + (f" · ⚠ {empty} szöveg nélkül" if empty else ""),
+                )
+            )
             # Tartalom exportból csatornánként egy van. Kettő ugyanarra a
             # csatornára minden posztot megkétszerezne — az elérés-összegek és
             # az átlagok csendben elromlanának.
@@ -293,6 +329,18 @@ def build(directory: Path, period: str) -> dict:
         elif source.kind == "meta_daily":
             parsed = meta_daily.parse(source.path, overrides=overrides)
             series.append(parsed.payload)
+            # A csatorna és az összeg együtt: ha két azonos nevű csempe
+            # ugyanarra a csatornára került, az itt szemmel látszik. Ez volt a
+            # Mammut egyik néma hibája — a két „Megtekintések" felcserélése.
+            inventory.append(
+                (
+                    source.path.name,
+                    f"{parsed.payload.channel} / {parsed.payload.field}",
+                    f"összeg {sum(v for _, v in parsed.payload.points):,}".replace(
+                        ",", " "
+                    ),
+                )
+            )
         elif source.kind == "screenshot":
             # A menedzser gyakran bedobja a Business Suite képernyőképeit is.
             # Ez nem szemét: ezekről olvasható le a havi elérés és a változás.
@@ -432,7 +480,23 @@ def build(directory: Path, period: str) -> dict:
                 ],
                 "posts_total": len(joined.posts),
                 "posts_measured": sum(1 for p in joined.posts if p.organic_measured),
+                # Hány poszt kapta meg a költését. Ha ez nulla, miközben van
+                # boost, a párosítás elromlott — és a boost-szorzó hamis.
+                "posts_with_spend": sum(1 for p in joined.posts if p.paid),
                 "unmatched_boosts": [c.name for c in joined.unmatched_boosts],
+                # Valódi költés, ami ma teljesen kimarad a riportból: a poszt
+                # egy korábbi hónapban jelent meg, a hirdetés viszont most
+                # futott rá. Ez NEM hiba — a `--validate` mégis ugyanúgy
+                # figyelmezteti, mint egy valódi elakadást.
+                "earlier_posts_boosted_now": [
+                    {
+                        "name": c.name,
+                        "spend": c.spend,
+                        "reach": c.reach,
+                        "channel": c.channel,
+                    }
+                    for c in joined.unmatched_boosts
+                ],
                 "unmatched_content": [p.post_id for p in joined.unmatched_content],
                 "dropped_zero_campaign_rows": (
                     ads_payload.dropped_zero_rows if ads_payload else 0
@@ -446,6 +510,10 @@ def build(directory: Path, period: str) -> dict:
             # számok jó eséllyel leolvashatók — ilyenkor nem kérdezünk, hanem
             # megnézzük.
             "screenshots": screenshots,
+            "inventory": [
+                {"file": name, "as": what, "detail": detail}
+                for name, what, detail in sorted(inventory)
+            ],
             "missing": _missing(
                 seen,
                 content_channels,

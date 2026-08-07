@@ -19,16 +19,31 @@ def _report_map(data: dict) -> str:
     channels = ", ".join(sorted(data["channels"])) or "nincs"
     unmatched = quality["unmatched_boosts"]
 
+    # „Így értelmeztem a mappát" — a hiány jelentése nem elég. A Mammut-próba
+    # hét csúszástípusából négy teljesen néma volt: nem hibáztunk, csak rosszul
+    # párosítottunk. Az ilyen hiba nem hiányként jelentkezik, hanem téves
+    # értelmezésként, tehát csak úgy fogható meg, ha kiírjuk, mit hogyan
+    # olvastunk — MIELŐTT bármit kiszámolnánk belőle.
+    width = max((len(item["file"]) for item in data["inventory"]), default=0)
+    interpretation = "\n".join(
+        f"  {item['file']:<{width}}  →  {item['as']}   {item['detail']}"
+        for item in data["inventory"]
+    )
+
     return "\n".join(
         [
             f"Ügyfél:   {data['meta']['client']}",
             f"Időszak:  {data['meta']['period']}",
             "",
+            "Így értelmeztem a mappát — nézd át, mielőtt továbbmegyünk:",
+            interpretation,
+            "",
             f"ZoomSphere      {content['total']} tartalom — "
             + ", ".join(f"{count} {name}" for name, count in content["by_type"].items()),
             f"Posztok         {quality['posts_total']} összesen · "
             f"{quality['posts_measured']} mért organikus teljesítménnyel · "
-            f"{quality['posts_with_creative']} kreatívval",
+            f"{quality['posts_with_creative']} kreatívval · "
+            f"{quality['posts_with_spend']} költéssel",
             f"Meta Ads        {paid['always_on']['campaigns']} always-on + "
             f"{paid['boosted']['campaigns']} boost, "
             f"{paid['spend']:.2f} {paid['currency']} "
@@ -114,8 +129,22 @@ def _report_map(data: dict) -> str:
                 else "Minden mért poszthoz van kreatív."
             ),
             "",
-            "⚠ nem illesztett boost: "
-            + (f"{len(unmatched)} db — " + "; ".join(unmatched) if unmatched else "nincs"),
+            # Ez a leggyakrabban NEM hiba: a poszt egy korábbi hónapban jelent
+            # meg, a hirdetés viszont most futott rá. A költése valódi, és
+            # benne is van a havi összegben — csak poszt-kártya nem tartozik
+            # hozzá, mert a poszt nem ebben a hónapban született.
+            (
+                "ⓘ korábbi poszt, ebben a hónapban hirdetve "
+                f"({len(unmatched)} db — a költésük benne van a havi összegben, "
+                "de poszt-kártya nem tartozik hozzájuk):\n"
+                + "\n".join(
+                    f"  · {item['name'][:64]} — {item['spend']:.2f} "
+                    f"{paid['currency']}"
+                    for item in quality["earlier_posts_boosted_now"]
+                )
+                if unmatched
+                else "Minden boost megtalálta a posztját."
+            ),
         ]
     )
 

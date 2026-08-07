@@ -48,7 +48,10 @@ def test_validate_prints_data_map(fixture_dir, capsys):
     assert "29 tartalom" in out
     assert "16 mért organikus teljesítménnyel" in out
     assert "472.71 EUR" in out
-    assert "nem illesztett boost" in out
+    # Az „illesztetlen boost" a leggyakrabban NEM hiba: a poszt egy korábbi
+    # hónapban jelent meg, a hirdetés viszont most futott rá. A kimenet ezért
+    # mindkét esetet megnevezi, nem figyelmeztetésként.
+    assert "Minden boost megtalálta a posztját." in out
 
 
 def test_validate_writes_nothing(fixture_dir, tmp_path):

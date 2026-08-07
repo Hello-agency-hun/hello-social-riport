@@ -20,30 +20,44 @@ PERMALINK = "https://www.facebook.com/larusetterem/posts/pfbid0rbkdek"
 
 
 def test_the_opening_image_is_read_from_the_post_page():
-    found = images.creative_from_permalink(PERMALINK, fetcher=lambda url: PAGE)
+    found, why = images.creative_from_permalink(PERMALINK, fetcher=lambda url: PAGE)
     assert found == "https://scontent.fbud3-2.fna.fbcdn.net/kep.jpg?a=1&b=2", (
         "a HTML-entitásokat vissza kell alakítani, különben az URL nem tölthető le"
     )
+    assert why == "megvan"
 
 
-def test_a_page_without_the_tag_yields_nothing_not_a_crash():
-    assert images.creative_from_permalink(PERMALINK, fetcher=lambda u: b"<html>") is None
+def test_a_page_without_the_tag_says_why():
+    """A Mammut-próbán mindhárom pótlás eredménytelen maradt, és nem derült ki,
+    miért — így a menedzser nem tudta eldönteni, érdemes-e kézzel pótolni."""
+    found, why = images.creative_from_permalink(PERMALINK, fetcher=lambda u: b"<html>")
+
+    assert found is None
+    assert "nincs og:image" in why
 
 
-def test_a_failed_request_falls_back_quietly():
+def test_a_failed_request_falls_back_quietly_but_audibly():
     """A hiányzó kép kellemetlen; egy elszálló build sokkal rosszabb."""
 
     def boom(url):
         raise OSError("nincs hálózat")
 
-    assert images.creative_from_permalink(PERMALINK, fetcher=boom) is None
+    found, why = images.creative_from_permalink(PERMALINK, fetcher=boom)
+    assert found is None
+    assert "nem érhető el" in why
 
 
 def test_only_facebook_links_are_followed():
     """Az Instagram-permalinkek nem adnak `og:image`-et, és nem is akarunk
     tetszőleges URL-t lekérni azért, mert egy exportban szerepelt."""
-    assert images.creative_from_permalink("https://example.com/x", lambda u: PAGE) is None
-    assert images.creative_from_permalink("", lambda u: PAGE) is None
+    assert images.creative_from_permalink("https://example.com/x", lambda u: PAGE)[0] is None
+    assert images.creative_from_permalink("", lambda u: PAGE)[0] is None
+
+
+def test_an_offline_build_says_so_rather_than_staying_silent():
+    found, why = images.creative_from_permalink(PERMALINK, fetcher=lambda u: b"")
+    assert found is None
+    assert "offline" in why
 
 
 def test_offline_builds_do_not_reach_out(tmp_path):
