@@ -7,3 +7,7 @@ clients/*/*/Riport.html
 .pytest_cache/
 .image-cache/
 .playwright-mcp/
+
+# A próbafutás beágyazott klónja — valós ügyféladat, nem való a repóba.
+user_jorney_trial/
+user_journey_trial/
