@@ -3,6 +3,8 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from pipeline.build import build, load_narrative
 from pipeline.errors import FixtureAsClientError, PipelineError
 from pipeline.textio import force_utf8_output
@@ -52,11 +54,12 @@ def _report_map(data: dict) -> str:
             (
                 "Beszerezhető, de még nincs megadva — írd a client.yaml-be:\n"
                 + "\n".join(
-                    f"  → {item['label']}\n"
-                    f"      hol:  {item['hint']}\n"
-                    f"      miért: {item['why']}"
+                    f"  → {item['label']}\n      {item['hint']}"
                     for item in data["obtainable"]
                 )
+                # A magyarázat egyszer szerepel, nem csatornánként: ugyanaz a
+                # mondat kétszer egymás alatt zajnak látszik, nem indoklásnak.
+                + f"\n\n  Miért nem tudjuk kiszámolni? {data['obtainable'][0]['why']}"
                 + "\n\n  monthly_reach:\n"
                 + "\n".join(
                     f"    {item['key'].split('.')[1]}: <szám>"
@@ -104,6 +107,51 @@ def _refuse_the_fixture(directory: Path, allowed: bool) -> None:
         )
 
 
+def _also_worth_knowing(directory: Path, period: str) -> None:
+    """A megállás után: mi az, ami úgyis hiányozni fog?
+
+    A build az első hibánál megáll — muszáj, mert a többi számítás arra épül.
+    A menedzser viszont emiatt körönként egy hibát lát: kijavít egyet,
+    újrafuttat, kap egy másikat. A PETI-próbán ez négy kör volt az első
+    sikeres futásig.
+
+    A hiányzó `client.yaml`-mezők ettől függetlenül megállapíthatók, mert csak
+    a konfigurációtól függenek. Ezeket tehát előre megmondjuk, hogy egy körben
+    lehessen mindent pótolni. Ha ez maga is hibára fut, csendben elhallgat: a
+    segítség sosem takarhatja el az eredeti hibát.
+    """
+    from pipeline import bootstrap, followers, manual
+
+    try:
+        path = Path(directory) / "client.yaml"
+        if not path.exists():
+            return
+        config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        client = config.get("client") or {}
+        gaps = []
+
+        given_followers = config.get("followers") or {}
+        given_reach = config.get("monthly_reach") or {}
+        for name in followers.wanted_channels(client):
+            if not isinstance(given_followers.get(name), int):
+                gaps.append(f"followers.{name} — {bootstrap.FOLLOWER_HINT[name]}")
+            if not isinstance(given_reach.get(name), int):
+                hint = manual.OBTAINABLE["monthly_reach"]["hint"].get(name, "")
+                gaps.append(f"monthly_reach.{name} — {hint}")
+
+        if gaps:
+            print(
+                "\nEz úgyis hiányozni fog — érdemes most pótolni, "
+                "hogy ne kelljen még egy kört futni:",
+                file=sys.stderr,
+            )
+            for index, gap in enumerate(gaps, 1):
+                print(f"  {index}. {gap}", file=sys.stderr)
+    except Exception:
+        # A segítség sosem takarhatja el az eredeti hibát.
+        return
+
+
 def main(argv: list[str] | None = None) -> int:
     force_utf8_output()
     parser = argparse.ArgumentParser(prog="hello-report")
@@ -136,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
         data = build(Path(args.directory), period=args.period)
     except PipelineError as error:
         print(f"HIBA: {error}", file=sys.stderr)
+        _also_worth_knowing(Path(args.directory), args.period)
         return 1
 
     print(_report_map(data))

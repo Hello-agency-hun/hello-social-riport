@@ -30,11 +30,12 @@ SLOTS: dict[str, dict] = {}
     # száma, amelyek legalább egyszer megnézték a tartalmaidat”). Aki az Elérést
     # keresi, nem találja, és a rossz csempét („Megtekintések”) hozza el —
     # az viszont megjelenést mér, nem embert, és nagyságrenddel nagyobb.
+# Terminálra megy, nem markdownba: a `**félkövér**` ott csillagokként látszik.
 FIND_MONTHLY_REACH = {
-    "facebook": "Business Suite → Eredmények → **Nézők** csempe, a hónapra "
-    "állítva. A Facebookon ez az elérés neve — „Elérés” csempe nincs, a "
-    "„Megtekintések” pedig mást mér (megjelenést, nem embert).",
-    "instagram": "Business Suite → Eredmények → **Elérés** csempe, a hónapra "
+    "facebook": 'Business Suite → Eredmények → a "Nézők" csempe, a hónapra '
+    'állítva. A Facebookon ez az elérés neve — "Elérés" csempe nincs, a '
+    '"Megtekintések" pedig mást mér (megjelenést, nem embert).',
+    "instagram": 'Business Suite → Eredmények → az "Elérés" csempe, a hónapra '
     "állítva.",
 }
 
@@ -42,10 +43,12 @@ OBTAINABLE = {
     "monthly_reach": {
         "label": "havi elérés",
         "hint": FIND_MONTHLY_REACH,
-        "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az "
-        "elérés emberben mér, és aki két napon látott minket, egy ember — "
-        "a napi vagy poszt-szintű értékek összege mindig több a valóságnál "
-        "(júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)",
+        # Egyszer mondjuk el, ne csatornánként. És általánosan: egy másik
+        # ügyfél riportjában a Larus júliusi számai zavarba ejtőek.
+        "why": "az elérés emberben mér, és aki két napon látott minket, egy "
+        "ember — a napi és a poszt-szintű értékek összege ezért mindig több a "
+        "valóságnál. A deduplikáció csak a Meta oldalán történhet meg, tehát "
+        "ezt az egy számot nem lehet kiszámolni, csak leolvasni.",
     },
 }
 

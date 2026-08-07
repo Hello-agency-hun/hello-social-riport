@@ -5,6 +5,7 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
+from pipeline.errors import MissingColumnError
 from pipeline.schema import ContentItem, ParsedSource
 
 REQUIRED_HEADERS = {"PostType", "FacebookPostIDs", "InstagramPostIDs"}
@@ -67,9 +68,26 @@ def _urls(value: str) -> list[str]:
     return [u.strip() for u in (value or "").split(",") if u.strip().startswith("http")]
 
 
+DATETIME_FORMAT = "%d.%m.%Y - %I:%M %p"
+
+
 def _parse_datetime(value: str) -> date:
-    """`01.07.2026 - 11:00 AM` → date(2026, 7, 1)"""
-    return datetime.strptime(value.strip(), "%d.%m.%Y - %I:%M %p").date()
+    """`01.07.2026 - 11:00 AM` → date(2026, 7, 1)
+
+    Ha a ZoomSphere megváltoztatja a formátumot — vagy valaki megnyitja és
+    menti a fájlt Excelben, ami átírja a dátumokat —, itt nyers `ValueError`
+    jött, `_strptime` stack trace-szel. Abból a menedzser nem tudhatja, hogy a
+    fájllal van baj, nem a programmal.
+    """
+    try:
+        return datetime.strptime((value or "").strip(), DATETIME_FORMAT).date()
+    except ValueError as error:
+        raise MissingColumnError(
+            f"a ZoomSphere export `Datetime` oszlopában értelmezhetetlen dátum: "
+            f"{value!r}. Várt formátum: `01.07.2026 - 11:00 AM`.\n"
+            "Gyakori ok: a fájlt megnyitották Excelben és mentették — az átírja "
+            "a dátumokat. Töltsd le újra, és ne nyisd meg."
+        ) from error
 
 
 def parse(path) -> ParsedSource:

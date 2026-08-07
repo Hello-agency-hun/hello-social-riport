@@ -38,8 +38,22 @@ def join_posts(
             if post_id:
                 by_id[(channel, post_id)] = item
 
+    # Tartalék: szöveg szerint. A poszt-azonosító a megbízhatóbb, de a két
+    # rendszer nem mindig ugyanazt az ID-t tárolja — Instagramnál különösen —,
+    # és ha nem egyezik, a poszt NÉMÁN elveszti a kreatívját. A szöveg egyezése
+    # gyengébb bizonyíték, de sokkal jobb, mint egy üres kép.
+    by_caption: dict[tuple[str, str], ContentItem] = {}
+    for item in items:
+        for channel in ("facebook", "instagram"):
+            key = normalize_caption(item.caption(channel))[:MATCH_LENGTH]
+            if key and item.creatives.get(channel):
+                by_caption.setdefault((channel, key), item)
+
     for post in result.posts:
         item = by_id.get((post.channel, post.post_id))
+        if item is None:
+            key = normalize_caption(post.caption)[:MATCH_LENGTH]
+            item = by_caption.get((post.channel, key)) if key else None
         if item is None:
             result.unmatched_content.append(post)
             continue

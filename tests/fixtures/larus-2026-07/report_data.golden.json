@@ -2181,14 +2181,14 @@
     {
       "key": "monthly_reach.facebook",
       "label": "facebook havi elérés",
-      "hint": "Business Suite → Eredmények → **Nézők** csempe, a hónapra állítva. A Facebookon ez az elérés neve — „Elérés” csempe nincs, a „Megtekintések” pedig mást mér (megjelenést, nem embert).",
-      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál (júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)"
+      "hint": "Business Suite → Eredmények → a \"Nézők\" csempe, a hónapra állítva. A Facebookon ez az elérés neve — \"Elérés\" csempe nincs, a \"Megtekintések\" pedig mást mér (megjelenést, nem embert).",
+      "why": "az elérés emberben mér, és aki két napon látott minket, egy ember — a napi és a poszt-szintű értékek összege ezért mindig több a valóságnál. A deduplikáció csak a Meta oldalán történhet meg, tehát ezt az egy számot nem lehet kiszámolni, csak leolvasni."
     },
     {
       "key": "monthly_reach.instagram",
       "label": "instagram havi elérés",
-      "hint": "Business Suite → Eredmények → **Elérés** csempe, a hónapra állítva.",
-      "why": "ez az egyetlen szám, amit semmiből nem lehet kiszámolni: az elérés emberben mér, és aki két napon látott minket, egy ember — a napi vagy poszt-szintű értékek összege mindig több a valóságnál (júliusban a napi Nézők összege ~248 E volt, a havi érték 139,7 E)"
+      "hint": "Business Suite → Eredmények → az \"Elérés\" csempe, a hónapra állítva.",
+      "why": "az elérés emberben mér, és aki két napon látott minket, egy ember — a napi és a poszt-szintű értékek összege ezért mindig több a valóságnál. A deduplikáció csak a Meta oldalán történhet meg, tehát ezt az egy számot nem lehet kiszámolni, csak leolvasni."
     }
   ],
   "missing": [
