@@ -141,6 +141,16 @@ def test_each_channel_gets_daily_trend_charts(html):
     assert html.count('class="chart"') >= 8, "csatornánként 4 metrika trendgörbéje"
 
 
+def test_five_daily_trends_are_split_before_they_overflow(data, tmp_path):
+    data["channels"]["facebook"]["daily"]["fifth_metric"] = [
+        ("2026-07-01", 1),
+        ("2026-07-31", 2),
+    ]
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+    facebook_trends = out[out.index("Facebook") :]
+    assert facebook_trends.count("Napi alakulás") >= 2
+
+
 def test_trend_chart_labels_are_hungarian(html):
     assert "Felkeresések" in html
     assert "Interakciók" in html
@@ -283,6 +293,20 @@ def test_the_ranking_page_is_back(html):
     """A poszt-szövegekkel felsorolt, oldalra fordított oszlopdiagram."""
     assert "Teljesítmény a szokásoshoz képest" in html
     assert 'class="bar"' in html
+
+
+def test_posts_without_a_stable_baseline_are_not_drawn_as_zero(data, tmp_path):
+    from pipeline import performance
+
+    posts = data["channels"]["facebook"]["posts"]
+    measured = performance.balanced(posts, limit=6)[0]
+    for post in posts:
+        if post.get("score"):
+            post["score"]["vs_typical"] = None
+    measured["caption"] = "Nincs stabil viszonyítási alap"
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+    assert "nincs stabil alap" in out
+    assert 'aria-label="Facebook — Teljesítmény a szokásoshoz képest"' not in out
 
 
 def test_the_ranking_is_not_ordered_by_reach(html):

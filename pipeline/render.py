@@ -162,7 +162,7 @@ def render(
 
     trends = {}
     for name, block in data.get("channels", {}).items():
-        trends[name] = [
+        trend_charts = [
             (
                 labels.page_field(field, language),
                 charts.line_chart(
@@ -179,6 +179,9 @@ def render(
             )
             for index, field in enumerate(sorted(block["daily"]))
         ]
+        # Legfeljebb négy trenddiagram fér el biztonságosan egy 16:9-es
+        # oldalon. Öt mérőszámnál az ötödik korábban a lábléc alá csúszott.
+        trends[name] = _balanced_chunks(trend_charts, per_page=4)
 
     channel_posts = {}
     ranking: dict[str, str] = {}
@@ -219,7 +222,14 @@ def render(
         # amit a kártyák oldalanként háromra bontva nem tudnak.
         # A diagram azt mutatja, hányszorosa a poszt a csatorna szokásos
         # teljesítményének — nem az elérést, mert azt a költés dönti el.
-        measured = [post for post in selected if post.get("score")]
+        # A `score` önmagában még nem jelent összehasonlítható szorzót. Ha egy
+        # mezőny mediánja nulla, a `vs_typical` szándékosan None; ezt nullaként
+        # kirajzolni azt hazudná, hogy a poszt 0,0-szeresen teljesített.
+        measured = [
+            post
+            for post in selected
+            if post.get("score") and post["score"].get("vs_typical") is not None
+        ]
         if measured:
             ranking[name] = charts.bar_chart(
                 [

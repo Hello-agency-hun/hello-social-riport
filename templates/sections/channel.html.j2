@@ -82,7 +82,7 @@
         <tr><td>{{ t.resonance }}<br>
             <span class="note">{{ t.among_boosted if post.score.boosted
                                   else t.among_organic }}</span></td>
-            <td class="num"><strong>{{ post.score.vs_typical | num(1) }}×</strong></td></tr>
+            <td class="num"><strong>{% if post.score.vs_typical is not none %}{{ post.score.vs_typical | num(1) }}×{% else %}{{ t.no_stable_baseline }}{% endif %}</strong></td></tr>
         <tr><td>{{ t.engagement_rate }}</td>
             <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>
         {% endif %}

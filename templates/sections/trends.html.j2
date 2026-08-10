@@ -1,10 +1,11 @@
 {% for name, block in data.channels.items() %}
 {% if block.daily %}
+{% for chunk in trends[name] %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
   <h2 style="margin-bottom:28px">{{ t.daily_trend }}</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr">
-    {% for title, svg in trends[name] %}
+    {% for title, svg in chunk %}
     <div class="panel">
       <h3 style="font-size:15px;margin-bottom:8px">{{ title }}</h3>
       {{ svg | safe }}
@@ -12,5 +13,6 @@
     {% endfor %}
   </div>
 </section>
+{% endfor %}
 {% endif %}
 {% endfor %}
