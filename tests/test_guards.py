@@ -59,6 +59,21 @@ def test_matching_client_passes():
     )
 
 
+def test_display_name_and_page_slug_are_the_same_client():
+    check_client(
+        {"page_name": "Mammut Bevásárló- és Szórakoztató Központ"},
+        {"fb_page_name": "mammut.bevasarlo.es.szorakoztato.kozpont"},
+    )
+
+
+def test_foreign_page_name_raises_without_page_id():
+    with pytest.raises(ClientMismatchError, match="page_name"):
+        check_client(
+            {"page_name": "Másik Bevásárlóközpont"},
+            {"fb_page_name": "mammut.bevasarlo.es.szorakoztato.kozpont"},
+        )
+
+
 def test_foreign_page_id_raises():
     with pytest.raises(ClientMismatchError, match="page_id"):
         check_client(
