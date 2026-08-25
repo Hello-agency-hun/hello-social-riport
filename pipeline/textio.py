@@ -50,12 +50,7 @@ def read_lines(path: Path) -> list[str]:
     return [line for line in read_text(path).splitlines() if line.strip()]
 
 
-def read_csv_rows(path: Path) -> list[dict[str, str]]:
-    """CSV sorok szótárként.
-
-    A nyers szöveget adja a parsernek, nem előszűrt sorokat — így a több sorra
-    tagolt kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak.
-    """
+def _csv_reader(path: Path):
     text = read_text(path)
     first_line, separator, remainder = text.partition("\n")
     declared = first_line.strip().lower()
@@ -67,5 +62,19 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
             delimiter = csv.Sniffer().sniff(text[:65536], delimiters=",;\t").delimiter
         except csv.Error:
             delimiter = ","
-    reader = csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
+    return csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
+
+
+def read_csv_header(path: Path) -> list[str]:
+    reader = _csv_reader(path)
+    return [str(value or "").strip().lstrip("\ufeff") for value in (reader.fieldnames or [])]
+
+
+def read_csv_rows(path: Path) -> list[dict[str, str]]:
+    """CSV sorok szótárként.
+
+    A nyers szöveget adja a parsernek, nem előszűrt sorokat — így a több sorra
+    tagolt kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak.
+    """
+    reader = _csv_reader(path)
     return [{k: (v or "") for k, v in row.items()} for row in reader]

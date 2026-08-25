@@ -57,3 +57,35 @@ def test_unrelated_unknown_file_remains_unknown(tmp_path):
     unknown.write_text("foo,bar\na,b\n", encoding="utf-8")
 
     assert scan(tmp_path)[0].kind == "unknown"
+
+
+def test_badly_named_content_export_is_recognized_from_its_data_pattern(tmp_path):
+    path = tmp_path / "letoltes-vegleges.dat"
+    path.write_text(
+        "Bejegyzésazonosító,Elérés,Megtekintések,Állandó hivatkozás,Közzététel időpontja\n"
+        "123,10,20,https://facebook.com/123,07/01/2026 10:00\n",
+        encoding="utf-8",
+    )
+
+    assert identify(path).kind == "meta_content"
+
+
+def test_header_only_export_is_still_recognized_before_empty_file_validation(tmp_path):
+    path = tmp_path / "ures-export.akarmi"
+    path.write_text(",".join([
+        "Kampány neve", "Eredmény jelzése", "Elérés", "Megjelenések"
+    ]) + "\n", encoding="utf-8")
+
+    assert identify(path).kind == "meta_ads"
+
+
+def test_probable_ads_export_is_classified_even_when_one_required_header_is_broken(tmp_path):
+    """A parser mondja meg a konkrét hiányt; ne vesszen el az ismeretlen kategóriában."""
+    path = tmp_path / "teljesen-ismeretlen-nev.csv"
+    path.write_text(
+        "elrontott első oszlop,Eredmény jelzése,Elérés,Megjelenések,Jelentés kezdete,Jelentés vége\n"
+        "Teszt,reach,10,20,2026-07-01,2026-07-31\n",
+        encoding="utf-8",
+    )
+
+    assert identify(path).kind == "meta_ads"

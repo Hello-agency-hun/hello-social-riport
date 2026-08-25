@@ -117,6 +117,16 @@ def _missing(seen: dict, content_channels: dict, daily_channels: set, client: di
     return gaps
 
 
+def _required_missing(seen: dict, daily_channels: set, client: dict) -> list[str]:
+    """Ami nélkül egy ismeretlen fájlt sem nevezhetünk biztonsággal extrának."""
+    gaps = [text for kind, text in EXPECTED.items() if kind not in seen]
+    if (client.get("fb_page_id") or client.get("fb_page_name")) and "facebook" not in daily_channels:
+        gaps.append(EXPECTED_PER_CHANNEL["daily"].format(channel="Facebook"))
+    if client.get("ig_handle") and "instagram" not in daily_channels:
+        gaps.append(EXPECTED_PER_CHANNEL["daily"].format(channel="Instagram"))
+    return gaps
+
+
 # E fölött az arány fölött az illesztetlenség már nem lábjegyzet, hanem hiba.
 UNMATCHED_BOOST_LIMIT = 0.5
 
@@ -306,7 +316,12 @@ def build(directory: Path, period: str) -> dict:
             parsed = zoomsphere.parse(source.path)
             items = parsed.payload
             inventory.append(
-                (source.path.name, "ZoomSphere", f"{len(parsed.payload)} elem")
+                (
+                    source.path.name,
+                    "ZoomSphere",
+                    f"{len(parsed.payload)} elem"
+                    + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
+                )
             )
         elif source.kind == "meta_ads":
             parsed = meta_ads.parse(source.path)
@@ -318,7 +333,8 @@ def build(directory: Path, period: str) -> dict:
                     source.path.name,
                     "Meta Ads",
                     f"{len(campaigns)} kampány ({boosts} boost), "
-                    f"{parsed.payload.currency}",
+                    f"{parsed.payload.currency}"
+                    + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
                 )
             )
         elif source.kind == "meta_content":
@@ -333,7 +349,8 @@ def build(directory: Path, period: str) -> dict:
                     # Az üres poszt-szöveg NÉMA hiba: nem áll meg tőle semmi,
                     # csak a boost-illesztés hiúsul meg, mert az szöveg alapján
                     # megy. A Mammutnál minden IG-poszt így jött be.
-                    + (f" · ⚠ {empty} szöveg nélkül" if empty else ""),
+                    + (f" · ⚠ {empty} szöveg nélkül" if empty else "")
+                    + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
                 )
             )
             # Tartalom exportból csatornánként egy van. Kettő ugyanarra a
@@ -403,7 +420,9 @@ def build(directory: Path, period: str) -> dict:
             "a PDF-ből és a régi Excelből ki tudom nyerni a táblázatot."
         )
 
-    if unknown:
+    daily_channels = {entry.channel for entry in series}
+    required_missing = _required_missing(seen, daily_channels, client)
+    if unknown and required_missing:
         raise UnknownSourceError(
             "nem azonosítható fájl az input mappában: "
             + ", ".join(unknown)
@@ -412,6 +431,15 @@ def build(directory: Path, period: str) -> dict:
             "töltsd le újra, változtatás nélkül.\n"
             "Csendben átugrani nem tudjuk: ha mégis riportadat volt, egy egész "
             "csatorna hiányozna a riportból anélkül, hogy bárki észrevenné."
+        )
+    for name in unknown:
+        inventory.append(
+            (
+                name,
+                "Kihagyott extra fájl",
+                "a tartalmát megvizsgáltam, nem ismertem fel riportforrásként; "
+                "minden kötelező forrás külön megvan",
+            )
         )
 
     if not any([items, content, campaigns, series]):
@@ -553,7 +581,7 @@ def build(directory: Path, period: str) -> dict:
             "missing": _missing(
                 seen,
                 content_channels,
-                {entry.channel for entry in series},
+                daily_channels,
                 client,
             ),
         }

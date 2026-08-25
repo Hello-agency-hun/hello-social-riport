@@ -1,6 +1,21 @@
 from datetime import date
 
+import pytest
+
+from pipeline.detect import identify
 from pipeline.parsers.meta_ads import detect_currency, parse
+
+
+ADS_HEADER = [
+    "Kampány neve",
+    "Eredmény jelzése",
+    "Elérés",
+    "Megjelenések",
+    "Jelentés kezdete",
+    "Jelentés vége",
+    "Elköltött összeg (HUF)",
+]
+ADS_ROW = ["Nyári kampány", "reach", 123, 456, "2026-07-01", "2026-07-31", 789]
 
 
 def test_currency_is_read_from_the_header():
@@ -38,6 +53,53 @@ def test_excel_semicolon_ads_export_is_parsed_without_manual_conversion(tmp_path
 
     assert source.payload.campaigns[0].name == "Nyári kampány"
     assert source.payload.campaigns[0].impressions == 456
+
+
+@pytest.mark.parametrize("suffix", [".xls", ".xlsx"])
+def test_textual_csv_is_parsed_even_when_excel_extension_was_used(tmp_path, suffix):
+    """A kiterjesztés átnevezése nem teheti olvashatatlanná a jó CSV-t."""
+    path = tmp_path / f"teljesen-rossz-nev{suffix}"
+    path.write_text(
+        ",".join(ADS_HEADER) + "\n" + ",".join(map(str, ADS_ROW)) + "\n",
+        encoding="utf-8",
+    )
+
+    assert identify(path).kind == "meta_ads"
+    assert parse(path).payload.campaigns[0].reach == 123
+
+
+def test_real_xlsx_ads_export_is_identified_and_parsed_by_its_schema(tmp_path):
+    """A valódi XLSX Meta Ads-exportot nem szabad CSV-vé mentésre visszadobni."""
+    from openpyxl import Workbook
+
+    path = tmp_path / "valami-fontos-de-rosszul-elnevezve.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(ADS_HEADER)
+    sheet.append(ADS_ROW)
+    workbook.save(path)
+
+    assert identify(path).kind == "meta_ads"
+    source = parse(path)
+    assert source.period == (date(2026, 7, 1), date(2026, 7, 31))
+    assert source.payload.campaigns[0].name == "Nyári kampány"
+
+
+def test_real_legacy_xls_ads_export_is_identified_and_parsed_by_its_schema(tmp_path):
+    """A bináris .xls is használható, ha a szükséges oszlopok felismerhetők."""
+    import xlwt
+
+    path = tmp_path / "ismeretlen-fajl.xls"
+    workbook = xlwt.Workbook()
+    sheet = workbook.add_sheet("Meta Ads")
+    for column, value in enumerate(ADS_HEADER):
+        sheet.write(0, column, value)
+    for column, value in enumerate(ADS_ROW):
+        sheet.write(1, column, value)
+    workbook.save(str(path))
+
+    assert identify(path).kind == "meta_ads"
+    assert parse(path).payload.campaigns[0].impressions == 456
 
 
 def test_zero_rows_are_filtered_and_counted(input_file):

@@ -1,6 +1,7 @@
 from collections import Counter
 from datetime import date
 
+from pipeline.detect import identify
 from pipeline.parsers.zoomsphere import parse
 
 
@@ -50,3 +51,20 @@ def test_video_posts_lead_with_a_still_not_the_mp4(input_file):
         assert "/offset-thumbs/" in urls[0] or "thumb" in urls[0].lower() or not urls[0].endswith(
             (".mp4", ".mov")
         ), f"{channel}: az első kreatív nem lehet videófájl — {urls[0]}"
+
+
+def test_zoomsphere_csv_is_recognized_and_parsed_even_with_an_unknown_name(tmp_path):
+    """A Scheduler-export se függjön az XLSX kiterjesztéstől vagy fájlnévtől."""
+    path = tmp_path / "letoltes-123.csv"
+    path.write_text(
+        "Datetime,PostType,FacebookPostIDs,InstagramPostIDs,FacebookSources,"
+        "FacebookMessage,FacebookPublicPermalinks\n"
+        '"01.07.2026 - 11:00 AM",image,100_200,300,"Próba (oldal)",Teszt,'
+        "https://facebook.com/200\n",
+        encoding="utf-8",
+    )
+
+    assert identify(path).kind == "zoomsphere"
+    source = parse(path)
+    assert source.period == (date(2026, 7, 1), date(2026, 7, 1))
+    assert source.payload[0].post_ids["facebook"] == "200"

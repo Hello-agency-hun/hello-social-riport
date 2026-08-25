@@ -3,10 +3,9 @@ import zipfile
 from datetime import date, datetime
 from pathlib import Path
 
-from openpyxl import load_workbook
-
 from pipeline.errors import MissingColumnError
 from pipeline.schema import ContentItem, ParsedSource
+from pipeline.tabular import read_table_rows
 
 REQUIRED_HEADERS = {"PostType", "FacebookPostIDs", "InstagramPostIDs"}
 
@@ -79,33 +78,38 @@ def _parse_datetime(value: str) -> date:
     jött, `_strptime` stack trace-szel. Abból a menedzser nem tudhatja, hogy a
     fájllal van baj, nem a programmal.
     """
-    try:
-        return datetime.strptime((value or "").strip(), DATETIME_FORMAT).date()
-    except ValueError as error:
-        raise MissingColumnError(
-            f"a ZoomSphere export `Datetime` oszlopában értelmezhetetlen dátum: "
-            f"{value!r}. Várt formátum: `01.07.2026 - 11:00 AM`.\n"
-            "Gyakori ok: a fájlt megnyitották Excelben és mentették — az átírja "
-            "a dátumokat. Töltsd le újra, és ne nyisd meg."
-        ) from error
+    raw = (value or "").strip()
+    for date_format in (
+        DATETIME_FORMAT,
+        "%m/%d/%Y %H:%M",
+        "%Y-%m-%d",
+        "%Y-%m-%d %H:%M:%S",
+    ):
+        try:
+            return datetime.strptime(raw, date_format).date()
+        except ValueError:
+            continue
+    raise MissingColumnError(
+        f"a ZoomSphere export `Datetime` oszlopában értelmezhetetlen dátum: "
+        f"{value!r}. Várt példa: `01.07.2026 - 11:00 AM`."
+    )
 
 
 def parse(path) -> ParsedSource:
-    workbook = load_workbook(path, read_only=True, data_only=True)
-    sheet = workbook.active
-    rows = sheet.iter_rows(values_only=True)
-    header = [str(cell or "") for cell in next(rows)]
-    index = {name: position for position, name in enumerate(header)}
+    rows = read_table_rows(path)
+    if not rows:
+        raise MissingColumnError(f"{path}: üres ZoomSphere export")
+    header = set(rows[0])
+    for column_name in REQUIRED_HEADERS | {"Datetime"}:
+        if column_name not in header:
+            raise MissingColumnError(f"{path}: hiányzó oszlop — {column_name}")
 
     items: list[ContentItem] = []
     page_name = ""
 
     for row in rows:
-        cells = ["" if cell is None else str(cell) for cell in row]
-        cells += [""] * (len(header) - len(cells))
-
         def column(name: str) -> str:
-            return cells[index[name]] if name in index else ""
+            return row.get(name, "")
 
         if not column("Datetime").strip():
             continue
@@ -129,7 +133,6 @@ def parse(path) -> ParsedSource:
 
         items.append(item)
 
-    workbook.close()
     dates = sorted(item.published for item in items)
     return ParsedSource(
         kind="zoomsphere",

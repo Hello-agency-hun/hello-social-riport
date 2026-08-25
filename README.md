@@ -122,14 +122,22 @@ Csempénként külön CSV, **csatornánként öt-öt**:
 
 Ebből jönnek a **napi görbék** és az oldal havi összesítései.
 
-### ⚠️ Ne nevezd át a fájlokat
+### A fájlnév és a formátum miatt ne aggódj
 
 A rendszer a **tartalmukból** ismeri fel őket, nem a nevükből. A
 `Felkeresések.csv` és a `Felkeresések-2.csv` ütközése rendben van — az egyik a
 Facebook, a másik az Instagram, és ezt a fájl belsejéből tudja.
 
-Ha átnevezed, attól még működik. De ha **szerkeszted** (megnyitod Excelben és
-mented), akkor elromolhat.
+Ha átnevezed, attól még működik. A Meta Ads- és Tartalom-exportot a motor
+CSV-ből, valódi XLSX-ből és régi bináris XLS-ből is beolvassa, akkor is, ha a
+kiterjesztést véletlenül összekeverted. A UTF-8, UTF-16 és magyar Windows-1250
+kódolást, valamint a vesszős, pontosvesszős és tabos elválasztást automatikusan
+kezeli. A leltárban jelzi, ha átalakítva olvasott be egy fájlt.
+
+Az ismeretlen fájlt előbb tartalom alapján megvizsgálja. Ha valamelyik szükséges
+export mintájára illik, annak veszi; ha minden kötelező adat külön megvan és ez
+tényleg csak extra, figyelmeztetéssel kihagyja. Csak akkor áll meg, ha az
+ismeretlen fájl akár egy hiányzó kötelező forrás is lehet.
 
 ### Hova tedd őket
 
@@ -148,8 +156,8 @@ Claude megmondja a pontos útvonalat. Bedobod, szólsz, és megy tovább.
 Innentől Claude dolgozik:
 
 1. **Megnézi, mi van a mappában.** Ha hiányzik valami, megnevezi, és megmondja,
-   hol találod. Ha kakukktojás került be, azt is szól — nem hagyja figyelmen
-   kívül, mert lehet, hogy mégis riportadat volt.
+   hol találod. A kakukktojás tartalmát is megvizsgálja; a biztosan felesleges
+   extrát jelzi és kihagyja, a lehetséges hiányzó riportforrást nem engedi el.
 2. **Kiszámolja a számokat.** Ez a rész kódból megy, nem nyelvi modellből.
 3. **Megírja a szöveget** — vezetői összefoglaló, kulcsmegállapítás, mi
    működött, min javítsunk, következő lépések.
@@ -324,7 +332,7 @@ Minden hibaüzenet megmondja, **mi a baj és mit tegyél**. A leggyakoribbak:
 |---|---|
 | *nincs client.yaml* | új ügyfél — az üzenet tartalmazza a kitöltött sablont |
 | *hiányzik a követőszám* | írd be a profilról leolvasott számot |
-| *nem azonosítható fájl* | valami idegen került az `input` mappába |
+| *nem azonosítható fájl* | hiányzik kötelező forrás, és az ismeretlen fájl tartalma alapján nem dönthető el biztonságosan, hogy az volt-e |
 | *két … export van a mappában* | a régit töröld, különben az adat megkétszereződne |
 | *a csempe nem árulja el, melyik csatornáé* | az üzenet ad egy kimásolható sort |
 | *a teszt-fixture, nem ügyfélmappa* | riportot nem a `tests/` alól készítünk |
