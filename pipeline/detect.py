@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from pipeline.textio import read_lines
 
@@ -102,5 +103,23 @@ def identify(path: Path) -> Source:
     return Source(path, "unknown")
 
 
+def _canonical_upload_name(path: Path) -> tuple[str, str]:
+    """Collapse the suffix added by browsers/hosting for a repeated upload."""
+    stem = re.sub(r"(?:\s+-\s*\d+|\s*\(\d+\))$", "", path.stem).strip().rstrip(".")
+    return stem.casefold(), path.suffix.casefold()
+
+
 def scan(directory: Path) -> list[Source]:
-    return [identify(p) for p in sorted(Path(directory).iterdir()) if p.is_file()]
+    sources = [identify(p) for p in sorted(Path(directory).iterdir()) if p.is_file()]
+    recognized_names = {
+        _canonical_upload_name(source.path)
+        for source in sources
+        if source.kind != "unknown"
+    }
+    for source in sources:
+        if (
+            source.kind == "unknown"
+            and _canonical_upload_name(source.path) in recognized_names
+        ):
+            source.kind = "ignored_duplicate"
+    return sources
