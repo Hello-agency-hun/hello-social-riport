@@ -9,6 +9,7 @@ from pipeline.errors import (
     DuplicateSourceError,
     MissingConfigError,
     NoSourceError,
+    UnknownSourceError,
     PeriodMismatchError,
 )
 
@@ -145,6 +146,38 @@ def test_a_complete_folder_reports_nothing_missing(fixture_dir, tmp_path):
     original.with_name("Jul-01-2026_instagram.csv").write_text(faked, encoding="utf-8")
 
     assert build(work, period="2026-07")["missing"] == []
+
+
+def test_unknown_extra_is_skipped_when_every_required_source_is_present(
+    fixture_dir, tmp_path
+):
+    """Egy jegyzet ne állítsa meg a jó csomagot, de legyen látható a leltárban."""
+    work = tmp_path / "plusz-fajl"
+    shutil.copytree(fixture_dir, work)
+    (work / "input" / "olvasd-el.txt").write_text(
+        "Ezt a fájlt nem használja a riport.", encoding="utf-8"
+    )
+
+    data = build(work, period="2026-07")
+
+    skipped = next(item for item in data["inventory"] if item["file"] == "olvasd-el.txt")
+    assert skipped["as"] == "Kihagyott extra fájl"
+    assert "nem ismertem fel" in skipped["detail"]
+
+
+def test_unknown_file_still_blocks_when_a_required_source_is_missing(
+    fixture_dir, tmp_path
+):
+    """Nem nevezhetünk extrának egy fájlt, ha akár a hiányzó kötelező export is lehet."""
+    work = tmp_path / "hianyos-ismeretlennel"
+    shutil.copytree(fixture_dir, work)
+    next((work / "input").glob("*Kampányok*.csv")).unlink()
+    (work / "input" / "talán-kampányok.dat").write_text(
+        "ismeretlen,fejléc\n1,2\n", encoding="utf-8"
+    )
+
+    with pytest.raises(UnknownSourceError, match="talán-kampányok.dat"):
+        build(work, period="2026-07")
 
 
 def test_an_empty_input_folder_is_an_error_not_a_zero_report(fixture_dir, tmp_path):

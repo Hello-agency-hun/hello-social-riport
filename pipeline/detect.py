@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from pipeline.tabular import read_table_header, table_format
 from pipeline.textio import read_lines
 
 DAILY_METRICS = {
@@ -41,6 +42,7 @@ class Source:
     metric: str | None = None
     channel: str | None = None
     field: str | None = None
+    adaptation: str | None = None
 
 
 # A mappába nem csak az kerül, amit kérünk. A menedzser letölti rossz
@@ -72,33 +74,51 @@ def identify(path: Path) -> Source:
     path = Path(path)
 
     sniffed = sniff(path)
-    if sniffed:
+    if sniffed in {"pdf", "screenshot"}:
         return Source(path, sniffed)
 
-    if path.suffix.lower() == ".xlsx":
-        from pipeline.parsers.zoomsphere import looks_like_zoomsphere
+    # A napi csempék speciális, kétsoros fejléce megelőzi a normál táblázatot.
+    # Bináris Excelt nem próbálunk szövegként dekódolni.
+    actual_format = table_format(path)
+    if actual_format == "csv":
+        lines = read_lines(path)
+        if lines and lines[0].lower().startswith("sep="):
+            metric = lines[1].strip().strip('"') if len(lines) > 1 else ""
+            channel, field = DAILY_METRICS.get(metric, (None, None))
+            return Source(path, "meta_daily", metric=metric, channel=channel, field=field)
 
-        if looks_like_zoomsphere(path):
-            return Source(path, "zoomsphere")
-        # Nem ZoomSphere, de akkor is táblázat: a Mammut-próbán az Ads-export
-        # jött XLSX-ként. „Ismeretlen fájl" itt haszontalan válasz — a tartalma
-        # jó, csak CSV-vé kell menteni.
-        return Source(path, "spreadsheet")
-
-    lines = read_lines(path)
-    if not lines:
+    try:
+        header = set(read_table_header(path))
+    except Exception:
+        if sniffed == "legacy_office":
+            return Source(path, "legacy_office")
+        if actual_format == "xlsx":
+            return Source(path, "spreadsheet")
         return Source(path, "unknown")
 
-    if lines[0].lower().startswith("sep="):
-        metric = lines[1].strip().strip('"')
-        channel, field = DAILY_METRICS.get(metric, (None, None))
-        return Source(path, "meta_daily", metric=metric, channel=channel, field=field)
+    from pipeline.parsers.meta_ads import REQUIRED as ADS_REQUIRED
+    from pipeline.parsers.meta_content import REQUIRED as CONTENT_REQUIRED
+    from pipeline.parsers.zoomsphere import REQUIRED_HEADERS as ZOOMSPHERE_REQUIRED
 
-    header = lines[0]
-    if "Kampány neve" in header:
-        return Source(path, "meta_ads")
-    if "Bejegyzésazonosító" in header:
-        return Source(path, "meta_content")
+    adaptation = None if actual_format == "csv" else actual_format.upper()
+    if ZOOMSPHERE_REQUIRED.issubset(header):
+        return Source(
+            path,
+            "zoomsphere",
+            adaptation=None if actual_format == "xlsx" else actual_format.upper(),
+        )
+    # Egy sérült fejléc miatt se essen vissza „ismeretlenre” az egész export.
+    # Három együttes Meta-oszlop már elég erős ujjlenyomat; a parser ezután
+    # pontosan megnevezi, melyik kötelező oszlop hiányzik.
+    if len(set(ADS_REQUIRED) & header) >= 3 or "Kampány neve" in header:
+        return Source(path, "meta_ads", adaptation=adaptation)
+    if len(set(CONTENT_REQUIRED) & header) >= 3 or "Bejegyzésazonosító" in header:
+        return Source(path, "meta_content", adaptation=adaptation)
+
+    if actual_format == "xlsx":
+        return Source(path, "spreadsheet")
+    if actual_format == "xls":
+        return Source(path, "legacy_office")
 
     return Source(path, "unknown")
 

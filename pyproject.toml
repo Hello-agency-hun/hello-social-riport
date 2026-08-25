@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "openpyxl>=3.1",
+    "xlrd>=2.0",
     "pyyaml>=6.0",
     "jinja2>=3.1",
     "pillow>=10.0",
@@ -11,7 +12,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "fonttools[woff]>=4.50", "pymupdf>=1.24"]
+dev = ["pytest>=8.0", "fonttools[woff]>=4.50", "pymupdf>=1.24", "xlwt>=1.3"]
 
 # A repo gyökerében a `pipeline` mellett `assets`, `templates`, `tools` és `docs`
 # is van. Ezek nem Python-csomagok, de a setuptools automatikus felderítése

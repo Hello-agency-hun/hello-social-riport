@@ -8,12 +8,10 @@ Amit nem tudunk kiolvasni, azt nem találjuk ki: az placeholderként marad benn,
 és megmondja, honnan szerezhető meg.
 """
 
-import csv
-import io
 from pathlib import Path
 
 from pipeline.detect import scan
-from pipeline.textio import read_text
+from pipeline.tabular import read_table_rows
 
 PLACEHOLDERS = {
     "name": "<Ügyfél neve — ahogy a riport címlapján szerepeljen>",
@@ -35,8 +33,8 @@ FOLLOWER_HINT = {
 
 
 def _first_row(path: Path) -> dict[str, str]:
-    reader = csv.DictReader(io.StringIO(read_text(path), newline=""))
-    return next(reader, {}) or {}
+    rows = read_table_rows(path)
+    return rows[0] if rows else {}
 
 
 def _from_content(path: Path) -> dict[str, str]:
@@ -57,7 +55,8 @@ def _from_content(path: Path) -> dict[str, str]:
 def _from_ads(path: Path) -> dict[str, str]:
     from pipeline.parsers.meta_ads import detect_currency
 
-    header = next(csv.reader(io.StringIO(read_text(path), newline="")), [])
+    rows = read_table_rows(path)
+    header = list(rows[0]) if rows else []
     currency = detect_currency(header)
     return {"currency": currency} if currency else {}
 

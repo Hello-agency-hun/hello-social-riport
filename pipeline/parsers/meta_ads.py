@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pipeline.errors import MissingColumnError
 from pipeline.schema import Campaign, ParsedSource
-from pipeline.textio import read_csv_rows
+from pipeline.tabular import read_table_rows
 
 BOOST_PREFIXES = {"Instagram-bejegyzés:": "instagram", "Bejegyzés:": "facebook"}
 REQUIRED = ["Kampány neve", "Eredmény jelzése", "Elérés", "Megjelenések"]
@@ -50,7 +50,7 @@ def _boost_channel(name: str) -> str | None:
 
 
 def parse(path) -> ParsedSource:
-    rows = read_csv_rows(path)
+    rows = read_table_rows(path)
     if not rows:
         raise MissingColumnError(f"{path}: üres Ads export")
 

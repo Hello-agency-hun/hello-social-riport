@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pipeline.errors import MissingColumnError
 from pipeline.schema import ParsedSource, Post
-from pipeline.textio import read_csv_rows
+from pipeline.tabular import read_table_rows
 
 REQUIRED = ["Bejegyzésazonosító", "Elérés", "Megtekintések", "Állandó hivatkozás"]
 
@@ -22,7 +22,7 @@ def _channel(permalink: str) -> str:
 
 
 def parse(path) -> ParsedSource:
-    rows = read_csv_rows(path)
+    rows = read_table_rows(path)
     if not rows:
         raise MissingColumnError(f"{path}: üres Tartalom export")
 
