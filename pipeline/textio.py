@@ -10,10 +10,14 @@ BOMS = {
 
 
 def detect_encoding(raw: bytes) -> str:
-    """A Meta exportjai vegyesen UTF-16 LE és UTF-8 BOM-osak."""
+    """A Meta exportjai UTF-8, UTF-16 vagy magyar Windows-1250 fájlok."""
     for bom, encoding in BOMS.items():
         if raw.startswith(bom):
             return encoding
+    try:
+        raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return "cp1250"
     return "utf-8"
 
 
@@ -52,5 +56,16 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
     A nyers szöveget adja a parsernek, nem előszűrt sorokat — így a több sorra
     tagolt kampánynevek és poszt-szövegek bekezdéshatárai megmaradnak.
     """
-    reader = csv.DictReader(io.StringIO(read_text(path), newline=""))
+    text = read_text(path)
+    first_line, separator, remainder = text.partition("\n")
+    declared = first_line.strip().lower()
+    if declared.startswith("sep=") and len(declared) == 5 and separator:
+        delimiter = declared[-1]
+        text = remainder
+    else:
+        try:
+            delimiter = csv.Sniffer().sniff(text[:65536], delimiters=",;\t").delimiter
+        except csv.Error:
+            delimiter = ","
+    reader = csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
     return [{k: (v or "") for k, v in row.items()} for row in reader]

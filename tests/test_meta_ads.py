@@ -8,6 +8,38 @@ def test_currency_is_read_from_the_header():
     assert detect_currency(["Elköltött összeg (HUF)"]) == "HUF"
 
 
+def test_windows_1250_ads_export_is_parsed_without_manual_conversion(tmp_path):
+    path = tmp_path / "kampanyok.csv"
+    csv_text = (
+        "Kampány neve,Eredmény jelzése,Elérés,Megjelenések,Jelentés kezdete,"
+        "Jelentés vége,Elköltött összeg (HUF)\n"
+        "Nyári kampány,reach,123,456,2026-07-01,2026-07-31,789\n"
+    )
+    path.write_bytes(csv_text.encode("cp1250"))
+
+    source = parse(path)
+
+    assert source.payload.currency == "HUF"
+    assert source.payload.campaigns[0].name == "Nyári kampány"
+    assert source.payload.campaigns[0].reach == 123
+
+
+def test_excel_semicolon_ads_export_is_parsed_without_manual_conversion(tmp_path):
+    path = tmp_path / "kampanyok-pontosvesszo.csv"
+    csv_text = (
+        "sep=;\n"
+        "Kampány neve;Eredmény jelzése;Elérés;Megjelenések;Jelentés kezdete;"
+        "Jelentés vége;Elköltött összeg (HUF)\n"
+        "Nyári kampány;reach;123;456;2026-07-01;2026-07-31;789\n"
+    )
+    path.write_bytes(csv_text.encode("cp1250"))
+
+    source = parse(path)
+
+    assert source.payload.campaigns[0].name == "Nyári kampány"
+    assert source.payload.campaigns[0].impressions == 456
+
+
 def test_zero_rows_are_filtered_and_counted(input_file):
     source = parse(input_file("Kampányok"))
     assert len(source.payload.campaigns) == 13
