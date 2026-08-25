@@ -370,6 +370,15 @@ def build(directory: Path, period: str) -> dict:
             # ami ezeken ott van.
             screenshots.append(source.path.name)
             continue
+        elif source.kind == "ignored_duplicate":
+            inventory.append(
+                (
+                    source.path.name,
+                    "Kihagyott hibás duplikátum",
+                    "egy azonos nevű, felismerhető exportot használunk helyette",
+                )
+            )
+            continue
         elif source.kind in CONVERTIBLE:
             wrong_format.append((source.path.name, CONVERTIBLE[source.kind]))
             continue
