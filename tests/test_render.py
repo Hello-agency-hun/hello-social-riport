@@ -282,7 +282,7 @@ def test_indicative_ads_window_is_explained_without_hiding_campaigns(data, tmp_p
     assert data["paid"]["campaign_details"][0]["name"] in out
 
 
-def test_campaign_status_pages_are_limited_to_eight_rows(data, tmp_path):
+def test_campaign_status_first_page_leaves_room_for_copy_and_counts(data, tmp_path):
     prototype = data["paid"]["campaign_details"][0]
     data["paid"]["campaign_details"] = [
         {**prototype, "name": f"Kampány {index:02d}"}
@@ -296,7 +296,8 @@ def test_campaign_status_pages_are_limited_to_eight_rows(data, tmp_path):
 
     assert len(pages) == 3
     assert sum(page.count('class="campaign-row"') for page in pages) == 17
-    assert all(page.count('class="campaign-row"') <= 8 for page in pages)
+    assert pages[0].count('class="campaign-row"') == 6
+    assert all(page.count('class="campaign-row"') <= 8 for page in pages[1:])
     assert 'data-status-count' in pages[0]
 
 

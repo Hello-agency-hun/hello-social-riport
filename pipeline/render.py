@@ -177,7 +177,13 @@ def render(
             else campaign.get("end_date") or text.campaign_unknown
         )
         campaign_rows.append(row)
-    campaign_pages = _fixed_chunks(campaign_rows, per_page=8)
+    # Az első oldalon a narratíva és az állapotösszesítő is helyet kér. Nyolc
+    # sor hosszabb kampányneveknél a lábléc alá csúszik; a folytatásoldalakon
+    # viszont, ahol nincs bevezető blokk, továbbra is elfér nyolc sor.
+    campaign_pages = []
+    if campaign_rows:
+        campaign_pages = [campaign_rows[:6]]
+        campaign_pages.extend(_fixed_chunks(campaign_rows[6:], per_page=8))
     campaign_status_counts = sorted(
         Counter(row["display_status"] for row in campaign_rows).items()
     )
