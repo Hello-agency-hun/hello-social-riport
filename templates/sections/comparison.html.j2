@@ -14,7 +14,7 @@
 #}
 {% set headline = data.meta.get("comparison_headline", "value") %}
 {% for name, block in data.comparison.items() %}
-<section class="page">
+<section class="page{% if not block %} manual-only-page{% endif %}">
   <div class="eyebrow">{{ name | channel }}</div>
   <h2 style="margin-bottom:40px">{{ t.change_vs_previous }}</h2>
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
