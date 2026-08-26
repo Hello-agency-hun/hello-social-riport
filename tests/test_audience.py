@@ -93,6 +93,22 @@ def test_the_second_month_does_not_ask_again(fixture_dir):
     assert "továbbszámolva" in origin["facebook"]
 
 
+def test_exact_contiguous_dates_chain_even_across_the_same_calendar_month():
+    config = {"client": {"fb_page_id": "1"}}
+    previous = _prev("2026-07")
+    previous["meta"]["measurement_end"] = "2026-07-24"
+
+    resolved, _ = followers.resolve(
+        config,
+        CHANNELS,
+        previous,
+        period="2026-08",
+        measurement_start="2026-07-25",
+    )
+
+    assert resolved["facebook"] == 4187 + 5
+
+
 def test_a_skipped_month_breaks_the_chain():
     """Ha kimarad egy hónap, a köztes gyarapodást senki nem mérte. A júliusi
     riportból a szeptemberi állomány nem jön ki."""

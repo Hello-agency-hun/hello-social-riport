@@ -13,6 +13,8 @@ Ugyanígy szakad a lánc ott, ahol nincs napi követés-csempe (az Instagramnál
 jellemzően nincs): állomány + semmi = nem tudjuk, mennyi lett.
 """
 
+from datetime import date
+
 from pipeline.bootstrap import FOLLOWER_HINT
 from pipeline.errors import MissingConfigError
 
@@ -32,7 +34,13 @@ def wanted_channels(client: dict) -> list[str]:
     return names
 
 
-def resolve(config: dict, channels: dict, previous: dict | None, period: str):
+def resolve(
+    config: dict,
+    channels: dict,
+    previous: dict | None,
+    period: str,
+    measurement_start: str | None = None,
+):
     """(követőszámok, honnan) — vagy hiba, ha valamelyik tényleg hiányzik.
 
     A `honnan` a menedzsernek szól: a továbbszámolt értéket látnia kell, hogy
@@ -41,7 +49,7 @@ def resolve(config: dict, channels: dict, previous: dict | None, period: str):
     client = config.get("client") or {}
     given = config.get("followers") or {}
 
-    chained = _chainable(previous, period)
+    chained = _chainable(previous, period, measurement_start)
 
     resolved: dict[str, int] = {}
     origin: dict[str, str] = {}
@@ -64,15 +72,25 @@ def resolve(config: dict, channels: dict, previous: dict | None, period: str):
         )
 
     if gaps:
-        raise MissingConfigError(_help(gaps, previous, period))
+        raise MissingConfigError(_help(gaps, previous, period, measurement_start))
     return resolved, origin
 
 
-def _chainable(previous: dict | None, period: str) -> dict | None:
+def _chainable(
+    previous: dict | None, period: str, measurement_start: str | None = None
+) -> dict | None:
     """Az előző havi riportadat — de csak ha tényleg az előző hónapé."""
     if not previous:
         return None
-    if (previous.get("meta") or {}).get("period") != previous_period(period):
+    meta = previous.get("meta") or {}
+    previous_end = meta.get("measurement_end")
+    if measurement_start and previous_end:
+        try:
+            if (date.fromisoformat(measurement_start) - date.fromisoformat(previous_end)).days != 1:
+                return None
+        except ValueError:
+            return None
+    elif meta.get("period") != previous_period(period):
         return None
     return previous.get("audience") or {}
 
@@ -87,16 +105,24 @@ def _carry_forward(chained, channels: dict, name: str):
     return before + gained, gained
 
 
-def _help(gaps: list[str], previous: dict | None, period: str) -> str:
+def _help(
+    gaps: list[str],
+    previous: dict | None,
+    period: str,
+    measurement_start: str | None = None,
+) -> str:
     lines = "\n".join(f"  {name}: <{FOLLOWER_HINT[name]}>" for name in gaps)
 
     if previous is None:
         why = "Ez az első hónap ennél az ügyfélnél, tehát nincs miből továbbszámolni."
-    elif (previous.get("meta") or {}).get("period") != previous_period(period):
-        got = (previous.get("meta") or {}).get("period", "ismeretlen")
+    elif _chainable(previous, period, measurement_start) is None:
+        before = previous.get("meta") or {}
+        got = before.get("measurement_end") or before.get("period", "ismeretlen")
+        expected = previous_period(period)
         why = (
-            f"A previous.json a(z) {got} hónapé, nem a közvetlenül megelőzőé "
-            f"({previous_period(period)}). A köztes idő gyarapodását senki nem "
+            f"A previous.json zárása ({got}) nem a közvetlenül megelőzőé. "
+            f"A naptári címke alapján a(z) {expected} riport kellene. "
+            "A köztes idő gyarapodását senki nem "
             "mérte, tehát nem lehet továbbszámolni."
         )
     else:
