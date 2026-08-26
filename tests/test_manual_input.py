@@ -44,3 +44,14 @@ def test_a_non_number_is_rejected_rather_than_coerced():
     beírásból 12 lett. Most vagy szám, vagy semmi."""
     reader = REVIEW_JS[REVIEW_JS.index("function readNumber") :]
     assert "return null" in reader
+
+
+def test_applied_manual_values_survive_later_review_rounds():
+    """Az újrarenderelt összehasonlító kártyának már nincs ``data-manual``
+    mezője. A következő mentés ezért a korábbi értékekből induljon, különben
+    egy puszta narratívajavítás kitörli az előző havi számokat."""
+    collector = REVIEW_JS[REVIEW_JS.index("function collect") :]
+    collector = collector[: collector.index("var edits")]
+
+    assert "Object.assign({}, stored.manual || {})" in collector
+    assert "delete manual[field.dataset.manual]" in collector
