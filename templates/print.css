@@ -14,7 +14,8 @@
      A `print-color-adjust: exact` mondja meg, hogy ezek a színek nem díszek,
      hanem a dokumentum részei. A `-webkit-` előtag a Chrome és az Edge miatt
      kell, a PDF-mentés ott történik. */
-  html, body, .page, .panel, .manual-slot, .pdf-button, .delta, .bar {
+  html, body, .page, .panel, .manual-slot, .pdf-button, .delta, .bar,
+  .period-warning, .status-pill, .campaign-duration::before {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -30,6 +31,7 @@
   .no-print { display: none !important; }
   .manual-slot { display: none !important; }
   .comment-button { display: none !important; }
+  .campaign-row { break-inside: avoid; page-break-inside: avoid; }
   a { text-decoration: none; color: inherit; }
 }
 

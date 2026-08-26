@@ -2,7 +2,7 @@ import pytest
 
 from pipeline.build import load_narrative
 from pipeline.errors import NarrativeError
-from pipeline.narrative import BLOCKS, resolve, resolve_all
+from pipeline.narrative import BLOCKS, OPTIONAL_BLOCKS, resolve, resolve_all
 
 
 def test_a_broken_narrative_json_names_the_likely_cause(tmp_path):
@@ -100,6 +100,9 @@ def test_every_declared_block_is_documented():
     for key, meta in BLOCKS.items():
         assert meta["label"], key
         assert meta["guidance"], f"{key}: nincs megadva, mit írjon bele"
+
+    assert OPTIONAL_BLOCKS["campaign_status"]["label"]
+    assert OPTIONAL_BLOCKS["campaign_status"]["guidance"]
 
 
 def test_the_shipped_narrative_passes_the_number_check():

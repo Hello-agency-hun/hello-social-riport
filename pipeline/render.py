@@ -1,6 +1,7 @@
 """A riport összeállítása. Csak a `report_data.json`-t olvassa, forrásfájlt soha."""
 
 import json
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Callable
@@ -84,8 +85,8 @@ def _measured_range(meta: dict) -> str:
     mindig a hónap utolsó napján tölt le; ha ilyenkor teljes hónapot
     állítanánk, a következő havi összehasonlítás csendben torz lenne.
     """
-    start = meta.get("coverage_start")
-    end = meta.get("coverage_end")
+    start = meta.get("measurement_start") or meta.get("coverage_start")
+    end = meta.get("measurement_end") or meta.get("coverage_end")
     if not start or not end:
         return _period_range(meta["period"])
     return f"{start} – {end}"
@@ -128,6 +129,24 @@ def _balanced_chunks(items: list, per_page: int = 3) -> list[list]:
     return [items[i : i + size] for i in range(0, len(items), size)]
 
 
+def _fixed_chunks(items: list, per_page: int = 8) -> list[list]:
+    """Hard page capacity for dense rows: never exceed the print-safe limit."""
+    return [items[index : index + per_page] for index in range(0, len(items), per_page)]
+
+
+def _campaign_status(campaign: dict, text) -> str:
+    if campaign.get("is_ongoing"):
+        return text.campaign_ongoing
+    status = str(campaign.get("delivery_status") or campaign.get("status") or "").casefold()
+    if status in {"active", "in_process", "in progress"}:
+        return text.campaign_active
+    if status in {"completed", "recently_completed", "finished"}:
+        return text.campaign_completed
+    if status in {"paused", "inactive"}:
+        return text.campaign_paused
+    return text.campaign_unknown
+
+
 def render(
     data: dict,
     cache_dir: Path,
@@ -147,6 +166,29 @@ def render(
         if narrative
         else None
     )
+
+    campaign_rows = []
+    for campaign in data.get("paid", {}).get("campaign_details", []):
+        row = dict(campaign)
+        row["display_status"] = _campaign_status(campaign, text)
+        row["display_end"] = (
+            text.campaign_ongoing
+            if campaign.get("is_ongoing")
+            else campaign.get("end_date") or text.campaign_unknown
+        )
+        campaign_rows.append(row)
+    campaign_pages = _fixed_chunks(campaign_rows, per_page=8)
+    campaign_status_counts = sorted(
+        Counter(row["display_status"] for row in campaign_rows).items()
+    )
+
+    credibility = data.get("meta", {}).get("measurement_credibility")
+    period_warning = {
+        "gap": text.period_gap_warning,
+        "overlap": text.period_overlap_warning,
+        "nonstandard": text.period_nonstandard_warning,
+        "assumed": text.period_assumed_warning,
+    }.get(credibility)
 
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
@@ -262,6 +304,10 @@ def render(
             None,
         ),
         narrative=resolved,
+        campaign_narrative=(resolved or {}).get("campaign_status") or {},
+        campaign_pages=campaign_pages,
+        campaign_status_counts=campaign_status_counts,
+        ads_period=data.get("quality", {}).get("ads_period") or {},
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
         logo_mark=logo("hello-mark"),
@@ -271,6 +317,7 @@ def render(
         ui_labels=json.dumps(i18n.ui(language), ensure_ascii=False),
         period_name=_period_name(data["meta"]["period"], language),
         period_range=_measured_range(data["meta"]),
+        period_warning=period_warning,
         coverage_partial=data["meta"].get("coverage_partial", False),
         generated=date.today().isoformat(),
         charts={

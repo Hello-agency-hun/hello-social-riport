@@ -69,7 +69,7 @@ Ha nincs mező arra, amit mondani szeretnél: **akkor azt nem tudjuk**, és nem 
 
 A mezők a `report_data.json`-ból jönnek; a teljes szerkezetet ott látod.
 
-## Az öt blokk
+## Az öt kötelező blokk és az opcionális kampányblokk
 
 **`executive_summary`** — három-négy mondat arról, mi történt és miért. A
 legfontosabb állítással kezdj.
@@ -85,6 +85,11 @@ azt írd le, mit csinálunk másképp.
 
 **`next_steps`** — három-négy lépés, fontossági sorrendben, mindegyik cselekvés.
 Az első legyen a legfontosabb, ne a legkönnyebb.
+
+**`campaign_status`** — opcionális `title` + `body`, ha van Meta Ads export.
+Értelmezd, mi futott és mi zárult le, illetve pontos vagy csak tájékoztató-e az
+Ads-lekérési ablak. A kampány nevét, dátumát, állapotát és eredményét ne másold
+be kézzel: ezek zárolt exportadatként külön jelennek meg a szöveg alatt.
 
 ## Jó és rossz példa ugyanarra
 

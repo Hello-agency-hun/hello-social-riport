@@ -77,6 +77,20 @@ def test_nested_paths_are_edited():
     assert edited["key_finding"]["body"] == "Törzs"
 
 
+def test_campaign_status_copy_can_be_edited_without_creating_data_fields():
+    narrative = {"campaign_status": {"title": "Eredeti", "body": "Törzs"}}
+
+    edited = apply_edits(
+        narrative,
+        {
+            "campaign_status.title": "Átírt",
+            "campaign_status.campaigns.0.spend": "hamis érték",
+        },
+    )
+
+    assert edited["campaign_status"] == {"title": "Átírt", "body": "Törzs"}
+
+
 def test_editing_does_not_mutate_the_original():
     narrative = {"key_finding": {"title": "Eredeti"}}
     apply_edits(narrative, {"key_finding.title": "Átírt"})
