@@ -19,6 +19,12 @@ class Campaign:
     status: str = ""
     channel: str | None = None
     is_boost: bool = False
+    start_date: date | None = None
+    end_date: date | None = None
+    is_ongoing: bool = False
+    delivery_status: str = ""
+    report_start: date | None = None
+    report_end: date | None = None
 
 
 @dataclass

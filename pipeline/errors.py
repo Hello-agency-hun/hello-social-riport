@@ -39,6 +39,10 @@ class PeriodMismatchError(PipelineError):
     """Egy forrás időszaka nem a riportált hónapra esik."""
 
 
+class MeasurementPeriodError(PipelineError):
+    """A riport pontos mérési időszaka nem oldható fel megbízhatóan."""
+
+
 class ClientMismatchError(PipelineError):
     """Egy forrás más ügyfélhez tartozik."""
 
