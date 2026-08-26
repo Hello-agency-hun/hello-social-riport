@@ -31,10 +31,15 @@
   window.__helloReadNumber = readNumber; // teszthez
 
   function collect() {
-    var manual = {};
+    // Az egyszer már alkalmazott kézi szám a következő renderben valódi
+    // összehasonlító kártyává alakul, ezért többé nincs data-manual mezője a
+    // DOM-ban. A következő mentési kör mégis a korábbi értékekből induljon:
+    // egy puszta szövegjavítás nem törölheti ki az előző havi adatokat.
+    var manual = Object.assign({}, stored.manual || {});
     document.querySelectorAll("[data-manual]").forEach(function (field) {
       var value = readNumber(field.querySelector(".manual-input").textContent);
       if (value !== null) manual[field.dataset.manual] = value;
+      else delete manual[field.dataset.manual];
     });
 
     var edits = {};
