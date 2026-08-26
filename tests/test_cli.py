@@ -54,6 +54,17 @@ def test_validate_prints_data_map(fixture_dir, capsys):
     assert "Minden boost megtalálta a posztját." in out
 
 
+def test_validate_names_how_the_exact_period_was_resolved(fixture_dir, capsys):
+    exit_code = main(
+        [str(fixture_dir), "--period", "2026-07", "--validate", "--allow-fixture"]
+    )
+
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "napi exportokból" in out
+    assert "2026-07-01 – 2026-07-31" in out
+
+
 def test_validate_writes_nothing(fixture_dir, tmp_path):
     target = tmp_path / "report_data.json"
     main([str(fixture_dir), "--period", "2026-07", "--validate", "--out", str(target)])
@@ -72,6 +83,24 @@ def test_wrong_period_exits_with_error(fixture_dir, capsys):
     exit_code = main([str(fixture_dir), "--period", "2026-06"])
     assert exit_code == 1
     assert "HIBA" in capsys.readouterr().err
+
+
+def test_cli_accepts_exact_date_overrides(fixture_dir, tmp_path):
+    target = tmp_path / "report_data.json"
+    exit_code = main(
+        [
+            str(fixture_dir),
+            "--period", "2026-06",
+            "--start-date", "2026-07-01",
+            "--end-date", "2026-07-31",
+            "--out", str(target),
+            "--html", str(tmp_path / "Riport.html"),
+            "--offline", "--allow-fixture",
+        ]
+    )
+
+    assert exit_code == 0
+    assert json.loads(target.read_text(encoding="utf-8"))["meta"]["period"] == "2026-07"
 
 
 def test_output_matches_the_golden_file(fixture_dir, tmp_path):

@@ -21,7 +21,9 @@ mappaábra két helyen szerepelt, és az egyik rossz helyre tette a
 fájlokat.** A „csinálj riportot a Larusnak júliusra” nem azt jelenti, hogy
 keress adatot a repóban — azt jelenti, hogy *most kezdjük el együtt*.
 
-Kérdezd meg az ügyfél nevét és a hónapot, hozd létre a
+Kérdezd meg az ügyfél nevét, a záróhónapot és — ha már ismert — a mérés két
+konkrét dátumát. A HELLO-nál a 25–24-es pénzügyi ciklus a gyakori, és a
+következő hiteles riport az előző záródátum utáni napon indul. Hozd létre a
 `clients/<ugyfel>/<YYYY-MM>/input/` mappát, majd **add oda a checklistet szó
 szerint** — ne prózát:
 

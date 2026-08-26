@@ -8,9 +8,13 @@ mérési különbség — és sehol nem látszott.
 
 import shutil
 
+import pytest
+
 from pipeline import compare
 from pipeline.build import build
+from pipeline.errors import MeasurementPeriodError
 from pipeline.render import _measured_range
+from pipeline.textio import read_text
 
 
 def test_the_measured_range_comes_from_the_files(fixture_dir):
@@ -42,8 +46,23 @@ def test_a_mid_month_download_is_not_reported_as_a_full_month(fixture_dir, tmp_p
             path.write_text("\n".join(keep) + "\n", encoding="utf-8")
 
     meta = build(work, period="2026-07")["meta"]
-    assert meta["coverage_end"] < "2026-07-31"
-    assert meta["coverage_partial"] is True
+    assert meta["measurement_end"] < "2026-07-31"
+    assert meta["measurement_credibility"] == "nonstandard"
+    assert meta["coverage_partial"] is False
+
+
+def test_daily_exports_with_different_end_dates_are_rejected(fixture_dir, tmp_path):
+    work = tmp_path / "eltolt-csempe"
+    shutil.copytree(fixture_dir, work)
+    path = work / "input" / "Felkeresések.csv"
+    lines = read_text(path).splitlines()
+    path.write_text(
+        "\n".join(line for line in lines if "2026-07-31" not in line) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(MeasurementPeriodError, match="eltérő időszakokat"):
+        build(work, period="2026-07")
 
 
 def test_the_report_shows_the_measured_range_not_the_calendar_month():
@@ -96,3 +115,21 @@ def test_a_previous_report_without_coverage_is_flagged_as_unknown():
 
 def test_no_previous_month_is_not_a_problem():
     assert compare.coverage_check(None, _meta())["status"] == "none"
+
+
+def test_comparison_prefers_exact_measurement_dates_over_legacy_coverage():
+    previous = {
+        "meta": {
+            "measurement_end": "2026-07-24",
+            "coverage_end": "2026-07-31",
+        }
+    }
+    current = {
+        "measurement_start": "2026-07-25",
+        "coverage_start": "2026-08-01",
+    }
+
+    found = compare.coverage_check(previous, current)
+
+    assert found["status"] == "ok"
+    assert found["previous_end"] == "2026-07-24"

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from pipeline import bootstrap, compare, followers, guards, kpi, manual
+from pipeline import bootstrap, compare, followers, guards, kpi, manual, periods
 from pipeline import performance as performance_mod
 from pipeline.detect import scan
 from pipeline.errors import (
@@ -281,7 +281,31 @@ def load_narrative(directory: Path) -> dict | None:
         ) from error
 
 
-def build(directory: Path, period: str) -> dict:
+def _ads_period_quality(ads_window, resolved, campaigns: list) -> dict | None:
+    if not ads_window:
+        return None
+    report_start, report_end = ads_window
+    starts_earlier = report_start < resolved.start
+    ends_later = report_end > resolved.end
+    exact = report_start == resolved.start and report_end == resolved.end
+    return {
+        "report_start": report_start.isoformat(),
+        "report_end": report_end.isoformat(),
+        "measurement_start": resolved.start.isoformat(),
+        "measurement_end": resolved.end.isoformat(),
+        "accuracy": "exact" if exact else "indicative",
+        "starts_earlier": starts_earlier,
+        "ends_later": ends_later,
+        "has_running_campaigns": any(campaign.is_ongoing for campaign in campaigns),
+    }
+
+
+def build(
+    directory: Path,
+    period: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict:
     directory = Path(directory)
     config = load_config(directory)
     client = config["client"]
@@ -403,7 +427,6 @@ def build(directory: Path, period: str) -> dict:
             unknown.append(source.path.name)
             continue
 
-        guards.check_period(source.kind, parsed.period, period)
         # Meddig ér az adat? A menedzser nem mindig a hónap utolsó napján tölt
         # le, és a Business Suite csempéi külön-külön zárulnak. Ha ezt nem
         # mérjük ki, a riport a teljes hónapot állítja — és a következő
@@ -450,8 +473,54 @@ def build(directory: Path, period: str) -> dict:
 
     guards.check_client(hints, client)
 
+    previous = compare.load_previous(directory)
+    report_config = config.get("report") or {}
+    daily_windows = [
+        window
+        for kind, window in coverage.values()
+        if kind == "meta_daily" and window is not None
+    ]
+    ads_windows = [
+        window
+        for kind, window in coverage.values()
+        if kind == "meta_ads" and window is not None
+    ]
+    ads_window = ads_windows[0] if ads_windows else None
+    previous_meta = (previous or {}).get("meta") or {}
+    previous_end_text = previous_meta.get("measurement_end")
+    previous_end = date.fromisoformat(previous_end_text) if previous_end_text else None
+    resolved = periods.resolve_period(
+        label=period,
+        manager_start=start_date or report_config.get("measurement_start"),
+        manager_end=end_date or report_config.get("measurement_end"),
+        daily_windows=daily_windows,
+        ads_window=ads_window,
+        previous_end=previous_end,
+    )
+
+    if resolved.source == "daily_exports" and len(set(daily_windows)) > 1:
+        windows = ", ".join(
+            f"{start.isoformat()}–{end.isoformat()}"
+            for start, end in sorted(set(daily_windows))
+        )
+        raise periods.MeasurementPeriodError(
+            "A napi exportok eltérő időszakokat fednek: " + windows + ". "
+            "Töltsd le őket újra ugyanazzal a két konkrét dátummal."
+        )
+
+    series = [
+        periods.filter_daily(entry, resolved.start, resolved.end)
+        for entry in series
+    ]
+    for entry in series:
+        periods.require_complete_daily(entry, resolved.start, resolved.end)
+    content = periods.filter_posts(content, resolved.start, resolved.end)
+    items = periods.filter_items(items, resolved.start, resolved.end)
+    ads_period = _ads_period_quality(ads_window, resolved, campaigns)
+
     joined = join_posts(content=content, items=items, campaigns=campaigns)
-    _check_boost_matching(joined, campaigns)
+    if not ads_period or ads_period["accuracy"] == "exact":
+        _check_boost_matching(joined, campaigns)
 
     channels = kpi.channel_blocks(
         series=series, posts=joined.posts, campaigns=campaigns
@@ -465,35 +534,45 @@ def build(directory: Path, period: str) -> dict:
         performance[name] = performance_mod.findings(
             performance_mod.score_posts(block["posts"])
         )
-    previous = compare.load_previous(directory)
     manual_values = manual.load_manual(directory)
     follower_counts, follower_origin = followers.resolve(
-        config, channels, previous, period
+        config,
+        channels,
+        previous,
+        resolved.label,
+        measurement_start=resolved.start.isoformat(),
     )
+
+    coverage_meta = _coverage(coverage, resolved.label)
+    coverage_meta.update(
+        {
+            "coverage_start": resolved.start.isoformat(),
+            "coverage_end": resolved.end.isoformat(),
+            "coverage_partial": False,
+        }
+    )
+    meta = {
+        "client": client["name"],
+        "period": resolved.label,
+        "measurement_start": resolved.start.isoformat(),
+        "measurement_end": resolved.end.isoformat(),
+        "measurement_source": resolved.source,
+        "measurement_credibility": resolved.credibility,
+        "currency": ads_payload.currency if ads_payload else "EUR",
+        "language": config.get("report", {}).get("language", "hu"),
+        "comparison_headline": config.get("report", {}).get(
+            "comparison_headline", "value"
+        ),
+        **_contact(directory, config),
+        **coverage_meta,
+    }
+
+    paid = kpi.paid_totals(campaigns)
+    paid["campaign_details"] = campaigns
 
     return _serialise(
         {
-            "meta": {
-                "client": client["name"],
-                "period": period,
-                "currency": ads_payload.currency if ads_payload else "EUR",
-                "language": config.get("report", {}).get("language", "hu"),
-                # Mi legyen a nagy szám az összehasonlító oldalakon: a hónap
-                # végeredménye (`value`) vagy a változás mértéke (`change`).
-                # Kampányriportnál a második erősebb. A menedzser ezt
-                # megjegyzésben szokta kérni, ezért kapcsoló, nem sablonátírás.
-                "comparison_headline": config.get("report", {}).get(
-                    "comparison_headline", "value"
-                ),
-                # Ügyfelenként külön postafiók van (larus@, mammut@…). A
-                # mappanévből kitalált cím jó kiindulás, de nem biztos, hogy
-                # helyes — ezért jelöljük, hogy találgatás, és a `--validate`
-                # emlékeztet rá. Rossz e-mail a záróoldalon az ügyfélhez megy ki.
-                **_contact(directory, config),
-                # Meddig ér ténylegesen az adat — a fájlokból mérve, nem a
-                # naptárból feltételezve.
-                **_coverage(coverage, period),
-            },
+            "meta": meta,
             "content": kpi.content_summary(items),
             # A posztok egyetlen helyen élnek: a csatorna-blokkokban. Lapos
             # másolatot nem tartunk mellette — két forrás ugyanarra elcsúszik.
@@ -523,11 +602,11 @@ def build(directory: Path, period: str) -> dict:
             # Honnan tudjuk a követőszámot. A továbbszámolt értéket a
             # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
             "follower_origin": follower_origin,
-            "paid": kpi.paid_totals(campaigns),
+            "paid": paid,
             # Illeszkedik-e az előző havi adat a mostanihoz? Rés, átfedés vagy
             # ismeretlen időszak esetén a „változás" nem változás.
             "comparison_health": compare.coverage_check(
-                previous, _coverage(coverage, period)
+                previous, meta
             ),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
@@ -565,6 +644,7 @@ def build(directory: Path, period: str) -> dict:
                 "dropped_zero_campaign_rows": (
                     ads_payload.dropped_zero_rows if ads_payload else 0
                 ),
+                "ads_period": ads_period,
             },
             "manual": manual_values,
             # Ami nincs exportban, de a felületről leolvasható. Nem hiba, és nem

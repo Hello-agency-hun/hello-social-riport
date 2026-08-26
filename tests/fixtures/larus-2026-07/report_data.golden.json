@@ -2,6 +2,10 @@
   "meta": {
     "client": "Larus Étterem",
     "period": "2026-07",
+    "measurement_start": "2026-07-01",
+    "measurement_end": "2026-07-31",
+    "measurement_source": "daily_exports",
+    "measurement_credibility": "first_baseline",
     "currency": "EUR",
     "language": "hu",
     "comparison_headline": "value",
@@ -720,7 +724,13 @@
             "cost_per_result": 0.12990654,
             "status": "completed",
             "channel": "instagram",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-23",
+            "is_ongoing": false,
+            "delivery_status": "completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": false,
           "score": null
@@ -756,7 +766,13 @@
             "cost_per_result": 0.47965517,
             "status": "completed",
             "channel": "instagram",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-27",
+            "is_ongoing": false,
+            "delivery_status": "completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": false,
           "score": null
@@ -854,7 +870,13 @@
             "cost_per_result": 0.15877193,
             "status": "recently_completed",
             "channel": "instagram",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-08-02",
+            "is_ongoing": false,
+            "delivery_status": "recently_completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": false,
           "score": null
@@ -889,7 +911,13 @@
             "cost_per_result": 0.08328125,
             "status": "recently_completed",
             "channel": "instagram",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-31",
+            "is_ongoing": false,
+            "delivery_status": "recently_completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": false,
           "score": null
@@ -930,7 +958,13 @@
           "cost_per_result": 0.12990654,
           "status": "completed",
           "channel": "instagram",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-23",
+          "is_ongoing": false,
+          "delivery_status": "completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
@@ -945,7 +979,13 @@
           "cost_per_result": 0.47965517,
           "status": "completed",
           "channel": "instagram",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-27",
+          "is_ongoing": false,
+          "delivery_status": "completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
@@ -960,7 +1000,13 @@
           "cost_per_result": 0.08328125,
           "status": "recently_completed",
           "channel": "instagram",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-31",
+          "is_ongoing": false,
+          "delivery_status": "recently_completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Instagram-bejegyzés: Kacsamell, almás zellerpüré,...",
@@ -975,7 +1021,13 @@
           "cost_per_result": 0.15877193,
           "status": "recently_completed",
           "channel": "instagram",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-08-02",
+          "is_ongoing": false,
+          "delivery_status": "recently_completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         }
       ]
     },
@@ -1554,7 +1606,13 @@
             "cost_per_result": 3.475,
             "status": "completed",
             "channel": "facebook",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-23",
+            "is_ongoing": false,
+            "delivery_status": "completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": true,
           "score": {
@@ -1647,7 +1705,13 @@
             "cost_per_result": 0.01529243,
             "status": "recently_completed",
             "channel": "facebook",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-31",
+            "is_ongoing": false,
+            "delivery_status": "recently_completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": true,
           "score": {
@@ -1798,7 +1862,13 @@
             "cost_per_result": 1.07307692,
             "status": "completed",
             "channel": "facebook",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-27",
+            "is_ongoing": false,
+            "delivery_status": "completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": true,
           "score": {
@@ -1921,7 +1991,13 @@
             "cost_per_result": 0.03228972,
             "status": "completed",
             "channel": "facebook",
-            "is_boost": true
+            "is_boost": true,
+            "start_date": null,
+            "end_date": "2026-07-23",
+            "is_ongoing": false,
+            "delivery_status": "completed",
+            "report_start": "2026-07-01",
+            "report_end": "2026-07-31"
           },
           "organic_measured": true,
           "score": {
@@ -2001,7 +2077,13 @@
           "cost_per_result": 0.03228972,
           "status": "completed",
           "channel": "facebook",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-23",
+          "is_ongoing": false,
+          "delivery_status": "completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Bejegyzés: „Ebben a melegben már csak egy hideg ital...”",
@@ -2016,7 +2098,13 @@
           "cost_per_result": 3.475,
           "status": "completed",
           "channel": "facebook",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-23",
+          "is_ongoing": false,
+          "delivery_status": "completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Bejegyzés: „Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬”",
@@ -2031,7 +2119,13 @@
           "cost_per_result": 1.07307692,
           "status": "completed",
           "channel": "facebook",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-27",
+          "is_ongoing": false,
+          "delivery_status": "completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         },
         {
           "name": "Bejegyzés: „Séfünk ajánlata! 😎”",
@@ -2046,7 +2140,13 @@
           "cost_per_result": 0.01529243,
           "status": "recently_completed",
           "channel": "facebook",
-          "is_boost": true
+          "is_boost": true,
+          "start_date": null,
+          "end_date": "2026-07-31",
+          "is_ongoing": false,
+          "delivery_status": "recently_completed",
+          "report_start": "2026-07-01",
+          "report_end": "2026-07-31"
         }
       ]
     }
@@ -2153,7 +2253,282 @@
         "spend": 13.95,
         "results": 13
       }
-    }
+    },
+    "campaign_details": [
+      {
+        "name": "larus_event_eskuvo _2026_nyár",
+        "spend": 66.53,
+        "currency": "EUR",
+        "reach": 25078,
+        "impressions": 47908,
+        "frequency": 1.91036,
+        "link_clicks": 1714,
+        "results": 1066,
+        "result_type": "actions:omni_landing_page_view",
+        "cost_per_result": 0.06241088,
+        "status": "recently_completed",
+        "channel": null,
+        "is_boost": false,
+        "start_date": null,
+        "end_date": "2026-07-31",
+        "is_ongoing": false,
+        "delivery_status": "recently_completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "larus_event_b2b_ nyár",
+        "spend": 152.16,
+        "currency": "EUR",
+        "reach": 33218,
+        "impressions": 109709,
+        "frequency": 3.302697,
+        "link_clicks": 2000,
+        "results": 1631,
+        "result_type": "actions:omni_landing_page_view",
+        "cost_per_result": 0.09329246,
+        "status": "active",
+        "channel": null,
+        "is_boost": false,
+        "start_date": null,
+        "end_date": "2026-08-31",
+        "is_ongoing": false,
+        "delivery_status": "active",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Lóvasút_B2B_esküvő_2026_nyár",
+        "spend": 57.7,
+        "currency": "EUR",
+        "reach": 15857,
+        "impressions": 28678,
+        "frequency": 1.808539,
+        "link_clicks": 443,
+        "results": 407,
+        "result_type": "actions:omni_landing_page_view",
+        "cost_per_result": 0.14176904,
+        "status": "active",
+        "channel": null,
+        "is_boost": false,
+        "start_date": null,
+        "end_date": "2026-08-31",
+        "is_ongoing": false,
+        "delivery_status": "active",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Larus_insider_hr_július",
+        "spend": 64.99,
+        "currency": "EUR",
+        "reach": 123568,
+        "impressions": 207547,
+        "frequency": 1.679618,
+        "link_clicks": 170,
+        "results": 123568,
+        "result_type": "reach",
+        "cost_per_result": 0.52594523,
+        "status": "completed",
+        "channel": null,
+        "is_boost": false,
+        "start_date": null,
+        "end_date": "2026-07-29",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Instagram-bejegyzés: Ennyi! 😉🥂 #larus #larusetterem",
+        "spend": 13.9,
+        "currency": "EUR",
+        "reach": 2892,
+        "impressions": 4296,
+        "frequency": 1.485477,
+        "link_clicks": 108,
+        "results": 107,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.12990654,
+        "status": "completed",
+        "channel": "instagram",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-23",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Bejegyzés: „Gambas Pil-Pil, papfojtó tésztával. Egy tál nyár! ☀️🦐”",
+        "spend": 13.82,
+        "currency": "EUR",
+        "reach": 4251,
+        "impressions": 6885,
+        "frequency": 1.619619,
+        "link_clicks": 10,
+        "results": 428,
+        "result_type": "actions:post_engagement",
+        "cost_per_result": 0.03228972,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-23",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Bejegyzés: „Ebben a melegben már csak egy hideg ital...”",
+        "spend": 13.9,
+        "currency": "EUR",
+        "reach": 2008,
+        "impressions": 3392,
+        "frequency": 1.689243,
+        "link_clicks": 13,
+        "results": 4,
+        "result_type": "actions:click_to_call_native_call_placed",
+        "cost_per_result": 3.475,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-23",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Instagram-bejegyzés: Frissen, roppanósan. Ahogy...",
+        "spend": 13.91,
+        "currency": "EUR",
+        "reach": 1456,
+        "impressions": 2154,
+        "frequency": 1.479396,
+        "link_clicks": 28,
+        "results": 29,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.47965517,
+        "status": "completed",
+        "channel": "instagram",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-27",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Bejegyzés: „Frissen, roppanósan. Ahogy szeretitek! 🍄🍆🥕🥬”",
+        "spend": 13.95,
+        "currency": "EUR",
+        "reach": 1847,
+        "impressions": 2626,
+        "frequency": 1.421765,
+        "link_clicks": 13,
+        "results": 13,
+        "result_type": "actions:link_click",
+        "cost_per_result": 1.07307692,
+        "status": "completed",
+        "channel": "facebook",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-27",
+        "is_ongoing": false,
+        "delivery_status": "completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Instagram-bejegyzés: Séfünk ajánlata! 😎 #larus...",
+        "spend": 15.99,
+        "currency": "EUR",
+        "reach": 5709,
+        "impressions": 7106,
+        "frequency": 1.244701,
+        "link_clicks": 194,
+        "results": 192,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.08328125,
+        "status": "recently_completed",
+        "channel": "instagram",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-31",
+        "is_ongoing": false,
+        "delivery_status": "recently_completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Bejegyzés: „Séfünk ajánlata! 😎”",
+        "spend": 15.95,
+        "currency": "EUR",
+        "reach": 8398,
+        "impressions": 11480,
+        "frequency": 1.366992,
+        "link_clicks": 1018,
+        "results": 1043,
+        "result_type": "actions:post_engagement",
+        "cost_per_result": 0.01529243,
+        "status": "recently_completed",
+        "channel": "facebook",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-07-31",
+        "is_ongoing": false,
+        "delivery_status": "recently_completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Instagram-bejegyzés: Kacsamell, almás zellerpüré,...",
+        "spend": 9.05,
+        "currency": "EUR",
+        "reach": 2093,
+        "impressions": 2596,
+        "frequency": 1.240325,
+        "link_clicks": 53,
+        "results": 57,
+        "result_type": "profile_visit_view",
+        "cost_per_result": 0.15877193,
+        "status": "recently_completed",
+        "channel": "instagram",
+        "is_boost": true,
+        "start_date": null,
+        "end_date": "2026-08-02",
+        "is_ongoing": false,
+        "delivery_status": "recently_completed",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      },
+      {
+        "name": "Lóvasút_B2B_nyár_v2",
+        "spend": 20.86,
+        "currency": "EUR",
+        "reach": 4646,
+        "impressions": 6457,
+        "frequency": 1.389798,
+        "link_clicks": 261,
+        "results": 216,
+        "result_type": "actions:omni_landing_page_view",
+        "cost_per_result": 0.09657407,
+        "status": "active",
+        "channel": null,
+        "is_boost": false,
+        "start_date": null,
+        "end_date": "2026-08-31",
+        "is_ongoing": false,
+        "delivery_status": "active",
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31"
+      }
+    ]
   },
   "comparison_health": {
     "status": "none"
@@ -2185,7 +2560,17 @@
     "unmatched_content": [
       "1508309508006534"
     ],
-    "dropped_zero_campaign_rows": 16
+    "dropped_zero_campaign_rows": 16,
+    "ads_period": {
+      "report_start": "2026-07-01",
+      "report_end": "2026-07-31",
+      "measurement_start": "2026-07-01",
+      "measurement_end": "2026-07-31",
+      "accuracy": "exact",
+      "starts_earlier": false,
+      "ends_later": false,
+      "has_running_campaigns": false
+    }
   },
   "manual": {},
   "obtainable": [

@@ -36,6 +36,29 @@ def test_cover_shows_client_and_period(html):
     assert "2026" in html
 
 
+def test_cover_prefers_exact_measurement_dates_over_legacy_coverage(data, tmp_path):
+    data["meta"].update(
+        {
+            "measurement_start": "2026-06-25",
+            "measurement_end": "2026-07-24",
+            "coverage_start": "2026-07-01",
+            "coverage_end": "2026-07-31",
+        }
+    )
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "2026-06-25 – 2026-07-24" in out
+
+
+def test_cover_warns_when_the_period_is_not_a_credible_month(data, tmp_path):
+    data["meta"]["measurement_credibility"] = "gap"
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "nem tekinthető hitelesnek" in out
+
+
 def test_decimals_use_a_hungarian_comma(html):
     """Magyar riportban `33,2×`, nem `33.2×`.
 
@@ -173,7 +196,9 @@ def test_post_metrics_show_measured_numbers_not_a_subtraction(html):
 
 
 def test_page_count_stays_within_the_agreed_limit(html):
-    assert 12 <= html.count('class="page') <= 20
+    # A kampányállapotok legfeljebb nyolc soros, nyomtatásbiztos oldalai két
+    # oldallal bővítik a Larus mintariportot.
+    assert 12 <= html.count('class="page') <= 22
 
 
 def test_channel_kpi_tiles_use_hungarian_labels(html):
@@ -235,6 +260,67 @@ NARRATIVE = {
     "what_to_improve": ["Az Instagram-tartalom mérése hiányos."],
     "next_steps": ["Töltsük le az Instagram Tartalom exportot."],
 }
+
+
+def test_indicative_ads_window_is_explained_without_hiding_campaigns(data, tmp_path):
+    data["quality"]["ads_period"].update(
+        {
+            "report_start": "2026-06-01",
+            "report_end": "2026-07-31",
+            "measurement_start": "2026-06-25",
+            "measurement_end": "2026-07-24",
+            "accuracy": "indicative",
+            "starts_earlier": True,
+            "ends_later": True,
+        }
+    )
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "tájékoztató jellegű" in out
+    assert "Meta-export lekérési időszaka" in out
+    assert data["paid"]["campaign_details"][0]["name"] in out
+
+
+def test_campaign_status_pages_are_limited_to_eight_rows(data, tmp_path):
+    prototype = data["paid"]["campaign_details"][0]
+    data["paid"]["campaign_details"] = [
+        {**prototype, "name": f"Kampány {index:02d}"}
+        for index in range(17)
+    ]
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+    pages = re.findall(
+        r'<section class="page campaign-status-page".*?</section>', out, re.S
+    )
+
+    assert len(pages) == 3
+    assert sum(page.count('class="campaign-row"') for page in pages) == 17
+    assert all(page.count('class="campaign-row"') <= 8 for page in pages)
+    assert 'data-status-count' in pages[0]
+
+
+def test_campaign_copy_is_editable_but_exported_values_are_locked(data, tmp_path):
+    narrative = {
+        **NARRATIVE,
+        "campaign_status": {
+            "title": "A kampányok állapota",
+            "body": "Az export lekérési ablakában látható állapotok.",
+        },
+    }
+    data["paid"]["campaign_details"][0].update(
+        {"is_ongoing": True, "end_date": None}
+    )
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"", narrative=narrative)
+    status = out[out.index('class="page campaign-status-page"'):]
+    status = status[:status.index("</section>")]
+
+    assert 'data-narrative="campaign_status.title"' in status
+    assert 'data-narrative="campaign_status.body"' in status
+    assert "folyamatban" in status
+    assert 'data-campaign-value' in status
+    assert 'contenteditable="true"' not in status
 
 
 def test_narrative_pages_are_absent_without_narrative(html):

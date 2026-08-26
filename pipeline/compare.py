@@ -38,8 +38,8 @@ def coverage_check(previous: dict | None, meta: dict) -> dict:
         return {"status": "none"}
 
     before = previous.get("meta") or {}
-    prev_end = before.get("coverage_end")
-    now_start = meta.get("coverage_start")
+    prev_end = before.get("measurement_end") or before.get("coverage_end")
+    now_start = meta.get("measurement_start") or meta.get("coverage_start")
 
     if not prev_end or not now_start:
         return {

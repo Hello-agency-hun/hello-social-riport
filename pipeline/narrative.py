@@ -56,6 +56,20 @@ BLOCKS = {
     },
 }
 
+# Nem minden riportban kell külön kampányállapot-értelmezés. Ha van Meta Ads
+# export, ez a két szöveges levél megjelenhet és ugyanúgy szerkeszthető, mint a
+# kötelező narratívablokkok; a kampányok exportált adatai nem kerülnek ide.
+OPTIONAL_BLOCKS = {
+    "campaign_status": {
+        "label": "Kampányállapotok értelmezése",
+        "guidance": (
+            "A `title` röviden foglalja össze a kampánymezőnyt, a `body` pedig "
+            "magyarázza el az állapotokat és az Ads-lekérési ablak pontosságát. "
+            "Exportált dátumot, eredményt vagy státuszt ne másolj ide kézzel."
+        ),
+    }
+}
+
 
 def _number(value, digits: int = 0) -> str:
     text = f"{float(value):,.{digits}f}"

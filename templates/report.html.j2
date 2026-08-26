@@ -28,6 +28,9 @@
     {%- if coverage_partial %} · <strong>{{ t.month_not_closed }}</strong>,
     {{ t.data_until_here }}{% endif %}
   </p>
+  {% if period_warning %}
+  <div class="period-warning" style="margin-top:14px">{{ period_warning }}</div>
+  {% endif %}
 </section>
 
 <section class="page">
@@ -86,6 +89,12 @@
 <section class="page">
   <div class="eyebrow">{{ t.paid_advertising }}</div>
   <h2 style="margin-bottom:36px">{{ t.campaigns_by_result }}</h2>
+  {% if ads_period.accuracy == "indicative" %}
+  <div class="period-warning" style="margin-bottom:22px">
+    <strong>{{ t.ads_indicative_label }}</strong> · {{ t.ads_indicative_body }}
+    {{ t.campaign_report_window }}: {{ ads_period.report_start }} – {{ ads_period.report_end }}.
+  </div>
+  {% endif %}
   <table>
     <tr><th>{{ t.result_type }}</th><th class="num">{{ t.campaign }}</th>
         <th class="num">{{ t.spend | capitalize }}</th><th class="num">{{ t.result }}</th></tr>
@@ -114,6 +123,52 @@
     {{ t.result_types_note }}
   </p>
 </section>
+
+{% for campaigns in campaign_pages %}
+<section class="page campaign-status-page" data-campaign-page="{{ loop.index }}">
+  <div class="eyebrow">{{ t.campaign_status_eyebrow }}</div>
+  {% if loop.first and campaign_narrative.title %}
+  <h2 data-narrative="campaign_status.title" style="margin:10px 0 12px">{{ campaign_narrative.title | safe }}</h2>
+  {% else %}
+  <h2 style="margin:10px 0 12px">{{ t.campaign_status_title }}</h2>
+  {% endif %}
+  {% if loop.first and campaign_narrative.body %}
+  <p data-narrative="campaign_status.body" class="campaign-status-copy">{{ campaign_narrative.body | safe }}</p>
+  {% elif loop.first %}
+  <p class="campaign-status-copy">{{ t.campaign_status_body }}</p>
+  {% endif %}
+
+  {% if loop.first and campaign_status_counts %}
+  <div class="status-counts">
+    {% for status, count in campaign_status_counts %}
+    <span class="status-count" data-status-count><strong>{{ count }}</strong> {{ status }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="campaign-list">
+  {% for campaign in campaigns %}
+    <div class="campaign-row" data-campaign-value>
+      <div class="campaign-name">
+        <strong>{{ campaign.name }}</strong>
+        {% if campaign.start_date %}
+        <div class="campaign-duration">{{ campaign.start_date }} → {{ campaign.display_end }}</div>
+        {% endif %}
+      </div>
+      <div><span class="status-pill">{{ campaign.display_status }}</span></div>
+      <div><span class="campaign-label">{{ t.campaign_end }}</span>{{ campaign.display_end }}</div>
+      <div class="num"><span class="campaign-label">{{ t.campaign_result }}</span>{{ campaign.results | num }} · {{ campaign.result_type | result }}</div>
+    </div>
+  {% endfor %}
+  </div>
+
+  <p class="note campaign-window-note">
+    {% if ads_period.accuracy == "indicative" %}<strong>{{ t.ads_indicative_label }}</strong> · {% else %}<strong>{{ t.ads_exact_label }}</strong> · {% endif %}
+    {{ t.campaign_report_window }}: {{ ads_period.report_start }} – {{ ads_period.report_end }}.
+    {% if ads_period.accuracy == "indicative" %}{{ t.ads_indicative_body }}{% endif %}
+  </p>
+</section>
+{% endfor %}
 
 <section class="page">
   <div class="eyebrow">{{ t.organic_and_paid }}</div>

@@ -57,3 +57,17 @@ def test_the_cli_flag_needs_no_sources(tmp_path, capsys):
 
     assert exit_code == 0
     assert "ZoomSphere" in capsys.readouterr().out
+
+
+def test_exact_measurement_range_is_repeated_on_every_export_instruction():
+    text = checklist.render(
+        None,
+        "clients/x/2026-07",
+        measurement_start="2026-06-25",
+        measurement_end="2026-07-24",
+    )
+
+    assert "2026-06-25 – 2026-07-24" in text
+    assert "25–24" in text
+    assert "Meta Ads" in text and "tájékoztató" in text
+    assert "Jelentés kezdete" in text and "kampány kezdete" in text

@@ -1,4 +1,6 @@
+import re
 import shutil
+from datetime import date, timedelta
 
 import pytest
 import yaml
@@ -8,10 +10,12 @@ from pipeline.errors import (
     ClientMismatchError,
     DuplicateSourceError,
     MissingConfigError,
+    MeasurementPeriodError,
     NoSourceError,
     UnknownSourceError,
-    PeriodMismatchError,
 )
+from pipeline.detect import scan
+from pipeline.textio import read_text
 
 
 def test_build_produces_report_data(fixture_dir):
@@ -63,8 +67,118 @@ def test_build_output_is_json_serialisable(fixture_dir):
 
 
 def test_wrong_period_is_rejected(fixture_dir):
-    with pytest.raises(PeriodMismatchError):
-        build(fixture_dir, period="2026-06")
+    data = build(
+        fixture_dir,
+        period="2026-06",
+        start_date="2026-07-01",
+        end_date="2026-07-31",
+    )
+
+    assert data["meta"]["period"] == "2026-07"
+
+
+def test_manager_period_filters_daily_and_sparse_sources_before_kpis(
+    fixture_dir, tmp_path
+):
+    work = tmp_path / "exact-period"
+    shutil.copytree(fixture_dir, work)
+    config = yaml.safe_load((work / "client.yaml").read_text(encoding="utf-8"))
+    config["report"]["measurement_start"] = "2026-07-05"
+    config["report"]["measurement_end"] = "2026-07-24"
+    (work / "client.yaml").write_text(
+        yaml.safe_dump(config, allow_unicode=True), encoding="utf-8"
+    )
+
+    original_spend = build(fixture_dir, period="2026-07")["paid"]["spend"]
+    data = build(work, period="2026-07")
+
+    assert data["meta"]["measurement_start"] == "2026-07-05"
+    assert data["meta"]["measurement_end"] == "2026-07-24"
+    assert data["meta"]["measurement_source"] == "manager"
+    assert all(
+        "2026-07-05" <= point[0] <= "2026-07-24"
+        for point in data["channels"]["facebook"]["daily"]["visits"]
+    )
+    assert all(
+        "2026-07-05" <= post["published"] <= "2026-07-24"
+        for post in data["channels"]["facebook"]["posts"]
+    )
+    assert data["paid"]["spend"] == original_spend
+
+
+def test_build_infers_period_from_daily_exports_and_serializes_campaign_state(
+    fixture_dir,
+):
+    data = build(fixture_dir, period="2026-07")
+
+    assert data["meta"]["measurement_start"] == "2026-07-01"
+    assert data["meta"]["measurement_end"] == "2026-07-31"
+    assert data["meta"]["measurement_source"] == "daily_exports"
+    assert data["paid"]["campaign_details"]
+    assert data["paid"]["campaign_details"][0]["report_start"] == "2026-07-01"
+
+
+def test_ads_window_mismatch_is_indicative_and_never_prorates_spend(
+    fixture_dir, tmp_path
+):
+    work = tmp_path / "indicative-ads"
+    shutil.copytree(fixture_dir, work)
+    original = build(fixture_dir, period="2026-07")
+
+    data = build(
+        work,
+        period="2026-07",
+        start_date="2026-07-05",
+        end_date="2026-07-24",
+    )
+
+    assert data["quality"]["ads_period"] == {
+        "report_start": "2026-07-01",
+        "report_end": "2026-07-31",
+        "measurement_start": "2026-07-05",
+        "measurement_end": "2026-07-24",
+        "accuracy": "indicative",
+        "starts_earlier": True,
+        "ends_later": True,
+        "has_running_campaigns": False,
+    }
+    assert data["paid"]["spend"] == original["paid"]["spend"]
+
+
+def test_cross_month_period_keeps_exact_coverage_and_inclusive_daily_rows(
+    fixture_dir, tmp_path
+):
+    work = tmp_path / "cross-month"
+    shutil.copytree(fixture_dir, work)
+
+    daily_paths = [
+        source.path for source in scan(work / "input") if source.kind == "meta_daily"
+    ]
+    assert daily_paths
+
+    def shift(match):
+        day = date.fromisoformat(match.group(1)) - timedelta(days=6)
+        return day.isoformat()
+
+    for path in daily_paths:
+        shifted = re.sub(r"(2026-07-\d{2})", shift, read_text(path))
+        path.write_text(shifted, encoding="utf-8")
+
+    data = build(
+        work,
+        period="2026-07",
+        start_date="2026-06-25",
+        end_date="2026-07-24",
+    )
+
+    visits = data["channels"]["facebook"]["daily"]["visits"]
+    assert (visits[0][0], visits[-1][0], len(visits)) == (
+        "2026-06-25",
+        "2026-07-24",
+        30,
+    )
+    assert data["meta"]["coverage_start"] == "2026-06-25"
+    assert data["meta"]["coverage_end"] == "2026-07-24"
 
 
 def test_foreign_client_is_rejected(fixture_dir, tmp_path):

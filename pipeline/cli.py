@@ -18,6 +18,12 @@ def _report_map(data: dict) -> str:
     cross = data["cross"]
     channels = ", ".join(sorted(data["channels"])) or "nincs"
     unmatched = quality["unmatched_boosts"]
+    source_labels = {
+        "manager": "a manager által megadott dátumokból",
+        "daily_exports": "a napi exportokból",
+        "meta_ads": "a Meta Ads lekérési ablakából",
+        "calendar_fallback": "naptári feltételezésből",
+    }
 
     # „Így értelmeztem a mappát" — a hiány jelentése nem elég. A Mammut-próba
     # hét csúszástípusából négy teljesen néma volt: nem hibáztunk, csak rosszul
@@ -49,9 +55,16 @@ def _report_map(data: dict) -> str:
             f"{paid['spend']:.2f} {paid['currency']} "
             f"({quality['dropped_zero_campaign_rows']} nullás sor kiszűrve)",
             f"Napi metrikák   {channels}",
-            f"Mért időszak    {data['meta']['coverage_start']} – "
-            f"{data['meta']['coverage_end']}"
+            f"Mért időszak    {data['meta']['measurement_start']} – "
+            f"{data['meta']['measurement_end']} · "
+            f"{source_labels.get(data['meta'].get('measurement_source'), 'ismeretlen forrásból')}"
             + ("   ⚠ a hónap még nem zárult le" if data["meta"]["coverage_partial"] else ""),
+            (
+                "⚠ A Meta Ads export eltérő lekérési ablakot fed; a teljes "
+                "Ads-összeg tájékoztató jellegű, nem arányosított."
+                if (quality.get("ads_period") or {}).get("accuracy") == "indicative"
+                else ""
+            ),
             # Ha a források nem egyszerre zárultak, az pont az a hiba, amit a
             # korábbi kézi riportokban találtunk: egy dokumentumban keverednek
             # a különböző napokon lekérdezett állapotok.
@@ -236,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
         "directory", help="ügyfél-hónap mappa, pl. clients/larus/2026-07"
     )
     parser.add_argument("--period", required=True, help="YYYY-MM")
+    parser.add_argument("--start-date", default=None, help="mérés kezdete: YYYY-MM-DD")
+    parser.add_argument("--end-date", default=None, help="mérés vége: YYYY-MM-DD")
     parser.add_argument("--validate", action="store_true", help="csak ellenőrzés")
     parser.add_argument("--out", default=None, help="report_data.json útvonala")
     parser.add_argument("--html", default=None, help="Riport.html útvonala")
@@ -271,12 +286,24 @@ def main(argv: list[str] | None = None) -> int:
             client = (build_module_config(directory) or {}).get("client")
         except PipelineError:
             client = None
-        print(checklist.render(client, str(directory).replace("\\", "/")))
+        print(
+            checklist.render(
+                client,
+                str(directory).replace("\\", "/"),
+                measurement_start=args.start_date,
+                measurement_end=args.end_date,
+            )
+        )
         return 0
 
     try:
         _refuse_the_fixture(Path(args.directory), args.allow_fixture)
-        data = build(Path(args.directory), period=args.period)
+        data = build(
+            Path(args.directory),
+            period=args.period,
+            start_date=args.start_date,
+            end_date=args.end_date,
+        )
     except PipelineError as error:
         print(f"HIBA: {error}", file=sys.stderr)
         _also_worth_knowing(Path(args.directory), args.period)
