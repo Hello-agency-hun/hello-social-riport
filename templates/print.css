@@ -30,6 +30,9 @@
   .page:last-child { page-break-after: auto; break-after: auto; }
   .no-print { display: none !important; }
   .manual-slot { display: none !important; }
+  /* A szerkeszthető HTML-ben maradjanak meg a még kitölthető előző havi
+     mezők, de az ügyfél PDF-jébe ne kerüljön üres összehasonlító oldal. */
+  .manual-only-page { display: none !important; }
   .comment-button { display: none !important; }
   .campaign-row { break-inside: avoid; page-break-inside: avoid; }
   a { text-decoration: none; color: inherit; }

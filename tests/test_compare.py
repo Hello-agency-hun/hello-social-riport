@@ -60,3 +60,5 @@ def test_comparison_page_offers_fillable_fields_without_previous_data(tmp_path):
     html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
     assert 'data-manual="prev_facebook_visits"' in html
     assert "Változás az előző hónaphoz" in html
+    assert 'class="page manual-only-page"' in html
+    assert ".manual-only-page { display: none !important; }" in html
