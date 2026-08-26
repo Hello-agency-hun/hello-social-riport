@@ -2,6 +2,7 @@ from collections import Counter
 from datetime import date
 
 from pipeline.detect import identify
+from pipeline.periods import filter_items
 from pipeline.parsers.zoomsphere import parse
 
 
@@ -68,3 +69,13 @@ def test_zoomsphere_csv_is_recognized_and_parsed_even_with_an_unknown_name(tmp_p
     source = parse(path)
     assert source.period == (date(2026, 7, 1), date(2026, 7, 1))
     assert source.payload[0].post_ids["facebook"] == "200"
+
+
+def test_scheduler_filter_drops_items_outside_the_requested_dates(input_file):
+    items = parse(input_file("Scheduler")).payload
+
+    filtered = filter_items(items, date(2026, 7, 10), date(2026, 7, 20))
+
+    assert filtered
+    assert all(date(2026, 7, 10) <= item.published <= date(2026, 7, 20)
+               for item in filtered)

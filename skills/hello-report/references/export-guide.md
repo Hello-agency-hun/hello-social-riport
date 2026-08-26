@@ -9,6 +9,17 @@ az egész listát egyszerre — csak azt a lépést, ami éppen hiányzik.
 Minden fájl az `input/` mappába megy, **átnevezés nélkül**. A parser tartalom
 alapján ismeri fel őket, nem fájlnév alapján.
 
+## Először rögzítsd a pontos mérési időszakot
+
+A legtöbb HELLO-riport pénzügyi zárás szerint készül, például június 25-től
+július 24-ig. Ez teljes értékű havi ciklus: a következő riport július 25-én
+induljon, így nincs kimaradó vagy kétszer számolt nap.
+
+Minden napi, Tartalom- és ZoomSphere-exportban ugyanazt a két konkrét dátumot
+állítsd be. Ha ettől eltérsz, a hónapok változása nem lesz hiteles. A Meta Ads
+export lehet tágabb: a motor nem dobja el és nem arányosítja, hanem a teljes
+exportált összeget tájékoztató jelöléssel mutatja.
+
 ---
 
 ## 1. ZoomSphere — tartalomnaptár
@@ -26,8 +37,12 @@ Metrikát nem tartalmaz — az a Metából jön.
 
 *Ismerős lépés, elég egy emlékeztető.*
 
-Hirdetéskezelő → **Kampányok** → időszak a riportált hónapra → **Exportálás** →
-a szokásos oszlopsablonnal.
+Hirdetéskezelő → **Kampányok** → időszak a pontos mérési dátumokra →
+**Exportálás** → a szokásos oszlopsablonnal.
+
+A `Jelentés kezdete` és `Jelentés vége` a lekérési ablakot írja le, nem a
+kampány tényleges indulását. Kampánykezdést csak külön `Kezdés`, `Indulás` vagy
+`Kampány kezdete` oszlopból használunk; ha ilyen nincs, nem találjuk ki.
 
 Fájl: `<ügyfél>-Kampányok-<dátum>.csv`
 
@@ -37,7 +52,7 @@ Ez adja a poszt-szintű elérést és interakciókat. **Enélkül nincs top-posz
 
 1. Business Suite → **Statisztika**
 2. Bal oldali menü → **Tartalom**
-3. Fent az időszak a riportált hónapra
+3. Fent az időszak a két pontos mérési dátumra
 4. Jobb felül **Exportálás** → CSV
 
 Fájl: `<dátumtartomány>_<oldalazonosító>.csv`
@@ -80,7 +95,7 @@ Ugyanaz a fiókváltás után, öt csempe:
 
 **Ezeket nem kell letölteni** — a riportban ott lesz a helyük szaggatott kerettel.
 
-Statisztika → **Elérés** csempe, az időszak a riportált hónapra állítva.
+Statisztika → **Elérés** csempe, az időszak a pontos mérési dátumokra állítva.
 Csatornánként egy szám. Ugyanígy a követő-összlétszám a Közönség alatt.
 
 A menedzser beírja a riportba, megnyomja a **Mentés** gombot, és a letöltött
@@ -108,7 +123,8 @@ Az összehasonlító oldalakhoz. Két út:
 
 | Hibaüzenet | Mit jelent |
 |---|---|
-| `a forrás időszaka … a riportált hónap …` | rossz hónap exportja került a mappába |
+| `hiányzó napi adatok …` | legalább egy nap kimaradt a pontos mérési időszakból; töltsd le újra ugyanazzal a két dátummal |
+| `Meta Ads időszak … tájékoztató` | az export használható, de tágabb vagy eltérő ablakot fed; a teljes Ads-összeg bekerül |
 | `Más ügyfél adata került a mappába` | két ügyfél fájljai keveredtek |
 | `két ZoomSphere export van a mappában` | újraletöltésnél bennmaradt a régi — töröld |
 | `ismeretlen napi metrika` | új Meta-csempe; a `client.yaml` `daily_metric_overrides` szakaszába kell felvenni |

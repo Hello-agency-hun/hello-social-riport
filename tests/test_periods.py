@@ -3,7 +3,15 @@ from datetime import date
 import pytest
 
 from pipeline.errors import MeasurementPeriodError
-from pipeline.periods import continuity, resolve_period
+from pipeline.periods import (
+    continuity,
+    filter_daily,
+    filter_items,
+    filter_posts,
+    require_complete_daily,
+    resolve_period,
+)
+from pipeline.schema import ContentItem, DailySeries, Post
 
 
 def test_manager_dates_win_and_period_uses_the_closing_month():
@@ -104,3 +112,66 @@ def test_gap_overlap_first_and_nonstandard_are_distinct(
     start, end, previous_end, expected
 ):
     assert continuity(start, end, previous_end)["status"] == expected
+
+
+def test_daily_filter_is_inclusive_and_returns_a_new_series():
+    original = DailySeries(
+        channel="facebook",
+        field="visits",
+        metric="Facebook-felkeresések",
+        points=[
+            (date(2026, 6, 24), 1),
+            (date(2026, 6, 25), 2),
+            (date(2026, 7, 24), 3),
+            (date(2026, 7, 25), 4),
+        ],
+    )
+
+    filtered = filter_daily(original, date(2026, 6, 25), date(2026, 7, 24))
+
+    assert filtered.points == [
+        (date(2026, 6, 25), 2),
+        (date(2026, 7, 24), 3),
+    ]
+    assert original.points[0][0] == date(2026, 6, 24)
+    assert filtered is not original
+
+
+def test_daily_completeness_names_metric_and_every_missing_day():
+    series = DailySeries(
+        channel="instagram",
+        field="visits",
+        metric="Instagram-felkeresések",
+        points=[
+            (date(2026, 7, 1), 1),
+            (date(2026, 7, 2), 1),
+            (date(2026, 7, 4), 1),
+        ],
+    )
+
+    with pytest.raises(MeasurementPeriodError) as caught:
+        require_complete_daily(series, date(2026, 7, 1), date(2026, 7, 5))
+
+    assert "Instagram-felkeresések" in str(caught.value)
+    assert "2026-07-03" in str(caught.value)
+    assert "2026-07-05" in str(caught.value)
+
+
+def test_sparse_content_is_filtered_without_requiring_boundary_posts():
+    posts = [
+        Post("facebook", "before", date(2026, 6, 24)),
+        Post("facebook", "inside", date(2026, 7, 10)),
+        Post("facebook", "after", date(2026, 7, 25)),
+    ]
+    items = [
+        ContentItem(date(2026, 6, 24), "image"),
+        ContentItem(date(2026, 7, 20), "reel"),
+        ContentItem(date(2026, 7, 25), "story"),
+    ]
+
+    assert [post.post_id for post in filter_posts(
+        posts, date(2026, 6, 25), date(2026, 7, 24)
+    )] == ["inside"]
+    assert [item.post_type for item in filter_items(
+        items, date(2026, 6, 25), date(2026, 7, 24)
+    )] == ["reel"]

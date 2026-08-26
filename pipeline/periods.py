@@ -1,10 +1,11 @@
 """Exact, inclusive measurement-period resolution for every report."""
 
 from calendar import monthrange
-from dataclasses import dataclass
-from datetime import date
+from dataclasses import dataclass, replace
+from datetime import date, timedelta
 
 from pipeline.errors import MeasurementPeriodError
+from pipeline.schema import ContentItem, DailySeries, Post
 
 
 @dataclass(frozen=True)
@@ -115,3 +116,40 @@ def resolve_period(
         source=source,
         credibility=credibility,
     )
+
+
+def filter_daily(series: DailySeries, start: date, end: date) -> DailySeries:
+    """Return only inclusive in-window points without mutating parser output."""
+    return replace(
+        series,
+        points=[point for point in series.points if start <= point[0] <= end],
+    )
+
+
+def require_complete_daily(series: DailySeries, start: date, end: date) -> None:
+    """Reject a daily metric when any requested calendar day is absent."""
+    present = {day for day, _ in series.points}
+    missing: list[date] = []
+    cursor = start
+    while cursor <= end:
+        if cursor not in present:
+            missing.append(cursor)
+        cursor += timedelta(days=1)
+    if missing:
+        dates = ", ".join(day.isoformat() for day in missing)
+        raise MeasurementPeriodError(
+            f"{series.metric}: hiányzó napi adatok — {dates}. "
+            "Töltsd le újra ezt a csempét a teljes mérési időszakra."
+        )
+
+
+def filter_posts(posts: list[Post], start: date, end: date) -> list[Post]:
+    """Filter sparse Meta content rows; boundary-day posts are not required."""
+    return [post for post in posts if start <= post.published <= end]
+
+
+def filter_items(
+    items: list[ContentItem], start: date, end: date
+) -> list[ContentItem]:
+    """Filter sparse scheduler rows; boundary-day posts are not required."""
+    return [item for item in items if start <= item.published <= end]

@@ -164,3 +164,42 @@ def test_always_on_campaigns_are_still_not_boosts():
 
     assert _boost_channel("Mammut_Always-on forgalomterelés") is None
     assert _boost_channel("Nyári kampány — bejegyzések helyett") is None
+
+
+def test_campaign_state_uses_real_campaign_dates_and_report_window(tmp_path):
+    path = tmp_path / "campaign-state.csv"
+    path.write_text(
+        "Kampány neve,Eredmény jelzése,Elérés,Megjelenések,Eredmények,"
+        "Jelentés kezdete,Jelentés vége,Kezdés,Vége,Kampány teljesítése,"
+        "Elköltött összeg (HUF)\n"
+        "Nyári kampány,reach,123,456,42,2026-06-01,2026-07-31,"
+        "2026-06-20,folyamatban,ACTIVE,789\n",
+        encoding="utf-8",
+    )
+
+    campaign = parse(path).payload.campaigns[0]
+
+    assert campaign.start_date == date(2026, 6, 20)
+    assert campaign.end_date is None
+    assert campaign.is_ongoing is True
+    assert campaign.delivery_status == "active"
+    assert campaign.report_start == date(2026, 6, 1)
+    assert campaign.report_end == date(2026, 7, 31)
+
+
+def test_report_start_is_never_reused_as_a_missing_campaign_start(tmp_path):
+    path = tmp_path / "campaign-without-start.csv"
+    path.write_text(
+        "Kampány neve,Eredmény jelzése,Elérés,Megjelenések,"
+        "Jelentés kezdete,Jelentés vége,Vége,Kampány teljesítése,"
+        "Elköltött összeg (HUF)\n"
+        "Nyári kampány,reach,123,456,2026-06-01,2026-07-31,"
+        "2026-07-20,COMPLETED,789\n",
+        encoding="utf-8",
+    )
+
+    campaign = parse(path).payload.campaigns[0]
+
+    assert campaign.start_date is None
+    assert campaign.end_date == date(2026, 7, 20)
+    assert campaign.report_start == date(2026, 6, 1)

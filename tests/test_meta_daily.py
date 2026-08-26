@@ -1,6 +1,9 @@
+from datetime import date
+
 import pytest
 
 from pipeline.errors import PipelineError, UnknownSourceError
+from pipeline.periods import filter_daily
 from pipeline.parsers.meta_daily import parse
 
 
@@ -113,3 +116,15 @@ def test_ambiguous_metric_help_offers_the_file_name_key(tmp_path):
     odd = _write(tmp_path / "Megtekintések-2.csv", 'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","5"\n')
     with pytest.raises(UnknownSourceError, match="Megtekintések-2.csv"):
         parse(odd)
+
+
+def test_parsed_daily_export_can_be_filtered_to_an_inclusive_subperiod(input_file):
+    series = parse(input_file("Felkeresések.csv")).payload
+
+    filtered = filter_daily(series, date(2026, 7, 10), date(2026, 7, 12))
+
+    assert [day for day, _ in filtered.points] == [
+        date(2026, 7, 10),
+        date(2026, 7, 11),
+        date(2026, 7, 12),
+    ]

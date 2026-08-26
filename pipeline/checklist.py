@@ -18,7 +18,12 @@ Instagram-sorokat.
 FIVE_TILES = "Felkeresések · Hivatkozáskattintások · Interakciók · Követők · Megtekintések"
 
 
-def render(client: dict | None, directory: str) -> str:
+def render(
+    client: dict | None,
+    directory: str,
+    measurement_start: str | None = None,
+    measurement_end: str | None = None,
+) -> str:
     client = client or {}
     has_fb = bool(client.get("fb_page_id") or client.get("fb_page_name"))
     has_ig = bool(client.get("ig_handle"))
@@ -27,12 +32,22 @@ def render(client: dict | None, directory: str) -> str:
     if not has_fb and not has_ig:
         has_fb = has_ig = True
 
+    exact_range = (
+        f"{measurement_start} – {measurement_end}"
+        if measurement_start and measurement_end
+        else "a kiválasztott pontos mérési időszak"
+    )
     lines = [
         f"Töltsd ide: {directory}/input/",
         "Ne nevezd át a fájlokat — a nevük adatot hordoz (lásd a Megtekintéseket).",
         "",
-        "□ ZoomSphere → Scheduler → export a hónapra → .XLSX     (NEM pdf!)",
-        "□ Meta Ads Manager → Kampányok → hónap → Exportálás → .CSV  (NEM xlsx!)",
+        f"Mérési időszak: {exact_range} (a 25–24-es pénzügyi ciklus teljes értékű hónap).",
+        "Minden napi, Tartalom- és Scheduler-exportnál pontosan ezt az időszakot állítsd be.",
+        "",
+        "□ ZoomSphere → Scheduler → export erre az időszakra → .XLSX     (NEM pdf!)",
+        "□ Meta Ads Manager → Kampányok → ugyanerre az időszakra → Exportálás → .CSV  (NEM xlsx!)",
+        "  Ha az Ads-export tágabb időszakot fed, a teljes összeg bekerül, de tájékoztató jelölést kap.",
+        "  A Jelentés kezdete/vége a lekérési ablak; nem a kampány kezdete/vége.",
     ]
 
     if has_fb:

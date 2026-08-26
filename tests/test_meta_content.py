@@ -1,5 +1,6 @@
 from datetime import date
 
+from pipeline.periods import filter_posts
 from pipeline.parsers.meta_content import parse
 
 
@@ -74,3 +75,13 @@ def test_facebook_title_still_wins_over_the_description(tmp_path):
     )
     post = parse(csv_path).payload[0]
     assert post.caption == "A poszt szövege"
+
+
+def test_content_filter_drops_posts_outside_the_requested_dates(input_file):
+    posts = parse(input_file("Jul-01-2026")).payload
+
+    filtered = filter_posts(posts, date(2026, 7, 10), date(2026, 7, 20))
+
+    assert filtered
+    assert all(date(2026, 7, 10) <= post.published <= date(2026, 7, 20)
+               for post in filtered)

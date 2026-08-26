@@ -42,7 +42,11 @@ az nem azt jelenti, hogy keress adatot valahol a repóban — azt jelenti, hogy
 
 A sorrend:
 
-1. **Kérdezd meg az ügyfél nevét és a hónapot**, ha nem egyértelmű.
+1. **Kérdezd meg az ügyfél nevét, a záróhónapot és a két konkrét mérési
+   dátumot**, ha ismertek. A 25–24-es pénzügyi ciklus teljes értékű havi
+   mérés; a következő időszak az előző záródátum utáni napon induljon. Ha a
+   dátumok még nincsenek meg, ettől a projekt létrehozása nem állhat meg: a
+   motor az exportokból próbálja feloldani őket.
 2. **Hozd létre a mappát**: `clients/<ugyfel>/<YYYY-MM>/input/`, és **mondd meg
    a pontos útvonalat**.
 3. **Add oda a checklistet, szó szerint** — ne prózát:
