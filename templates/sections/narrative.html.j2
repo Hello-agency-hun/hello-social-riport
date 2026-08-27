@@ -32,7 +32,7 @@
       <h3 class="accent" style="margin-bottom:16px">{{ t.what_worked }}</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_worked %}
-        <li style="margin-bottom:14px;font-size:18px"
+        <li style="margin-bottom:{{ 14 if assessment_font >= 18 else 10 }}px;font-size:{{ assessment_font }}px"
             data-narrative="what_worked.{{ loop.index0 }}">{{ item | safe }}</li>
         {% endfor %}
       </ul>
@@ -41,7 +41,7 @@
       <h3 style="margin-bottom:16px">{{ t.what_to_improve }}</h3>
       <ul style="padding-left:20px">
         {% for item in narrative.what_to_improve %}
-        <li style="margin-bottom:14px;font-size:18px"
+        <li style="margin-bottom:{{ 14 if assessment_font >= 18 else 10 }}px;font-size:{{ assessment_font }}px"
             data-narrative="what_to_improve.{{ loop.index0 }}">{{ item | safe }}</li>
         {% endfor %}
       </ul>

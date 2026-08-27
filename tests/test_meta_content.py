@@ -85,3 +85,76 @@ def test_content_filter_drops_posts_outside_the_requested_dates(input_file):
     assert filtered
     assert all(date(2026, 7, 10) <= post.published <= date(2026, 7, 20)
                for post in filtered)
+
+
+def test_instagram_likes_are_read_as_reactions(tmp_path):
+    """Az Instagram Tartalom exportjában nincs `Reakciók` oszlop.
+
+    Ott `Kedvelések` a neve. Amíg csak a `Reakciók`-at olvastuk, minden
+    Instagram-poszt nulla reakcióval jött be: a Mammut júliusi exportjában
+    tizenkilenc posztra nulla reakció, miközben hozzászólás és megosztás volt.
+    Ettől a rezonancia nullára esett, a mezőny mediánja is nulla lett, és a
+    riportban a `nincs stabil alap` felirat jelent meg.
+    """
+    csv_path = tmp_path / "ig.csv"
+    csv_path.write_text(
+        "Bejegyzésazonosító,Fiókazonosító,Leírás,"
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés,Kedvelések,Megosztások,Hozzászólások,Mentések\n"
+        "181,178,Nyári ajánlat,"
+        '"07/03/2026 10:00","https://www.instagram.com/reel/AAA/",REEL,100,80,42,3,5,7\n',
+        encoding="utf-8",
+    )
+    post = parse(csv_path).payload[0]
+    assert post.channel == "instagram"
+    assert post.reactions == 42
+    assert post.comments == 5
+    assert post.shares == 3
+
+
+def test_facebook_reactions_column_still_wins(tmp_path):
+    csv_path = tmp_path / "fb.csv"
+    csv_path.write_text(
+        'Bejegyzésazonosító,Oldalazonosító,"Oldal neve",Cím,'
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés,Reakciók,Hozzászólások,Megosztások\n"
+        '148,100,"Mammut","A poszt",'
+        '"07/03/2026 10:00","https://www.facebook.com/100_148",POST,100,80,9,2,1\n',
+        encoding="utf-8",
+    )
+    post = parse(csv_path).payload[0]
+    assert post.reactions == 9
+
+
+def test_instagram_saves_are_read(tmp_path):
+    """A `Mentések` oszlop csak az Instagram exportjában létezik.
+
+    A mentés nem díszlet: a Mammut júliusi exportjában ötvenhét mentés volt,
+    miközben hozzászólás mindössze tizenegy. Ha nem olvassuk be, az Instagram
+    egyik legerősebb szándékjelzése hiányzik a pontozásból.
+    """
+    csv_path = tmp_path / "ig.csv"
+    csv_path.write_text(
+        "Bejegyzésazonosító,Fiókazonosító,Leírás,"
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés,Kedvelések,Megosztások,Hozzászólások,Mentések\n"
+        "181,178,Nyári ajánlat,"
+        '"07/03/2026 10:00","https://www.instagram.com/reel/AAA/",REEL,100,80,42,3,5,7\n',
+        encoding="utf-8",
+    )
+    post = parse(csv_path).payload[0]
+    assert post.saves == 7
+
+
+def test_facebook_export_has_no_saves(tmp_path):
+    """A Facebook exportjában nincs ilyen oszlop — nulla marad, nem hiba."""
+    csv_path = tmp_path / "fb.csv"
+    csv_path.write_text(
+        'Bejegyzésazonosító,Oldalazonosító,"Oldal neve",Cím,'
+        '"Közzététel időpontja","Állandó hivatkozás","Bejegyzés típusa",'
+        "Megtekintések,Elérés,Reakciók,Hozzászólások,Megosztások\n"
+        '148,100,"Mammut","A poszt",'
+        '"07/03/2026 10:00","https://www.facebook.com/100_148",POST,100,80,9,2,1\n',
+        encoding="utf-8",
+    )
+    assert parse(csv_path).payload[0].saves == 0

@@ -392,7 +392,7 @@ def test_posts_without_a_stable_baseline_are_not_drawn_as_zero(data, tmp_path):
             post["score"]["vs_typical"] = None
     measured["caption"] = "Nincs stabil viszonyítási alap"
     out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
-    assert "nincs stabil alap" in out
+    assert "nem viszonyítható" in out
     assert 'aria-label="Facebook — Teljesítmény a szokásoshoz képest"' not in out
 
 
@@ -416,3 +416,52 @@ def test_list_items_in_the_evaluation_are_editable(data, tmp_path):
     assert 'data-narrative="what_worked.0"' in out
     assert 'data-narrative="what_to_improve.0"' in out
     assert 'data-narrative="next_steps.0"' in out
+
+
+def test_huf_has_no_decimals():
+    """A forintnak nincs váltópénze — a `234 217,00 HUF` hibásnak látszik.
+
+    A Mammut augusztusi éles riportjában minden összeg két tizedessel jelent
+    meg. Az euró és a dollár esetén a két tizedes helyes, a forintnál nem.
+    """
+    from pipeline.render import _money
+
+    assert _money(234217, "HUF") == "234 217 HUF"
+    assert _money(9958, "HUF") == "9 958 HUF"
+    assert _money(472.71, "EUR") == "472,71 EUR"
+    assert _money(472.71, "USD", "en") == "$472.71"
+
+
+def test_narrative_money_follows_the_same_rule():
+    from pipeline.narrative import _format
+
+    data = {"paid": {"currency": "HUF"}}
+    assert _format(184261, "money", data) == "184 261 HUF"
+    data = {"paid": {"currency": "EUR"}}
+    assert _format(472.71, "money", data) == "472,71 EUR"
+
+
+def test_long_assessment_text_scales_down_instead_of_overflowing():
+    """A 16:9-es oldal magassága kötött, a narratíva hossza nem az.
+
+    A Mammut augusztusi éles riportjában a „Mi működött" panel 1119 karaktert
+    kapott az OpenAI-narratívától; a panelbe 637 pixel fér, a tartalom 678
+    pixel lett, és 115 pixellel túlcsordult az oldal. Vágni nem szabad —
+    az ügyfélnek szánt mondat veszne el —, ezért a betűméret lép lejjebb.
+    """
+    from pipeline.render import _assessment_font
+
+    assert _assessment_font([], []) == 18
+    assert _assessment_font(["a" * 200], ["a" * 200]) == 18
+    long_panel = ["a" * 164, "a" * 652, "a" * 303]
+    assert _assessment_font(long_panel, ["a" * 491]) < 18
+    assert _assessment_font(["a" * 3000], []) <= 14
+
+
+def test_assessment_font_follows_the_longer_panel():
+    """A két panel egy rácsban ül, azonos magasságban — a hosszabbik dönt."""
+    from pipeline.render import _assessment_font
+
+    assert _assessment_font(["a" * 1500], ["rövid"]) == _assessment_font(
+        ["rövid"], ["a" * 1500]
+    )

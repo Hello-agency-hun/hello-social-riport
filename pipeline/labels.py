@@ -8,6 +8,16 @@ Ismeretlen kulcsnál a nyers érték marad. Így ha a Meta új eredménytípust 
 be, az látható lesz a riportban — csak csúnyán —, nem pedig eltűnik.
 """
 
+# A forintnak nincs váltópénze: a `234 217,00 HUF` hibásnak látszik a riportban,
+# és az ügyfél két fölösleges számjegyet olvas minden összegnél. Az euró és a
+# dollár esetén a két tizedes helyes, ezért ez pénznemenként dől el, nem globálisan.
+ZERO_DECIMAL_CURRENCIES = {"HUF", "JPY", "KRW", "ISK", "CLP", "VND"}
+
+
+def money_digits(currency: str) -> int:
+    return 0 if (currency or "").upper() in ZERO_DECIMAL_CURRENCIES else 2
+
+
 PAGE_FIELDS = {
     "hu": {
         "visits": "Felkeresések",

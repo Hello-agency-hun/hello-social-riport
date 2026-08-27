@@ -56,9 +56,16 @@ def parse(path) -> ParsedSource:
                 post_type=row.get("Bejegyzés típusa", "").strip(),
                 reach=_number(row.get("Elérés", "")),
                 views=_number(row.get("Megtekintések", "")),
-                reactions=_number(row.get("Reakciók", "")),
+                # A Facebook exportjában `Reakciók`, az Instagraméban
+                # `Kedvelések` — utóbbiban `Reakciók` oszlop nincs is. Amíg
+                # csak az elsőt olvastuk, minden Instagram-poszt nulla
+                # reakcióval jött be, a rezonanciája nullára esett, és a
+                # riportban a mezőny mediánja is nulla lett.
+                reactions=_number(row.get("Reakciók") or row.get("Kedvelések") or ""),
                 comments=_number(row.get("Hozzászólások", "")),
                 shares=_number(row.get("Megosztások", "")),
+                # `Mentések` csak az Instagram exportjában van.
+                saves=_number(row.get("Mentések", "")),
                 clicks=_number(row.get("Összes kattintás", "")),
                 link_clicks=_number(row.get("Hivatkozáskattintások", "")),
                 organic_measured=True,
