@@ -59,6 +59,19 @@ def test_matching_client_passes():
     )
 
 
+def test_alternate_meta_page_id_passes_when_page_name_matches():
+    check_client(
+        {
+            "page_id": "100064789718198",
+            "page_name": "Mammut Bevásárló- és Szórakoztató Központ",
+        },
+        {
+            "fb_page_id": "218802662004",
+            "fb_page_name": "mammut.bevasarlo.es.szorakoztato.kozpont",
+        },
+    )
+
+
 def test_display_name_and_page_slug_are_the_same_client():
     check_client(
         {"page_name": "Mammut Bevásárló- és Szórakoztató Központ"},
@@ -78,5 +91,13 @@ def test_foreign_page_id_raises():
     with pytest.raises(ClientMismatchError, match="page_id"):
         check_client(
             {"page_id": "999", "page_name": "Mammut"},
+            {"fb_page_id": "100064824963030", "fb_page_name": "Larus Étterem"},
+        )
+
+
+def test_foreign_page_id_raises_without_page_name():
+    with pytest.raises(ClientMismatchError, match="page_id"):
+        check_client(
+            {"page_id": "999"},
             {"fb_page_id": "100064824963030", "fb_page_name": "Larus Étterem"},
         )

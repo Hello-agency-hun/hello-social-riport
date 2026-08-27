@@ -186,6 +186,7 @@ def test_foreign_client_is_rejected(fixture_dir, tmp_path):
     shutil.copytree(fixture_dir, other)
     config = yaml.safe_load((other / "client.yaml").read_text(encoding="utf-8"))
     config["client"]["fb_page_id"] = "999999"
+    config["client"]["fb_page_name"] = "Másik ügyfél"
     (other / "client.yaml").write_text(
         yaml.safe_dump(config, allow_unicode=True), encoding="utf-8"
     )

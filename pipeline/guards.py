@@ -58,12 +58,19 @@ def _identity_key(value: str) -> str:
 
 
 def check_client(hints: dict[str, str], config: dict[str, str]) -> None:
+    found_name = hints.get("page_name")
+    expected_name = config.get("fb_page_name")
+    names_match = bool(
+        found_name
+        and expected_name
+        and _identity_key(found_name) == _identity_key(expected_name)
+    )
     pairs = [("page_id", "fb_page_id"), ("page_name", "fb_page_name")]
     for hint_key, config_key in pairs:
         found, expected = hints.get(hint_key), config.get(config_key)
         if not found or not expected or found == expected:
             continue
-        if hint_key == "page_name" and _identity_key(found) == _identity_key(expected):
+        if names_match:
             continue
         if found != expected:
             raise ClientMismatchError(
