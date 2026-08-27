@@ -119,10 +119,22 @@ def resolve_period(
 
 
 def filter_daily(series: DailySeries, start: date, end: date) -> DailySeries:
-    """Return only inclusive in-window points without mutating parser output."""
+    """Return inclusive points and restore Meta's omitted Instagram zero days."""
+    points = [point for point in series.points if start <= point[0] <= end]
+    if series.channel == "instagram" and series.field == "follows":
+        # A Meta az Instagram-követések CSV-jéből kihagyja azokat a napokat,
+        # amelyeken nem érkezett új követés. Más napi csempék explicit nulla
+        # sorokat adnak, ezért csak ennél az ismert sparse metrikánál biztonságos
+        # a hiányzó dátumot nullaként visszaállítani.
+        values = dict(points)
+        points = []
+        cursor = start
+        while cursor <= end:
+            points.append((cursor, values.get(cursor, 0)))
+            cursor += timedelta(days=1)
     return replace(
         series,
-        points=[point for point in series.points if start <= point[0] <= end],
+        points=points,
     )
 
 

@@ -137,6 +137,28 @@ def test_daily_filter_is_inclusive_and_returns_a_new_series():
     assert filtered is not original
 
 
+def test_instagram_follows_filter_fills_meta_omitted_zero_days():
+    series = DailySeries(
+        channel="instagram",
+        field="follows",
+        metric="Instagram-követések",
+        points=[
+            (date(2026, 7, 26), 3),
+            (date(2026, 7, 28), 2),
+        ],
+    )
+
+    filtered = filter_daily(series, date(2026, 7, 25), date(2026, 7, 28))
+
+    assert filtered.points == [
+        (date(2026, 7, 25), 0),
+        (date(2026, 7, 26), 3),
+        (date(2026, 7, 27), 0),
+        (date(2026, 7, 28), 2),
+    ]
+    require_complete_daily(filtered, date(2026, 7, 25), date(2026, 7, 28))
+
+
 def test_daily_completeness_names_metric_and_every_missing_day():
     series = DailySeries(
         channel="instagram",
