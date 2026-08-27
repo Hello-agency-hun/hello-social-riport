@@ -41,6 +41,17 @@ def test_stylesheet_inlines_the_fonts_as_data_uris():
     assert "@page" in css, "a print.css-nek is benne kell lennie"
 
 
+def test_last_report_page_does_not_create_a_blank_pdf_page():
+    """A riportoldalak utan script tagek jonnek, ezert a :last-child nem talalna
+    el az utolso sectionre, es a kotelezo oldaltores egy ures PDF-lapot adna.
+    """
+    from pipeline.assets import stylesheet
+
+    css = stylesheet()
+    assert ".page:last-of-type" in css
+    assert ".page:last-child" not in css
+
+
 def test_stylesheet_has_no_external_reference():
     """A kész riport offline is működik."""
     from pipeline.assets import stylesheet

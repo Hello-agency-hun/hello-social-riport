@@ -27,7 +27,9 @@
     break-after: page;
     box-shadow: none;
   }
-  .page:last-child { page-break-after: auto; break-after: auto; }
+  /* A riportoldalak utan szerkesztoi script tagek is allhatnak, ezert a
+     :last-child nem feltetlenul az utolso oldalra illeszkedik. */
+  .page:last-of-type { page-break-after: auto; break-after: auto; }
   .no-print { display: none !important; }
   .manual-slot { display: none !important; }
   /* A szerkeszthető HTML-ben maradjanak meg a még kitölthető előző havi
