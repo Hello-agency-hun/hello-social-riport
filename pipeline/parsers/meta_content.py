@@ -64,8 +64,9 @@ def parse(path) -> ParsedSource:
                 reactions=_number(row.get("Reakciók") or row.get("Kedvelések") or ""),
                 comments=_number(row.get("Hozzászólások", "")),
                 shares=_number(row.get("Megosztások", "")),
-                # `Mentések` csak az Instagram exportjában van.
-                saves=_number(row.get("Mentések", "")),
+                # `Mentések` csak az Instagram exportjában van. Ha az oszlop
+                # hiányzik, nem nullát írunk, hanem semmit.
+                saves=_number(row["Mentések"]) if "Mentések" in row else None,
                 clicks=_number(row.get("Összes kattintás", "")),
                 link_clicks=_number(row.get("Hivatkozáskattintások", "")),
                 organic_measured=True,

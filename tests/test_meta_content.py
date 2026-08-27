@@ -147,7 +147,7 @@ def test_instagram_saves_are_read(tmp_path):
 
 
 def test_facebook_export_has_no_saves(tmp_path):
-    """A Facebook exportjában nincs ilyen oszlop — nulla marad, nem hiba."""
+    """A Facebook exportjában nincs ilyen oszlop — így nem is nulla, hanem semmi."""
     csv_path = tmp_path / "fb.csv"
     csv_path.write_text(
         'Bejegyzésazonosító,Oldalazonosító,"Oldal neve",Cím,'
@@ -157,4 +157,4 @@ def test_facebook_export_has_no_saves(tmp_path):
         '"07/03/2026 10:00","https://www.facebook.com/100_148",POST,100,80,9,2,1\n',
         encoding="utf-8",
     )
-    assert parse(csv_path).payload[0].saves == 0
+    assert parse(csv_path).payload[0].saves is None

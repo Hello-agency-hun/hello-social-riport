@@ -161,12 +161,18 @@ def engagement_breakdown(posts) -> dict:
         raw = post.get(field) if isinstance(post, dict) else getattr(post, field, 0)
         return int(raw or 0)
 
+    def raw(post, field):
+        return post.get(field) if isinstance(post, dict) else getattr(post, field, None)
+
     out = {
         field: sum(value(post, field) for post in measured)
         for field in ENGAGEMENT_FIELDS
     }
     out["total"] = sum(out.values())
     out["posts_counted"] = len(measured)
+    # A mentést a Facebook exportja nem is tartalmazza. Külön jelezzük, hogy a
+    # riport a mért nullát megmutathassa, a nem mértet viszont elhagyja.
+    out["saves_measured"] = any(raw(post, "saves") is not None for post in measured)
     return out
 
 

@@ -144,6 +144,12 @@ def test_essentials_template_keeps_zero_saves_visible():
         encoding="utf-8"
     )
 
+    # A mért nullát nem rejtjük el — az adat, nem hiány. A `{% if post.saves %}`
+    # viszont pont ezt tenné: a nullát hamisnak veszi.
     assert "{% if post.saves %}" not in source
     assert "{% if block.engagement.saves %}" not in source
+    # A NEM mért mentést viszont el kell hagyni: a Facebook exportjában nincs is
+    # ilyen oszlop, ott a nulla olyat állítana, amit sosem mértünk.
+    assert "{% if post.saves is not none %}" in source
+    assert "{% if block.engagement.saves_measured %}" in source
     assert "t.essentials_impressions" in source

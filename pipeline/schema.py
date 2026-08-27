@@ -58,8 +58,10 @@ class Post:
     reactions: int = 0
     comments: int = 0
     shares: int = 0
-    # Csak az Instagram exportjában létezik; a Facebookén nulla marad.
-    saves: int = 0
+    # Csak az Instagram exportjában létezik. A Facebookén NINCS ilyen oszlop,
+    # ezért ott `None` — a nulla azt állítaná, hogy mértük és senki nem
+    # mentette el, pedig meg sem mérhettük.
+    saves: int | None = None
     clicks: int = 0
     link_clicks: int = 0
     paid: Campaign | None = None
