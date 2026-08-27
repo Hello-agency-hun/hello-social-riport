@@ -560,6 +560,10 @@ def build(
         "measurement_credibility": resolved.credibility,
         "currency": ads_payload.currency if ads_payload else "EUR",
         "language": config.get("report", {}).get("language", "hu"),
+        # Melyik riportot kérte a menedzser: a teljeset vagy a rövid
+        # Essentialst. A számolás mindkettőnél ugyanaz — csak kevesebb kerül
+        # belőle a riportba.
+        "variant": config.get("report", {}).get("variant", "full"),
         "comparison_headline": config.get("report", {}).get(
             "comparison_headline", "value"
         ),

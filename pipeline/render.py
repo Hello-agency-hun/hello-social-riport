@@ -8,7 +8,7 @@ from typing import Callable
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline import charts, i18n, images, labels
+from pipeline import charts, i18n, images, kpi, labels
 from pipeline import manual as manual_module
 from pipeline import performance
 from pipeline import narrative as narrative_module
@@ -44,6 +44,40 @@ def _signed(value, digits: int = 0, language: str = "hu") -> str:
         return "–"
     text = _number(abs(value), digits, language)
     return f"+{text}" if value > 0 else (f"−{text}" if value < 0 else text)
+
+
+# Az Essentials riport rövidebb: tíz dia, és a legjobb posztok sorrendjét nem
+# a rezonancia-index adja, hanem az interakciók száma. A kártyán mindkét szám
+# ott van — az elérés is —, hogy látszódjon, mihez képest erős a poszt.
+ESSENTIALS_POSTS = 3
+TEMPLATES_BY_VARIANT = {
+    "essentials": "report-essentials.html.j2",
+    "full": "report.html.j2",
+}
+
+
+def _template_name(variant) -> str:
+    """Ismeretlen változatnál a teljes riport — némán rossz sablont nem adunk."""
+    return TEMPLATES_BY_VARIANT.get(variant or "full", "report.html.j2")
+
+
+def _interactions(post: dict) -> int:
+    return sum(int(post.get(field) or 0) for field in kpi.ENGAGEMENT_FIELDS)
+
+
+def _essentials_posts(posts: list[dict]) -> list[dict]:
+    """A három legtöbb interakciót kapott mért poszt.
+
+    Elérés szerint rangsorolni annyi volna, mint költés szerint. Az elérés
+    így is látszik a kártyán, csak nem az dönti el a sorrendet — döntetlennél
+    viszont igen.
+    """
+    measured = [post for post in posts if post.get("organic_measured")]
+    ordered = sorted(
+        measured,
+        key=lambda post: (-_interactions(post), -int(post.get("reach") or 0)),
+    )
+    return ordered[:ESSENTIALS_POSTS]
 
 
 # A 16:9-es oldal magassága kötött, a narratíva hossza nem az. A Mammut
@@ -263,12 +297,17 @@ def render(
         # Teljesítmény szerint, nem elérés szerint. Elérés szerint rangsorolni
         # annyi volna, mint költés szerint: amelyik posztra a legtöbb pénz ment,
         # az lenne elöl — ez tautológia, nem megállapítás. Lásd `performance.py`.
+        essentials = data.get("meta", {}).get("variant") == "essentials"
         ranked = performance.balanced(block["posts"], limit=6)
         if not ranked:
             # Nincs mért elérés ezen a csatornán — marad a régi sorrend, hogy
             # a boostolt posztok legalább megjelenjenek.
             ranked = sorted(block["posts"], key=lambda post: -post["reach"])
-        selected = [post for post in ranked if post["reach"]][:6]
+        selected = (
+            _essentials_posts(block["posts"])
+            if essentials
+            else [post for post in ranked if post["reach"]][:6]
+        )
         if not selected:
             # Ezen a csatornán nincs mért elérés — a boostoltakat emeljük ki,
             # mert azokról van mért fizetett adatunk.
@@ -318,7 +357,9 @@ def render(
                 value_format=lambda value: _number(value, 1) + "×",
             )
 
-    template = _environment(language).get_template("report.html.j2")
+    template = _environment(language).get_template(
+        _template_name(data.get("meta", {}).get("variant"))
+    )
     return template.render(
         data=data,
         trends=trends,
@@ -343,6 +384,14 @@ def render(
             (resolved or {}).get("what_to_improve") or [],
         ),
         campaign_narrative=(resolved or {}).get("campaign_status") or {},
+        # Az Essentials csatornánként egy rövid összefoglalót mutat. Ha a
+        # narratíva nem tartalmazza, a dia a számokkal áll meg — kitalálni
+        # nem találunk ki hozzá szöveget.
+        essentials_overview={
+            name: (resolved or {}).get(f"{name}_overview")
+            for name in data.get("channels", {})
+            if (resolved or {}).get(f"{name}_overview")
+        },
         campaign_pages=campaign_pages,
         campaign_status_counts=campaign_status_counts,
         ads_period=data.get("quality", {}).get("ads_period") or {},

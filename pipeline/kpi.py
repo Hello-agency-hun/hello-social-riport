@@ -125,6 +125,41 @@ def cross_channel(posts: list[Post]) -> dict:
     }
 
 
+ENGAGEMENT_FIELDS = ("reactions", "comments", "shares", "saves")
+
+
+def engagement_breakdown(posts) -> dict:
+    """Interakció típusonként, a MÉRT posztokból.
+
+    Nem azonos a Business Suite `Interakciók` csempéjével, és nem is szabad
+    annak látszania: a csempe oldal-szintű — a story, a profil és a hirdetés
+    is beleszámít —, ez pedig csak a Tartalom exportban szereplő posztoké. A
+    Mammut júliusában a kettő 1691 és 1150 volt ugyanarra a csatornára. Ezért
+    külön mezőben él, és a riportban külön feliratot kap.
+
+    A nem mért poszt kimarad: nullaként beszámítani azt jelentené, hogy
+    „mértük, és nem reagált rá senki" — pedig nem mértük.
+    """
+    measured = [
+        post
+        for post in posts
+        if (post.get("organic_measured") if isinstance(post, dict)
+            else getattr(post, "organic_measured", False))
+    ]
+
+    def value(post, field):
+        raw = post.get(field) if isinstance(post, dict) else getattr(post, field, 0)
+        return int(raw or 0)
+
+    out = {
+        field: sum(value(post, field) for post in measured)
+        for field in ENGAGEMENT_FIELDS
+    }
+    out["total"] = sum(out.values())
+    out["posts_counted"] = len(measured)
+    return out
+
+
 def channel_blocks(series: list, posts: list, campaigns: list) -> dict:
     """Csatornánként egy blokk: napi idősorok, összegek, posztok, boostok.
 
@@ -153,5 +188,8 @@ def channel_blocks(series: list, posts: list, campaigns: list) -> dict:
     for campaign in campaigns:
         if campaign.is_boost and campaign.channel:
             block_for(campaign.channel)["boosts"].append(campaign)
+
+    for block in blocks.values():
+        block["engagement"] = engagement_breakdown(block["posts"])
 
     return blocks

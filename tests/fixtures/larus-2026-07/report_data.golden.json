@@ -8,6 +8,7 @@
     "measurement_credibility": "first_baseline",
     "currency": "EUR",
     "language": "hu",
+    "variant": "full",
     "comparison_headline": "value",
     "contact_email": "fixtures@helloagency.hu",
     "contact_email_is_guess": true,
@@ -1044,7 +1045,15 @@
           "report_start": "2026-07-01",
           "report_end": "2026-07-31"
         }
-      ]
+      ],
+      "engagement": {
+        "reactions": 0,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0,
+        "total": 0,
+        "posts_counted": 0
+      }
     },
     "facebook": {
       "daily": {
@@ -2179,7 +2188,15 @@
           "report_start": "2026-07-01",
           "report_end": "2026-07-31"
         }
-      ]
+      ],
+      "engagement": {
+        "reactions": 288,
+        "comments": 8,
+        "shares": 4,
+        "saves": 0,
+        "total": 300,
+        "posts_counted": 16
+      }
     }
   },
   "performance": {

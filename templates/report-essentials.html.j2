@@ -1,0 +1,193 @@
+{% from "macros.html.j2" import slot %}
+<!doctype html>
+<html lang="{{ data.meta.language }}">
+<head>
+<meta charset="utf-8">
+<title>{{ data.meta.client }} — {{ period_name }}</title>
+<style>{{ css | safe }}</style>
+</head>
+<body>
+
+<button class="pdf-button no-print" onclick="window.print()">{{ t.download_pdf }}</button>
+
+{# 1. Címlap #}
+<section class="page" style="justify-content:flex-end">
+  <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
+  <div class="eyebrow">{{ t.cover_eyebrow }}</div>
+  <h1>{{ data.meta.client }}</h1>
+  <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_name }}</h2>
+  <p class="note" style="margin-top:18px">{{ period_range }}</p>
+</section>
+
+{# 2. Közönségnövekedés #}
+<section class="page">
+  <div class="eyebrow">{{ t.essentials_audience }}</div>
+  <h2 style="margin-bottom:36px">{{ t.essentials_audience }}</h2>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+    {% for name, block in data.audience.items() %}
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
+      <div class="stat">{{ block.followers | num }}</div>
+      <div class="stat-label">{{ t.followers }}</div>
+      <div class="rule" style="margin:14px 0"></div>
+      <table style="font-size:15px">
+        <tr><td>{{ t.new_followers_label }}</td>
+            <td class="num"><strong>{{ block.new_followers | signed }}</strong></td></tr>
+        {% if block.growth is not none %}
+        <tr><td>{{ t.essentials_audience }}</td>
+            <td class="num">{{ (block.growth * 100) | num(2) }}%</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# 3. Elérés és megjelenés #}
+<section class="page">
+  <div class="eyebrow">{{ t.essentials_reach_impressions }}</div>
+  <h2 style="margin-bottom:36px">{{ t.essentials_reach_impressions }}</h2>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+    {% for name, block in data.channels.items() %}
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
+      <table style="font-size:17px">
+        <tr><td>{{ t.reach }}<br><span class="note">{{ t.page_level }}</span></td>
+            <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td></tr>
+        <tr><td>{{ "views" | field }}</td>
+            <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td></tr>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# 4. Elköteleződés és kattintások #}
+<section class="page">
+  <div class="eyebrow">{{ t.essentials_engagement }}</div>
+  <h2 style="margin-bottom:8px">{{ t.essentials_engagement }}</h2>
+  <p class="note" style="margin-bottom:22px;max-width:900px">{{ t.from_measured_posts }} — {{ t.page_level }}: {{ "interactions" | field }}</p>
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+    {% for name, block in data.channels.items() %}
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
+      <table style="font-size:15px">
+        <tr><td>{{ t.reactions }}</td><td class="num">{{ block.engagement.reactions | num }}</td></tr>
+        <tr><td>{{ t.comments }}</td><td class="num">{{ block.engagement.comments | num }}</td></tr>
+        <tr><td>{{ t.shares }}</td><td class="num">{{ block.engagement.shares | num }}</td></tr>
+        {% if block.engagement.saves %}
+        <tr><td>{{ t.saves }}</td><td class="num">{{ block.engagement.saves | num }}</td></tr>
+        {% endif %}
+        <tr><td><strong>{{ t.essentials_engagement }}</strong><br>
+            <span class="note">{{ t.from_measured_posts }}</span></td>
+            <td class="num"><strong>{{ block.engagement.total | num }}</strong></td></tr>
+        {% if block.totals.interactions %}
+        <tr><td>{{ "interactions" | field }}<br><span class="note">{{ t.page_level }}</span></td>
+            <td class="num">{{ block.totals.interactions | num }}</td></tr>
+        {% endif %}
+        <tr><td>{{ "link_clicks" | field }}</td>
+            <td class="num">{{ block.totals.link_clicks | num if block.totals.link_clicks else "–" }}</td></tr>
+        <tr><td>{{ "visits" | field }}</td>
+            <td class="num">{{ block.totals.visits | num if block.totals.visits else "–" }}</td></tr>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# 5–8. Csatornánként: a hónap számai, majd a három legjobb poszt #}
+{% for name, block in data.channels.items() %}
+<section class="page">
+  <div class="eyebrow">{{ name | channel }}</div>
+  <h2 style="margin-bottom:{{ 18 if essentials_overview.get(name) else 44 }}px">{{ t.month_performance }}</h2>
+  {% if essentials_overview.get(name) %}
+  <p style="margin-bottom:26px;max-width:1000px;color:var(--ink);font-size:18px;line-height:1.5"
+     data-narrative="{{ name }}_overview">{{ essentials_overview[name] | safe }}</p>
+  {% endif %}
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="panel">
+      <div class="stat">{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</div>
+      <div class="stat-label">{{ t.reach }}</div>
+    </div>
+    {% for key, value in block.totals.items() %}
+    <div class="panel">
+      <div class="stat">{{ value | num }}</div>
+      <div class="stat-label">{{ key | field }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% for chunk in channel_posts[name] %}
+<section class="page">
+  <div class="eyebrow">{{ name | channel }} · {{ t.highlighted_content }}</div>
+  <h2 style="margin-bottom:8px">{{ t.best_performing_posts }}</h2>
+  <p class="note" style="margin-bottom:20px">{{ t.interactions_ranked }}</p>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    {% for post in chunk %}
+    <div class="panel">
+      <img class="thumb" src="{{ post.thumb }}" alt="">
+      {% if name != "facebook" %}
+      <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
+      {% endif %}
+      <div class="rule" style="margin:12px 0"></div>
+      <table style="font-size:14px">
+        <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
+        <tr><td>{{ t.comments }}</td><td class="num">{{ post.comments | num }}</td></tr>
+        {% if post.saves %}
+        <tr><td>{{ t.saves }}</td><td class="num">{{ post.saves | num }}</td></tr>
+        {% endif %}
+        <tr><td>{{ t.shares }}</td><td class="num">{{ post.shares | num }}</td></tr>
+        <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
+        {% if post.paid %}
+        <tr><td class="accent">{{ t.paid_label }}</td>
+            <td class="num accent">{{ post.paid.spend | money(currency) }}</td></tr>
+        {% else %}
+        <tr><td>{{ t.organic_label }}</td><td class="num">—</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endfor %}
+
+{# 9. Összesített összefoglaló #}
+<section class="page">
+  <div class="eyebrow">{{ t.summary }}</div>
+  <h2 style="margin-bottom:36px">{{ t.essentials_summary_title }}</h2>
+  <table style="font-size:19px">
+    <tr><td></td>
+      {% for name in data.channels.keys() %}
+      <th class="num" style="padding-bottom:14px">{{ name | channel }}</th>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ t.followers }}</td>
+      {% for name in data.channels.keys() %}
+      <td class="num"><strong>{{ data.audience[name].followers | num if data.audience.get(name) else "–" }}</strong></td>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ "views" | field }}</td>
+      {% for name, block in data.channels.items() %}
+      <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ t.reach }}</td>
+      {% for name in data.channels.keys() %}
+      <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td>
+      {% endfor %}
+    </tr>
+  </table>
+</section>
+
+{# 10. Záróoldal #}
+<section class="page" style="justify-content:flex-end">
+  <div style="width:240px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
+  <h2>{{ data.meta.client }}</h2>
+  <p class="note" style="margin-top:12px">{{ data.meta.contact_email }}</p>
+</section>
+
+<script>{{ review_js | safe }}</script>
+</body>
+</html>
