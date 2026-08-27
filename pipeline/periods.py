@@ -2,7 +2,7 @@
 
 from calendar import monthrange
 from dataclasses import dataclass, replace
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from pipeline.errors import MeasurementPeriodError
 from pipeline.schema import ContentItem, DailySeries, Post
@@ -17,7 +17,15 @@ class MeasurementPeriod:
     credibility: str
 
 
-def _parse_date(value: str, field: str) -> date:
+def _parse_date(value, field: str) -> date:
+    # A `client.yaml`-ben idézőjel nélkül álló dátumot a YAML magától
+    # `datetime.date`-té alakítja — a webes felület pontosan így írja ki, és a
+    # kézzel szerkesztett fájlban is így fordul elő. A `fromisoformat`
+    # sztringet vár, ezért enélkül az éles generálás megállt.
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
     try:
         return date.fromisoformat(value)
     except (TypeError, ValueError) as exc:

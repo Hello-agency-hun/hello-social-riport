@@ -197,3 +197,32 @@ def test_sparse_content_is_filtered_without_requiring_boundary_posts():
     assert [item.post_type for item in filter_items(
         items, date(2026, 6, 25), date(2026, 7, 24)
     )] == ["reel"]
+
+
+def test_yaml_dates_arrive_as_date_objects_not_strings():
+    """A `client.yaml`-ben idézőjel nélkül álló dátumot a YAML dátummá alakítja.
+
+    Az éles Mammut-generálás ezen állt meg: a webes felület
+    `measurement_start: 2026-07-25` alakban írta ki, a PyYAML `datetime.date`-et
+    adott vissza, a `date.fromisoformat` pedig sztringet vár. A menedzser kézzel
+    szerkesztett fájljában ugyanígy előfordulhat — a motornak el kell fogadnia.
+    """
+    from datetime import date
+
+    from pipeline.periods import _parse_date
+
+    assert _parse_date("2026-07-25", "mérés kezdete") == date(2026, 7, 25)
+    assert _parse_date(date(2026, 7, 25), "mérés kezdete") == date(2026, 7, 25)
+
+
+def test_a_real_wrong_value_still_fails():
+    """A tűrés nem jelenti azt, hogy bármit elfogadunk."""
+    import pytest
+
+    from pipeline.errors import MeasurementPeriodError
+    from pipeline.periods import _parse_date
+
+    with pytest.raises(MeasurementPeriodError, match="YYYY-MM-DD"):
+        _parse_date("2026.07.25", "mérés kezdete")
+    with pytest.raises(MeasurementPeriodError, match="YYYY-MM-DD"):
+        _parse_date(None, "mérés kezdete")
