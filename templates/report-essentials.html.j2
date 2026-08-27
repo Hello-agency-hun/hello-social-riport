@@ -54,7 +54,7 @@
       <table style="font-size:17px">
         <tr><td>{{ t.reach }}<br><span class="note">{{ t.page_level }}</span></td>
             <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td></tr>
-        <tr><td>{{ "views" | field }}</td>
+        <tr><td>{{ t.essentials_impressions }}</td>
             <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td></tr>
       </table>
     </div>
@@ -75,9 +75,7 @@
         <tr><td>{{ t.reactions }}</td><td class="num">{{ block.engagement.reactions | num }}</td></tr>
         <tr><td>{{ t.comments }}</td><td class="num">{{ block.engagement.comments | num }}</td></tr>
         <tr><td>{{ t.shares }}</td><td class="num">{{ block.engagement.shares | num }}</td></tr>
-        {% if block.engagement.saves %}
         <tr><td>{{ t.saves }}</td><td class="num">{{ block.engagement.saves | num }}</td></tr>
-        {% endif %}
         <tr><td><strong>{{ t.essentials_engagement }}</strong><br>
             <span class="note">{{ t.from_measured_posts }}</span></td>
             <td class="num"><strong>{{ block.engagement.total | num }}</strong></td></tr>
@@ -134,9 +132,7 @@
       <table style="font-size:14px">
         <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
         <tr><td>{{ t.comments }}</td><td class="num">{{ post.comments | num }}</td></tr>
-        {% if post.saves %}
         <tr><td>{{ t.saves }}</td><td class="num">{{ post.saves | num }}</td></tr>
-        {% endif %}
         <tr><td>{{ t.shares }}</td><td class="num">{{ post.shares | num }}</td></tr>
         <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
         {% if post.paid %}
@@ -168,7 +164,7 @@
       <td class="num"><strong>{{ data.audience[name].followers | num if data.audience.get(name) else "–" }}</strong></td>
       {% endfor %}
     </tr>
-    <tr><td>{{ "views" | field }}</td>
+    <tr><td>{{ t.essentials_impressions }}</td>
       {% for name, block in data.channels.items() %}
       <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td>
       {% endfor %}

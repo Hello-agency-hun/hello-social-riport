@@ -118,6 +118,14 @@ def test_ambiguous_metric_help_offers_the_file_name_key(tmp_path):
         parse(odd)
 
 
+def test_legacy_impressions_metric_help_maps_to_views(tmp_path):
+    old = _write(tmp_path / "Megjelenések.csv", 'sep=,\n"Megjelenések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","5"\n')
+    with pytest.raises(UnknownSourceError) as caught:
+        parse(old)
+
+    assert '["facebook", "views"]' in str(caught.value)
+
+
 def test_parsed_daily_export_can_be_filtered_to_an_inclusive_subperiod(input_file):
     series = parse(input_file("Felkeresések.csv")).payload
 

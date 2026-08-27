@@ -89,6 +89,7 @@ STRINGS = {
         # Essentials riport
         "essentials_audience": "Közönségnövekedés",
         "essentials_reach_impressions": "Elérés és megjelenés",
+        "essentials_impressions": "Megjelenések / megtekintések",
         "essentials_engagement": "Elköteleződés",
         "essentials_clicks": "Kattintások",
         "essentials_summary_title": "A két csatorna egy lapon",
@@ -251,6 +252,7 @@ STRINGS = {
         # Essentials report
         "essentials_audience": "Audience growth",
         "essentials_reach_impressions": "Reach and impressions",
+        "essentials_impressions": "Impressions / views",
         "essentials_engagement": "Engagement",
         "essentials_clicks": "Clicks",
         "essentials_summary_title": "Both channels on one page",

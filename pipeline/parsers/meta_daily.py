@@ -25,9 +25,14 @@ def _unknown_metric_help(path, metric: str) -> str:
     # a szótárat használja visszafelé, a feliratokhoz. A Business Suite magyar
     # felületű, tehát itt mindig a magyar címkékből fejtünk vissza, akkor is,
     # ha a riport angolul készül.
-    field = {label: key for key, label in PAGE_FIELDS["hu"].items()}.get(
-        metric, "<mező>"
-    )
+    legacy_aliases = {
+        # A Meta régebbi exportja ezt Impressionsként adta, az új felületen
+        # ugyanez Views / Megtekintések néven jelenik meg.
+        "Megjelenések": "views",
+    }
+    field = legacy_aliases.get(metric) or {
+        label: key for key, label in PAGE_FIELDS["hu"].items()
+    }.get(metric, "<mező>")
     # A csatornát nem tippeljük meg a nevéből, ha nincs benne. Egy rossz tipp itt
     # nem hibát okoz, hanem csendben a másik csatorna grafikonjára teszi a görbét.
     known = (

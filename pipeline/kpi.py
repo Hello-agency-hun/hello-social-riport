@@ -50,7 +50,12 @@ def paid_totals(campaigns: list[Campaign]) -> dict:
     }
 
 
-def audience(channels: dict, followers: dict, monthly_reach: dict | None = None) -> dict:
+def audience(
+    channels: dict,
+    followers: dict,
+    monthly_reach: dict | None = None,
+    previous_audience: dict | None = None,
+) -> dict:
     """A közönség mérete és mozgása.
 
     A követőszám a `client.yaml`-ből jön (a Meta nem exportálja), az új követés
@@ -62,10 +67,15 @@ def audience(channels: dict, followers: dict, monthly_reach: dict | None = None)
     menedzser beírja, kiszámoljuk, hányszorosát értük el a követőtábornak.
     """
     monthly_reach = monthly_reach or {}
+    previous_audience = previous_audience or {}
     out = {}
     for name, block in channels.items():
         total = followers.get(name)
         gained = block.get("totals", {}).get("follows")
+        if not isinstance(gained, int):
+            before = (previous_audience.get(name) or {}).get("followers")
+            if isinstance(total, int) and isinstance(before, int):
+                gained = total - before
         reach = monthly_reach.get(name)
 
         out[name] = {
@@ -74,7 +84,7 @@ def audience(channels: dict, followers: dict, monthly_reach: dict | None = None)
             # A hónap eleji állomány a mostaniból és a gyarapodásból jön ki.
             "growth": (
                 round(gained / (total - gained), 4)
-                if total and gained and total > gained
+                if total and gained is not None and total - gained > 0
                 else None
             ),
             "monthly_reach": reach,

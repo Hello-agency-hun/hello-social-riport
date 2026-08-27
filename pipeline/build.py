@@ -98,6 +98,60 @@ EXPECTED_PER_CHANNEL = {
     "daily": "{channel} Eredmények napi CSV-k — enélkül nincs trendgörbe és nincs oldal-összesítés",
 }
 
+ESSENTIALS_DAILY_FIELDS = {
+    "views": "Megjelenések / megtekintések",
+    "interactions": "Interakciók",
+    "visits": "Felkeresések",
+    "link_clicks": "Hivatkozáskattintások",
+    "follows": "Új követők",
+}
+
+
+def _essentials_missing(
+    config: dict,
+    client: dict,
+    content_channels: dict,
+    series: list,
+    previous: dict | None = None,
+) -> list[str]:
+    """Az Essentials csak akkor rövid, ha az adat nem az.
+
+    A tradicionális riport minden csatornán ugyanazokat az oldal-szintű
+    KPI-kat és posztmutatókat ígéri. A teljes stratégiai riport régi,
+    megengedőbb forráskezelését nem szigorítjuk visszamenőleg; ezt a biztosítékot
+    kizárólag a menedzser által külön kiválasztott Essentials kapja.
+    """
+    if (config.get("report") or {}).get("variant", "full") != "essentials":
+        return []
+
+    channels = {}
+    if client.get("fb_page_id") or client.get("fb_page_name"):
+        channels["facebook"] = "Facebook"
+    if client.get("ig_handle"):
+        channels["instagram"] = "Instagram"
+
+    available = {
+        (entry.channel, entry.field)
+        for entry in series
+    }
+    gaps = []
+    for channel, label in channels.items():
+        if channel not in content_channels:
+            gaps.append(
+                f"{label} Tartalom CSV — enélkül nincs ellenőrzött top poszt és posztonkénti aktivitás"
+            )
+        for field, field_label in ESSENTIALS_DAILY_FIELDS.items():
+            if field == "follows":
+                current_followers = (config.get("followers") or {}).get(channel)
+                previous_followers = (
+                    ((previous or {}).get("audience") or {}).get(channel) or {}
+                ).get("followers")
+                if isinstance(current_followers, int) and isinstance(previous_followers, int):
+                    continue
+            if (channel, field) not in available:
+                gaps.append(f"{label} — {field_label} napi eredménycsempe")
+    return gaps
+
 
 def _missing(seen: dict, content_channels: dict, daily_channels: set, client: dict):
     """A hiányzó források, emberi megfogalmazásban."""
@@ -465,6 +519,20 @@ def build(
             )
         )
 
+    previous = compare.load_previous(directory)
+    essentials_missing = _essentials_missing(
+        config, client, content_channels, series, previous=previous
+    )
+    if essentials_missing:
+        raise MissingConfigError(
+            "Az Essentials riporthoz még hiányzik néhány tradicionális mutató:\n  ✗ "
+            + "\n  ✗ ".join(essentials_missing)
+            + "\n\nBusiness Suite → Eredmények alatt töltsd le a megnevezett napi "
+            "csempéket a riport pontos időszakára. A Tartalom CSV-t a "
+            "Business Suite → Tartalom nézetből exportáld. A feltöltések "
+            "megmaradtak; pótlás után futtasd újra a mély ellenőrzést."
+        )
+
     if not any([items, content, campaigns, series]):
         raise NoSourceError(
             f"{directory / 'input'}: egyetlen felismerhető forrásfájl sincs. "
@@ -473,7 +541,6 @@ def build(
 
     guards.check_client(hints, client)
 
-    previous = compare.load_previous(directory)
     report_config = config.get("report") or {}
     daily_windows = [
         window
@@ -601,7 +668,10 @@ def build(
             # A követőszám nem díszlet: belőle jön a növekedési ütem, és — ha a
             # menedzser beírja a havi elérést — az elérés/követő arány is.
             "audience": kpi.audience(
-                channels, follower_counts, config.get("monthly_reach") or {}
+                channels,
+                follower_counts,
+                config.get("monthly_reach") or {},
+                previous_audience=(previous or {}).get("audience") or {},
             ),
             # Honnan tudjuk a követőszámot. A továbbszámolt értéket a
             # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
