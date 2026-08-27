@@ -371,6 +371,43 @@ def main(argv: list[str] | None = None) -> int:
         html_path.write_text(html, encoding="utf-8")
         print(f"→ {html_path}")
 
+        # A menedzser a teljes riportot nézi, az ügyfél a rövidet kapja. Ha a
+        # `client.yaml` mindkettőt kéri, itt készül el a második is — ugyanabból
+        # az adatból és ugyanabból a narratívából. Modellre nem bízzuk: a
+        # konténerben futó modell a második renderelést két körön át kihagyta.
+        also = (build_module_config(Path(args.directory)).get("report") or {}).get("also_variant")
+        if also and also != data["meta"].get("variant"):
+            # A második riport kiegészítés, nem szállítmány. Ha az adat nem
+            # elégíti ki a másik változat követelményeit, azt megnevezzük — de
+            # a kész fő riportot nem dobjuk el miatta.
+            try:
+                second = build(
+                    Path(args.directory),
+                    period=args.period,
+                    start_date=args.start_date,
+                    end_date=args.end_date,
+                    variant=also,
+                )
+                second_html = html_path.with_name(
+                    f"{html_path.stem}-{also}{html_path.suffix}"
+                )
+                second_html.write_text(
+                    render(
+                        second,
+                        cache_dir=Path(args.directory) / ".image-cache",
+                        fetcher=fetcher,
+                        manual=second.get("manual"),
+                        narrative=load_narrative(Path(args.directory)),
+                    ),
+                    encoding="utf-8",
+                )
+                print(f"→ {second_html}")
+            except PipelineError as error:
+                print(
+                    f"\n⚠ a(z) {also!r} változat nem készült el, a fő riport kész:\n{error}",
+                    file=sys.stderr,
+                )
+
     return 0
 
 

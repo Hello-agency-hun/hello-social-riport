@@ -211,3 +211,30 @@ def test_variant_flag_overrides_the_client_yaml(tmp_path):
         (shutil.copytree if item.is_dir() else shutil.copy2)(item, tmp_path / item.name)
 
     assert build(tmp_path, "2026-07")["meta"]["variant"] == "full"
+
+def test_the_second_variant_never_kills_the_first(tmp_path, capsys):
+    """A második riport kiegészítés, nem szállítmány.
+
+    A Larus adata nem elégíti ki az Essentials követelményeit — ettől még a
+    teljes riportnak el kell készülnie. Korábban a második build hibája az
+    egész futást megölte, tehát egy opcionális másolat vitte volna magával a
+    kész fő riportot.
+    """
+    import shutil
+    from pathlib import Path
+
+    from pipeline.cli import main
+
+    fixture = Path(__file__).resolve().parent / "fixtures" / "larus-2026-07"
+    for item in fixture.iterdir():
+        (shutil.copytree if item.is_dir() else shutil.copy2)(item, tmp_path / item.name)
+    config = (tmp_path / "client.yaml").read_text(encoding="utf-8")
+    (tmp_path / "client.yaml").write_text(
+        config.replace("report:", "report:\n  also_variant: essentials"), encoding="utf-8"
+    )
+
+    assert main([str(tmp_path), "--period", "2026-07", "--offline", "--allow-fixture"]) == 0
+    assert (tmp_path / "Riport.html").exists()
+    assert not (tmp_path / "Riport-essentials.html").exists()
+    # És megmondja, min múlt — a néma kihagyás rosszabb, mint a hiba.
+    assert "Instagram Tartalom CSV" in capsys.readouterr().err
