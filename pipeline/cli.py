@@ -255,6 +255,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default=None, help="report_data.json útvonala")
     parser.add_argument("--html", default=None, help="Riport.html útvonala")
     parser.add_argument(
+        "--variant",
+        default=None,
+        choices=["full", "essentials"],
+        help="riportváltozat; felülírja a client.yaml beállítását",
+    )
+    parser.add_argument(
         "--offline",
         action="store_true",
         help="ne töltsön le képet — a kreatívok helyén helyőrző jelenik meg",
@@ -303,6 +309,7 @@ def main(argv: list[str] | None = None) -> int:
             period=args.period,
             start_date=args.start_date,
             end_date=args.end_date,
+            variant=args.variant,
         )
     except PipelineError as error:
         print(f"HIBA: {error}", file=sys.stderr)

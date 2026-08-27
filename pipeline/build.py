@@ -359,9 +359,19 @@ def build(
     period: str,
     start_date: str | None = None,
     end_date: str | None = None,
+    variant: str | None = None,
 ) -> dict:
+    """`variant` felülírja a `client.yaml` beállítását.
+
+    Ugyanabból az adatból két riport is készülhet: a menedzser a teljeset
+    nézi, az ügyfél a rövidet kapja. Enélkül a `client.yaml`-t kellene
+    átírni két futás között, és a projekt beállítása csendben elcsúszna
+    attól, ami az utolsó riportban van.
+    """
     directory = Path(directory)
     config = load_config(directory)
+    if variant:
+        config.setdefault("report", {})["variant"] = variant
     client = config["client"]
     overrides = config.get("daily_metric_overrides") or {}
     overrides = {key: tuple(value) for key, value in overrides.items()}
@@ -641,6 +651,37 @@ def build(
     paid = kpi.paid_totals(campaigns)
     paid["campaign_details"] = campaigns
 
+    audience_block = kpi.audience(
+        channels,
+        follower_counts,
+        config.get("monthly_reach") or {},
+        previous_audience=(previous or {}).get("audience") or {},
+    )
+    comparison = {
+        name: compare.deltas(
+            block["totals"],
+            (previous or {}).get("channels", {}).get(name, {}).get("totals")
+            or compare.previous_from_manual(manual_values, name, block["totals"]),
+        )
+        for name, block in channels.items()
+    }
+    # A követőállomány és a havi elérés nem a napi csempékből jön, ezért eddig
+    # kimaradt az összehasonlításból — pedig az ügyfél épp ezt a kettőt nézi
+    # meg elsőként: „nőttünk vagy csökkentünk?". Az előző havi riportban
+    # mindkettő ott van, tehát nincs mit kitalálni.
+    for name, block in audience_block.items():
+        before = ((previous or {}).get("audience") or {}).get(name) or {}
+        fields = ("followers", "monthly_reach")
+        now_values = {
+            field: block[field] for field in fields if isinstance(block.get(field), int)
+        }
+        before_values = {
+            field: before[field] for field in fields if isinstance(before.get(field), int)
+        }
+        comparison.setdefault(name, {}).update(
+            compare.deltas(now_values, before_values)
+        )
+
     return _serialise(
         {
             "meta": meta,
@@ -655,24 +696,10 @@ def build(
             # (`previous.json`), vagy — az első hónapban — a menedzser kézi
             # beviteléből. Ha egyik sincs, a blokk üres, és a riport
             # kitölthető mezőket mutat helyette.
-            "comparison": {
-                name: compare.deltas(
-                    block["totals"],
-                    (previous or {}).get("channels", {}).get(name, {}).get("totals")
-                    or compare.previous_from_manual(
-                        manual_values, name, block["totals"]
-                    ),
-                )
-                for name, block in channels.items()
-            },
+            "comparison": comparison,
             # A követőszám nem díszlet: belőle jön a növekedési ütem, és — ha a
             # menedzser beírja a havi elérést — az elérés/követő arány is.
-            "audience": kpi.audience(
-                channels,
-                follower_counts,
-                config.get("monthly_reach") or {},
-                previous_audience=(previous or {}).get("audience") or {},
-            ),
+            "audience": audience_block,
             # Honnan tudjuk a követőszámot. A továbbszámolt értéket a
             # menedzsernek látnia kell, hogy ránézésre kiszúrja, ha elcsúszott.
             "follower_origin": follower_origin,

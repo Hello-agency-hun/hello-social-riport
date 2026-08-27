@@ -153,3 +153,61 @@ def test_essentials_template_keeps_zero_saves_visible():
     assert "{% if post.saves is not none %}" in source
     assert "{% if block.engagement.saves_measured %}" in source
     assert "t.essentials_impressions" in source
+
+
+def test_follower_stock_and_reach_get_a_month_over_month_change():
+    """„Nőttünk vagy csökkentünk?" — az ügyfél ezt a két számot nézi elsőként.
+
+    Egyik sem a napi csempékből jön, ezért eddig kimaradt az összehasonlításból.
+    Az előző havi riportban viszont mindkettő ott van, tehát nincs mit kitalálni.
+    """
+    from pipeline.build import build
+    import json
+    import shutil
+    import tempfile
+    from pathlib import Path
+
+    fixture = Path(__file__).resolve().parent / "fixtures" / "larus-2026-07"
+    work = Path(tempfile.mkdtemp())
+    for item in fixture.iterdir():
+        (shutil.copytree if item.is_dir() else shutil.copy2)(item, work / item.name)
+    (work / "previous.json").write_text(
+        json.dumps(
+            {
+                "meta": {"period": "2026-06"},
+                "channels": {},
+                "audience": {"facebook": {"followers": 4000, "monthly_reach": 100000}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (work / "client.yaml").write_text(
+        (work / "client.yaml").read_text(encoding="utf-8").replace(
+            "report:", "monthly_reach:\n  facebook: 120000\n\nreport:"
+        ),
+        encoding="utf-8",
+    )
+
+    data = build(work, "2026-07")
+    facebook = data["comparison"]["facebook"]
+    assert facebook["followers"]["before"] == 4000
+    assert facebook["monthly_reach"]["before"] == 100000
+    assert facebook["monthly_reach"]["diff"] == 20000
+
+
+def test_variant_flag_overrides_the_client_yaml(tmp_path):
+    """Ugyanabból az adatból két riport: a menedzsernek a teljes, az ügyfélnek a rövid.
+
+    A `client.yaml` átírása két futás között azt jelentené, hogy a projekt
+    beállítása csendben elcsúszik attól, ami az utolsó riportban van.
+    """
+    import shutil
+    from pathlib import Path
+
+    from pipeline.build import build
+
+    fixture = Path(__file__).resolve().parent / "fixtures" / "larus-2026-07"
+    for item in fixture.iterdir():
+        (shutil.copytree if item.is_dir() else shutil.copy2)(item, tmp_path / item.name)
+
+    assert build(tmp_path, "2026-07")["meta"]["variant"] == "full"

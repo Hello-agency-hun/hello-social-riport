@@ -49,6 +49,13 @@
       <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
       <div class="stat">{{ block.followers | num }}</div>
       <div class="stat-label">{{ t.followers }}</div>
+      {% set follower_stock = (data.comparison[name] or {}).get("followers") if data.comparison and data.comparison.get(name) else none %}
+      {% if follower_stock %}
+      <div class="stat-label" style="text-transform:none;letter-spacing:0;margin-top:6px">
+        {{ delta(follower_stock.diff) }} {{ delta_value(follower_stock.diff, follower_stock.pct) }}
+        <span class="note">{{ t.vs_previous_month }}</span>
+      </div>
+      {% endif %}
       <div class="rule" style="margin:14px 0"></div>
       <table style="font-size:15px">
         {% set follow_change = (data.comparison[name] or {}).get("follows") if data.comparison and data.comparison.get(name) else none %}
@@ -74,7 +81,8 @@
     <div class="panel">
       <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
       <table style="font-size:17px">
-        <tr><td>{{ t.reach }}<br><span class="note">{{ t.page_level }}</span></td>
+        {% set reach_change = (data.comparison[name] or {}).get("monthly_reach") if data.comparison and data.comparison.get(name) else none %}
+        <tr><td>{{ t.reach }}<br><span class="note">{{ t.page_level }}{% if reach_change %} · {{ delta(reach_change.diff) }} {{ delta_value(reach_change.diff, reach_change.pct) }} {{ t.vs_previous_month }}{% endif %}</span></td>
             <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td></tr>
         {% set view_change = (data.comparison[name] or {}).get("views") if data.comparison and data.comparison.get(name) else none %}
         <tr><td>{{ t.essentials_impressions }}{% if view_change %}<br>
