@@ -115,3 +115,23 @@ def test_the_best_unboosted_post_is_surfaced_for_the_narrative():
     assert best["boosted"] is False
     assert best["vs_typical"] >= 1.5
     assert data["performance"]["facebook"]["best_unboosted_beats_typical"] is True
+
+
+def test_saves_sit_between_comments_and_shares_on_the_effort_ladder():
+    """A mentés szándékosabb, mint egy hozzászólás, de nem adja hozzá a nevét.
+
+    A létra sorrendje a lényeg: reakció < hozzászólás < mentés < megosztás.
+    """
+    from pipeline.performance import WEIGHTS, weighted_interactions
+
+    assert WEIGHTS["reactions"] < WEIGHTS["comments"] < WEIGHTS["saves"] < WEIGHTS["shares"]
+    post = {"reactions": 0, "comments": 0, "shares": 0, "saves": 2}
+    assert weighted_interactions(post) == 2 * WEIGHTS["saves"]
+
+
+def test_saved_posts_beat_merely_liked_ones():
+    from pipeline.performance import weighted_interactions
+
+    liked = {"reactions": 5, "comments": 0, "shares": 0, "saves": 0}
+    saved = {"reactions": 0, "comments": 0, "shares": 0, "saves": 5}
+    assert weighted_interactions(saved) > weighted_interactions(liked)

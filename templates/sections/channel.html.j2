@@ -98,6 +98,9 @@
         {% if post.reactions %}
         <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
         {% endif %}
+        {% if post.saves %}
+        <tr><td>{{ t.saves }}</td><td class="num">{{ post.saves | num }}</td></tr>
+        {% endif %}
         {# A kattintás-sor szándékosan nincs itt. Boostolt posztnál a kattintások
            zömét a hirdetés hozza, tehát ugyanaz a torzítás van benne, ami miatt
            a pontozásból is kivettük: a legnagyobb hirdetés látszana a

@@ -46,14 +46,40 @@ def _signed(value, digits: int = 0, language: str = "hu") -> str:
     return f"+{text}" if value > 0 else (f"−{text}" if value < 0 else text)
 
 
+# A 16:9-es oldal magassága kötött, a narratíva hossza nem az. A Mammut
+# augusztusi riportjában a „Mi működött" panel 1119 karaktert kapott, a
+# panelbe 637 pixel fért, a tartalom 678 lett — az oldal 115 pixellel
+# túlcsordult. Vágni nem szabad: az ügyfélnek szánt mondat veszne el. Ezért a
+# betűméret lép lejjebb, lépcsőzetesen, a hosszabbik panel szerint — a két
+# panel egy rácsban ül, tehát a rövidebbik nem menti meg a másikat.
+# A küszöbök a valódi oldalon mérve, böngészőben ellenőrizve: 18 px mellett
+# kb. 850 karakter fér el egy panelbe (580 px széles hasáb, 1,5-es sorköz).
+# Az első kalibráció engedékenyebb volt, és 1119 karakternél még maradt 19
+# pixel túllógás — a küszöbök azóta a mért értékhez igazodnak.
+ASSESSMENT_STEPS = ((850, 18), (1050, 16), (1400, 15))
+ASSESSMENT_MIN = 14
+
+
+def _assessment_font(what_worked, what_to_improve) -> int:
+    """A hosszabbik panel karakterszámából a lista betűmérete."""
+    longest = max(
+        (sum(len(str(item)) for item in panel) for panel in (what_worked or [], what_to_improve or [])),
+        default=0,
+    )
+    for limit, size in ASSESSMENT_STEPS:
+        if longest <= limit:
+            return size
+    return ASSESSMENT_MIN
+
+
 def _money(value, currency: str, language: str = "hu") -> str:
     """A pénznem helye nyelvfüggő: a szimbólumok (`$`, `£`) angolul a szám elé
     kerülnek, a betűkódok (HUF, EUR) mindkét nyelven mögé."""
-    amount = _number(value, 2, language)
+    amount = _number(value, labels.money_digits(currency), language)
     symbols = {"USD": "$", "GBP": "£"}
     if language != "hu" and currency in symbols:
         return f"{symbols[currency]}{amount}"
-    return f"{amount} {currency}"
+    return f"{amount} {labels.currency_label(currency)}"
 
 
 def _period_name(period: str, language: str = "hu") -> str:
@@ -310,6 +336,12 @@ def render(
             None,
         ),
         narrative=resolved,
+        # A narratíva hossza az OpenAI-tól jön, az oldal magassága kötött —
+        # a lista betűmérete ezért a szövegből számolódik, nem fix.
+        assessment_font=_assessment_font(
+            (resolved or {}).get("what_worked") or [],
+            (resolved or {}).get("what_to_improve") or [],
+        ),
         campaign_narrative=(resolved or {}).get("campaign_status") or {},
         campaign_pages=campaign_pages,
         campaign_status_counts=campaign_status_counts,

@@ -13,6 +13,8 @@ Ahol tényleg szám kell, ott adat van mögötte — tehát van mire hivatkozni.
 import html
 import re
 
+from pipeline.labels import currency_label, money_digits
+
 from pipeline.errors import NarrativeError
 
 REFERENCE = re.compile(r"\{([a-z_]+(?:\.[a-z_]+)*)(?:\|([a-z]+))?\}")
@@ -89,7 +91,8 @@ def _format(value, formatter: str | None, data: dict) -> str:
     if formatter in (None, "num"):
         return _number(value)
     if formatter == "money":
-        return f"{_number(value, 2)} {data['paid']['currency']}"
+        currency = data["paid"]["currency"]
+        return f"{_number(value, money_digits(currency))} {currency_label(currency)}"
     if formatter == "pct":
         return f"{_number(float(value) * 100, 1)}%"
     if formatter == "x":

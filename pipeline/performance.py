@@ -12,10 +12,12 @@ szóltak hozzá, az arány leesik.
 ## A súlyozás
 
 A reakciók nem egyenértékűek. Egy lájk egy koppintás; egy komment szándékot
-igényel; egy megosztás azt jelenti, hogy valaki a **saját nevét adta hozzá** a
-tartalomhoz a saját ismerőseinek. Ezért:
+igényel; egy mentés azt jelenti, hogy valaki **vissza akar térni hozzá**; egy
+megosztás pedig azt, hogy valaki a **saját nevét adta hozzá** a tartalomhoz a
+saját ismerőseinek. A mentés ezért a hozzászólás és a megosztás közé kerül:
+szándékosabb egy koppintásnál, de nem nyilvános kiállás. Ezért:
 
-    reakció 1 · hozzászólás 4 · megosztás 8
+    reakció 1 · hozzászólás 4 · mentés 6 · megosztás 8
 
 A pontos súlyok nem szentírás; a **sorrendjük** az, ami számít, és az iparági
 gyakorlattal egyezik. A skála log-szerű, mert a ráfordított erőfeszítés is az.
@@ -59,6 +61,7 @@ from statistics import median
 WEIGHTS = {
     "reactions": 1,
     "comments": 4,
+    "saves": 6,
     "shares": 8,
 }
 
