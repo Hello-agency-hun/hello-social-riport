@@ -58,13 +58,33 @@
   // Enélkül a mentés a behelyettesített számokat írná vissza sablonként, és a
   // következő build a saját narratíváját utasítaná el.
   function asTemplate(block) {
+    // A contenteditable az Entert hol `<br>`-ként, hol új `<div>`-ként adja
+    // vissza, a beágyazott elemek szövegét pedig a `textContent` sortörés
+    // nélkül fűzné össze. Ezért rekurzívan járjuk be, és mindkét alakból
+    // valódi sortörés lesz.
+    function serialise(node) {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+      if (node.dataset && node.dataset.ref) return node.dataset.ref;
+      if (node.nodeName === "BR") return "\n";
+      var inner = "";
+      node.childNodes.forEach(function (child) {
+        inner += serialise(child);
+      });
+      return /^(DIV|P|LI)$/.test(node.nodeName) ? "\n" + inner : inner;
+    }
+
     var out = "";
     block.childNodes.forEach(function (node) {
-      if (node.nodeType === Node.TEXT_NODE) out += node.textContent;
-      else if (node.dataset && node.dataset.ref) out += node.dataset.ref;
-      else out += node.textContent;
+      out += serialise(node);
     });
-    return out.trim().replace(/\s+/g, " ");
+    // Csak a vízszintes térköz olvad össze. A sortörés adat, nem formázás:
+    // korábban a \s+ minta ezt is elmosta, és a mentés után a
+    // menedzser tördelése nyomtalanul eltűnt.
+    return out
+      .replace(/[ \t\u00a0]+/g, " ")
+      .replace(/[ \t]*\n[ \t]*/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   function remember() {

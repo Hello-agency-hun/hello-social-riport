@@ -55,3 +55,41 @@ def test_applied_manual_values_survive_later_review_rounds():
 
     assert "Object.assign({}, stored.manual || {})" in collector
     assert "delete manual[field.dataset.manual]" in collector
+
+
+def test_review_js_keeps_line_breaks():
+    """A böngészőoldali gyűjtés sem moshatja el a sortörést.
+
+    Az `asTemplate` korábban `\s+`-t vont össze egyetlen szóközzé — a `\s`
+    pedig a sortörést is jelenti. Így a mentés pillanatában elveszett minden
+    Enter, még mielőtt a szerverhez ért volna.
+    """
+    source = (
+        Path(__file__).resolve().parent.parent / "templates" / "review.js"
+    ).read_text(encoding="utf-8")
+
+    assert "/\s+/g" not in source, "a sortörést is összevonó minta"
+    assert "BR" in source, "a <br> elemet külön kell kezelni"
+    assert "\n" in source, "sortörést kell kiírnia"
+
+
+def test_review_js_has_no_broken_string_literals():
+    """A `review.js` sablonba nem kerülhet nyers sortörés idézőjelek közé.
+
+    Egy szerkesztésnél pontosan ez történt: a `"\n"` helyére valódi sortörés
+    került, a fájl megszűnt értelmezhető JavaScriptnek lenni, és a riport
+    szerkesztője némán meghalt volna a böngészőben. A tesztek ezt nem vették
+    észre, mert a Python-oldalt nem érintette.
+    """
+    source = (
+        Path(__file__).resolve().parent.parent / "templates" / "review.js"
+    ).read_text(encoding="utf-8")
+
+    for number, line in enumerate(source.splitlines(), start=1):
+        # A kommentekben magyar idézőjel is állhat, azokat nem vizsgáljuk.
+        if line.lstrip().startswith("//"):
+            continue
+        without_escapes = line.replace('\\"', "").replace("\\\\", "")
+        assert without_escapes.count('"') % 2 == 0, (
+            f"{number}. sor: páratlan idézőjel — nyers sortörés a stringben?\n{line}"
+        )

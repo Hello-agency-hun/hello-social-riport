@@ -126,3 +126,26 @@ def test_the_shipped_narrative_passes_the_number_check():
     assert not REFERENCE.search(json.dumps(resolved)), "maradt feloldatlan hivatkozás"
     assert resolved["key_finding"]["title"]
     assert len(resolved["next_steps"]) >= 3
+
+
+def test_line_breaks_survive_into_the_rendered_html():
+    """A szerkesztő Enterét a riportnak meg kell tartania.
+
+    A `<p>`-be tett nyers sortörést a böngésző szóközzé olvasztja, tehát a
+    mentés után a tördelés eltűnik — pedig a menedzser tényleg megnyomta az
+    Entert. A sortörésből `<br>` kell legyen.
+    """
+    from pipeline.narrative import resolve_markup
+
+    out = resolve_markup("Első bekezdés.\nMásodik bekezdés.", {})
+    assert "<br>" in out
+    assert "Első bekezdés." in out and "Második bekezdés." in out
+
+
+def test_escaping_still_applies_around_the_line_break():
+    """A sortörés nem nyithat kaput a nyers HTML-nek."""
+    from pipeline.narrative import resolve_markup
+
+    out = resolve_markup("a <b>x</b>\n<script>", {})
+    assert "<b>" not in out and "<script>" not in out
+    assert "&lt;b&gt;" in out and "<br>" in out

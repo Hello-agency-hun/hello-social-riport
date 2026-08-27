@@ -115,6 +115,16 @@ def _check_digits(text: str) -> None:
         )
 
 
+def _escape(text: str) -> str:
+    """Escape-elt szöveg, a sortörésekből `<br>`.
+
+    A `<p>`-be tett nyers sortörést a böngésző szóközzé olvasztja, tehát a
+    menedzser Enterei nyomtalanul eltűnnének a mentés után. A csere az
+    escape UTÁN történik: a `<br>` az egyetlen jel, amit beengedünk.
+    """
+    return html.escape(text).replace(chr(10), "<br>")
+
+
 def resolve(text: str, data: dict) -> str:
     """Behelyettesítés — de előbb a számjegy-tilalom."""
     _check_digits(text)
@@ -144,7 +154,7 @@ def resolve_markup(text: str, data: dict) -> str:
     parts: list[str] = []
     position = 0
     for match in REFERENCE.finditer(text):
-        parts.append(html.escape(text[position : match.start()]))
+        parts.append(_escape(text[position : match.start()]))
         value = _format(_lookup(match.group(1), data), match.group(2), data)
         parts.append(
             f'<span class="val" contenteditable="false" '
@@ -152,7 +162,7 @@ def resolve_markup(text: str, data: dict) -> str:
             f"{html.escape(value)}</span>"
         )
         position = match.end()
-    parts.append(html.escape(text[position:]))
+    parts.append(_escape(text[position:]))
     return "".join(parts)
 
 
