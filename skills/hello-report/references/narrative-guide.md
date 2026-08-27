@@ -91,6 +91,30 @@ Az első legyen a legfontosabb, ne a legkönnyebb.
 Ads-lekérési ablak. A kampány nevét, dátumát, állapotát és eredményét ne másold
 be kézzel: ezek zárolt exportadatként külön jelennek meg a szöveg alatt.
 
+## Ha `report.variant: essentials` — két további kötelező blokk
+
+Az Essentials riport csatornánként egy rövid összefoglalót mutat a hónap
+számai fölött. Ez a dia enélkül szöveg nélkül, csupasz számokkal áll meg —
+márpedig pont az a menedzser kérte a rövid riportot, aki a hosszú elemzést
+sokallta, tehát az a néhány mondat itt a riport egyetlen értelmezése.
+
+Csatornánként egy string, a csatorna nevével kulcsolva:
+
+```json
+"facebook_overview": "…",
+"instagram_overview": "…"
+```
+
+Csak arra a csatornára írj, amelyik szerepel a `channels` alatt. Egy-két
+mondat, ugyanazzal a számjegy-tilalommal, mint a többi szöveg: a számokra
+hivatkozz (`{audience.facebook.monthly_reach}`), ne írd le őket.
+
+Mondd meg, **mi történt azon a csatornán**, ne ismételd a számokat felsorolva:
+a számok ott vannak a dián alatta. „Az Instagram vitte a hónap növekedését, a
+követőtábor {audience.instagram.growth|pct}-kal bővült" — ez használható. „Az
+elérés {audience.instagram.monthly_reach}, a megjelenés {channels.instagram.totals.views}"
+— ez fölösleges, mert ugyanaz olvasható a panelekben.
+
 ## Jó és rossz példa ugyanarra
 
 ❌ **Rossz**
