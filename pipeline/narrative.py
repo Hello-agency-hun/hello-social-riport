@@ -13,7 +13,7 @@ Ahol tényleg szám kell, ott adat van mögötte — tehát van mire hivatkozni.
 import html
 import re
 
-from pipeline.labels import money_digits
+from pipeline.labels import currency_label, money_digits
 
 from pipeline.errors import NarrativeError
 
@@ -92,7 +92,7 @@ def _format(value, formatter: str | None, data: dict) -> str:
         return _number(value)
     if formatter == "money":
         currency = data["paid"]["currency"]
-        return f"{_number(value, money_digits(currency))} {currency}"
+        return f"{_number(value, money_digits(currency))} {currency_label(currency)}"
     if formatter == "pct":
         return f"{_number(float(value) * 100, 1)}%"
     if formatter == "x":

@@ -14,6 +14,16 @@ be, az látható lesz a riportban — csak csúnyán —, nem pedig eltűnik.
 ZERO_DECIMAL_CURRENCIES = {"HUF", "JPY", "KRW", "ISK", "CLP", "VND"}
 
 
+# A forintot a `HUF` betűkód helyett a nálunk megszokott `Ft` jelöli — a
+# korábbi, kézzel készült riportok is így írták, és az ügyfél ezt olvassa
+# természetesen. A szám után áll, magyarul és angolul is.
+CURRENCY_LABELS = {"HUF": "Ft"}
+
+
+def currency_label(currency: str) -> str:
+    return CURRENCY_LABELS.get((currency or "").upper(), currency)
+
+
 def money_digits(currency: str) -> int:
     return 0 if (currency or "").upper() in ZERO_DECIMAL_CURRENCIES else 2
 

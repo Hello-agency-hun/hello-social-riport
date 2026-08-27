@@ -79,7 +79,7 @@ def _money(value, currency: str, language: str = "hu") -> str:
     symbols = {"USD": "$", "GBP": "£"}
     if language != "hu" and currency in symbols:
         return f"{symbols[currency]}{amount}"
-    return f"{amount} {currency}"
+    return f"{amount} {labels.currency_label(currency)}"
 
 
 def _period_name(period: str, language: str = "hu") -> str:

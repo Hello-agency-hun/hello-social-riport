@@ -426,17 +426,19 @@ def test_huf_has_no_decimals():
     """
     from pipeline.render import _money
 
-    assert _money(234217, "HUF") == "234 217 HUF"
-    assert _money(9958, "HUF") == "9 958 HUF"
+    assert _money(234217, "HUF") == "234 217 Ft"
+    assert _money(9958, "HUF") == "9 958 Ft"
     assert _money(472.71, "EUR") == "472,71 EUR"
     assert _money(472.71, "USD", "en") == "$472.71"
+    # Az angol riportban is `Ft` a forint jele — a szám után, mint magyarul.
+    assert _money(234217, "HUF", "en") == "234,217 Ft"
 
 
 def test_narrative_money_follows_the_same_rule():
     from pipeline.narrative import _format
 
     data = {"paid": {"currency": "HUF"}}
-    assert _format(184261, "money", data) == "184 261 HUF"
+    assert _format(184261, "money", data) == "184 261 Ft"
     data = {"paid": {"currency": "EUR"}}
     assert _format(472.71, "money", data) == "472,71 EUR"
 
