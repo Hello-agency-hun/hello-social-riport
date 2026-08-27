@@ -91,7 +91,13 @@ strong { color: var(--ink); font-weight: 700; }
 
 /* A poszt-kártya tartalma nem nőhet túl az oldalon: a kép fix, a szöveg két
    sorra fogott, a metrikatábla pedig tömör. */
-.panel table td { padding: 6px 8px 6px 0; font-size: 14px; }
+/* A kártya metrikatáblája sűrűbb lett, mint amire a 16:9-es oldal készült:
+   az Instagram-posztok most `Reakció` és `Mentés` sort is kapnak, mert a lájk
+   és a mentés végre bekerül a pontozásba. Hét sornál a korábbi 6 pixeles
+   függőleges térköz 28 pixellel kitolta az oldalt. Négy pixel pontosan ennyit nyer
+   vissza. Hét sornál több nem lehet: rezonancia, interakciós arány, elérés,
+   ebből fizetett, költés, reakció, mentés — ez a teljes metrikakészlet. */
+.panel table td { padding: 4px 8px 4px 0; font-size: 14px; }
 
 /* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
    kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
