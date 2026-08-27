@@ -109,6 +109,14 @@ Csak arra a csatornára írj, amelyik szerepel a `channels` alatt. Egy-két
 mondat, ugyanazzal a számjegy-tilalommal, mint a többi szöveg: a számokra
 hivatkozz (`{audience.facebook.monthly_reach}`), ne írd le őket.
 
+**Az Essentials teljes szövegében kerüld a szakszavakat.** Ezt a változatot
+az az ügyfél kapja, aki a hosszú elemzést sokallta — nem elemző ember, és ha
+egy szót nem ért, felhív. A „rezonancia" a leggyakoribb ilyen: a hosszú
+riportban van mellette módszertani oldal, ami megmagyarázza, itt nincs. Írd
+helyette azt, ami történt: „a legtöbb reakciót kapta", „erre reagáltak a
+legtöbben", „ez váltotta ki a legnagyobb visszhangot". Ugyanez áll a
+`next_steps` mondataira is.
+
 Mondd meg, **mi történt azon a csatornán**, ne ismételd a számokat felsorolva:
 a számok ott vannak a dián alatta. „Az Instagram vitte a hónap növekedését, a
 követőtábor {audience.instagram.growth|pct}-kal bővült" — ez használható. „Az
