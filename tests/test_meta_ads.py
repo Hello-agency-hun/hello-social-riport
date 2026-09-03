@@ -55,6 +55,23 @@ def test_excel_semicolon_ads_export_is_parsed_without_manual_conversion(tmp_path
     assert source.payload.campaigns[0].impressions == 456
 
 
+@pytest.mark.parametrize("name_column", ["Hirdetéssorozat neve", "Hirdetés neve"])
+def test_ads_export_from_a_more_detailed_level_uses_its_available_name(tmp_path, name_column):
+    path = tmp_path / "meta-reszletesebb-szint.csv"
+    path.write_text(
+        f"{name_column},Eredmény jelzése,Elérés,Megjelenések,Jelentés kezdete,"
+        "Jelentés vége,Elköltött összeg (HUF)\n"
+        "FUP bejegyzés,reach,123,456,2026-08-01,2026-08-31,789\n",
+        encoding="utf-8",
+    )
+
+    assert identify(path).kind == "meta_ads"
+    source = parse(path)
+
+    assert source.payload.campaigns[0].name == "FUP bejegyzés"
+    assert source.payload.source_level == ("adset" if name_column == "Hirdetéssorozat neve" else "ad")
+
+
 @pytest.mark.parametrize("suffix", [".xls", ".xlsx"])
 def test_textual_csv_is_parsed_even_when_excel_extension_was_used(tmp_path, suffix):
     """A kiterjesztés átnevezése nem teheti olvashatatlanná a jó CSV-t."""

@@ -96,6 +96,7 @@ def identify(path: Path) -> Source:
             return Source(path, "spreadsheet")
         return Source(path, "unknown")
 
+    from pipeline.parsers.meta_ads import NAME_COLUMNS as ADS_NAME_COLUMNS
     from pipeline.parsers.meta_ads import REQUIRED as ADS_REQUIRED
     from pipeline.parsers.meta_content import REQUIRED as CONTENT_REQUIRED
     from pipeline.parsers.zoomsphere import REQUIRED_HEADERS as ZOOMSPHERE_REQUIRED
@@ -110,7 +111,7 @@ def identify(path: Path) -> Source:
     # Egy sérült fejléc miatt se essen vissza „ismeretlenre” az egész export.
     # Három együttes Meta-oszlop már elég erős ujjlenyomat; a parser ezután
     # pontosan megnevezi, melyik kötelező oszlop hiányzik.
-    if len(set(ADS_REQUIRED) & header) >= 3 or "Kampány neve" in header:
+    if len(set(ADS_REQUIRED) & header) >= 3 or set(ADS_NAME_COLUMNS) & header:
         return Source(path, "meta_ads", adaptation=adaptation)
     if len(set(CONTENT_REQUIRED) & header) >= 3 or "Bejegyzésazonosító" in header:
         return Source(path, "meta_content", adaptation=adaptation)

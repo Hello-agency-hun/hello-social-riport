@@ -7,7 +7,12 @@ from pipeline.schema import Campaign, ParsedSource
 from pipeline.tabular import read_table_rows
 
 BOOST_PREFIXES = {"Instagram-bejegyzés:": "instagram", "Bejegyzés:": "facebook"}
-REQUIRED = ["Kampány neve", "Eredmény jelzése", "Elérés", "Megjelenések"]
+REQUIRED = ["Eredmény jelzése", "Elérés", "Megjelenések"]
+NAME_COLUMNS = {
+    "Kampány neve": "campaign",
+    "Hirdetéssorozat neve": "adset",
+    "Hirdetés neve": "ad",
+}
 
 
 @dataclass
@@ -15,6 +20,7 @@ class AdsPayload:
     campaigns: list[Campaign] = field(default_factory=list)
     currency: str = "EUR"
     dropped_zero_rows: int = 0
+    source_level: str = "campaign"
 
 
 def detect_currency(header: list[str]) -> str:
@@ -78,11 +84,17 @@ def parse(path) -> ParsedSource:
     for column in REQUIRED:
         if column not in header:
             raise MissingColumnError(f"{path}: hiányzó oszlop — {column}")
+    name_column = next((column for column in NAME_COLUMNS if column in header), None)
+    if name_column is None:
+        raise MissingColumnError(
+            f"{path}: hiányzó névoszlop — Kampány neve, Hirdetéssorozat neve "
+            "vagy Hirdetés neve"
+        )
 
     currency = detect_currency(header)
     spend_column = f"Elköltött összeg ({currency})"
 
-    payload = AdsPayload(currency=currency)
+    payload = AdsPayload(currency=currency, source_level=NAME_COLUMNS[name_column])
     starts, ends = [], []
 
     for row in rows:
@@ -97,7 +109,7 @@ def parse(path) -> ParsedSource:
             payload.dropped_zero_rows += 1
             continue
 
-        name = row["Kampány neve"].replace("\n", " ").strip()
+        name = row[name_column].replace("\n", " ").strip()
         channel = _boost_channel(name)
         end_text = str(row.get("Vége", "") or "").strip()
         normalized_end = end_text.casefold()
