@@ -238,3 +238,10 @@ def test_the_second_variant_never_kills_the_first(tmp_path, capsys):
     assert not (tmp_path / "Riport-essentials.html").exists()
     # És megmondja, min múlt — a néma kihagyás rosszabb, mint a hiba.
     assert "Instagram Tartalom CSV" in capsys.readouterr().err
+
+
+def test_report_templates_expose_post_id_for_image_recovery():
+    template_dir = Path(__file__).parents[1] / "templates"
+    for relative_path in ("report-essentials.html.j2", "sections/channel.html.j2"):
+        source = (template_dir / relative_path).read_text(encoding="utf-8")
+        assert 'data-post-id="{{ post.post_id }}"' in source

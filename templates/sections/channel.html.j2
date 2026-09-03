@@ -70,7 +70,7 @@
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
     <div class="panel">
-      <img class="thumb" src="{{ post.thumb }}" alt="">
+      <img class="thumb" src="{{ post.thumb }}" data-post-id="{{ post.post_id }}" alt="">
       <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
       <div class="rule" style="margin:12px 0"></div>
       <table style="font-size:14px">
