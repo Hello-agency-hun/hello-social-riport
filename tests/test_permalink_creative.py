@@ -47,9 +47,21 @@ def test_a_failed_request_falls_back_quietly_but_audibly():
     assert "nem érhető el" in why
 
 
-def test_only_facebook_links_are_followed():
-    """Az Instagram-permalinkek nem adnak `og:image`-et, és nem is akarunk
-    tetszőleges URL-t lekérni azért, mert egy exportban szerepelt."""
+def test_instagram_permalinks_are_followed_too():
+    """Itt korábban az állt, hogy „Instagramnál nincs og:image" — és emiatt a
+    FUP júliusi riportjában két IG-poszt helyén helyőrző maradt, pedig a
+    permalinkjük élt. Kimérve: az Instagram 200-at ad, szabványos og:image-dzsel,
+    `scontent.cdninstagram.com` hosztról."""
+    found, why = images.creative_from_permalink(
+        "https://www.instagram.com/p/DABCDEFGHIJ/", lambda u: PAGE
+    )
+    assert found is not None
+    assert why == "megvan"
+
+
+def test_only_meta_links_are_followed():
+    """Nem akarunk tetszőleges URL-t lekérni azért, mert egy exportban
+    szerepelt."""
     assert images.creative_from_permalink("https://example.com/x", lambda u: PAGE)[0] is None
     assert images.creative_from_permalink("", lambda u: PAGE)[0] is None
 

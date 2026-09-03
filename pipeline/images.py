@@ -51,7 +51,7 @@ OG_IMAGE = re.compile(r'og:image"?\s+content="([^"]+)"')
 def creative_from_permalink(
     permalink: str, fetcher: Callable[[str], bytes] = fetch
 ) -> tuple[str | None, str]:
-    """A poszt nyitóképe a Facebook `og:image` metaadatából.
+    """A poszt nyitóképe a permalink `og:image` metaadatából.
 
     Akkor kell, ha a ZoomSphere nem tud a posztról — mert közvetlenül a
     felületen ment ki —, de a Meta Tartalom exportja igen. Ilyenkor a
@@ -60,6 +60,13 @@ def creative_from_permalink(
     Kimérve: a Facebook a `hello-reporting` néven is kiadja az `og:` mezőket;
     **nem kell a saját crawlerének kiadnunk magunkat**. Böngésző-User-Agenttel
     viszont 400-at ad, tehát ezek a mezők kifejezetten gépi olvasásra szólnak.
+
+    **Az Instagram ugyanígy viselkedik.** Ezt a kód korábban tagadta — az állt
+    itt, hogy „Instagramnál nincs og:image" —, és emiatt a FUP júliusi
+    riportjában két IG-poszt helyén helyőrző maradt, pedig a permalinkjük élt.
+    A tévedés akkor derült ki, amikor valaki tényleg lekérte: az Instagram 200-at
+    ad, szabványos `og:image`-dzsel, `scontent.cdninstagram.com` hosztról. Amit
+    nem mérünk ki, azt ne állítsuk.
 
     Két feltétele van, és mindkettő kicsúszhat alólunk: az oldal legyen
     nyilvános, és a Facebook adja továbbra is ezt a metaadatot. Ezért ez
@@ -73,8 +80,8 @@ def creative_from_permalink(
     """
     if not permalink:
         return None, "nincs permalink a poszthoz"
-    if "facebook.com" not in permalink:
-        return None, "nem Facebook-link (Instagramnál nincs og:image)"
+    if not any(host in permalink for host in ("facebook.com", "instagram.com")):
+        return None, "nem Facebook- vagy Instagram-link"
     try:
         page = fetcher(permalink).decode("utf-8", errors="replace")
     except Exception as error:
