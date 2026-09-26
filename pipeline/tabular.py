@@ -2,11 +2,96 @@
 
 from datetime import date, datetime
 from pathlib import Path
+import re
 import zipfile
 
 from pipeline.textio import read_csv_header, read_csv_rows
 
 OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+
+# Ezres tagolásra használt szóközfélék: sima, nem törhető és keskeny szóköz.
+_GROUPING = re.compile(r"[\s  ']")
+_NUMBER = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
+
+
+def parse_number(value) -> float | None:
+    """Szám a cellából — akárhogy mentette el a menedzser.
+
+    A Meta nyers exportja `1234.5` alakú, de ha a menedzser megnyitja és
+    elmenti magyar Excelben, pontosvesszős CSV lesz belőle `1 234,5`
+    alakú számokkal. A pontosvesszőt már felismertük, a tizedesvesszőt nem:
+    a `float("13,90")` hibát dobott, a parser nullát írt helyette, és a
+    költés + megjelenés nulla sorokat „nullás kampányként” csendben kiszűrtük.
+    Egy egész hónap hirdetése tűnt volna el hibaüzenet nélkül.
+
+    Elfogadott alakok: `1234.5`, `1 234,5`, `1,234.5`, `1.234,5`, `13,90`,
+    `−87`, `12%`. Egyetlen vessző tizedesjel (a magyar Excel így ment);
+    több vessző ezres tagolás. `None`, ha a cella üres vagy nem szám
+    (`N/A`, `–`) — azt a hívó dönti el, mit jelent.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = _GROUPING.sub("", str(value)).replace("−", "-").rstrip("%")
+    if not text:
+        return None
+    if "," in text and "." in text:
+        # Amelyik később jön, az a tizedesjel: `1.234,5` vagy `1,234.5`.
+        if text.rfind(",") > text.rfind("."):
+            text = text.replace(".", "").replace(",", ".")
+        else:
+            text = text.replace(",", "")
+    elif text.count(",") == 1:
+        text = text.replace(",", ".")
+    elif text.count(",") > 1:
+        text = text.replace(",", "")
+    elif text.count(".") > 1:
+        text = text.replace(".", "")
+    if not _NUMBER.fullmatch(text):
+        return None
+    return float(text)
+
+
+# A dátumcellák alakjai. A sorrend számít: az ISO előbb jön, mert egyértelmű;
+# a `07/01/2026` a Meta saját (amerikai) formátuma, a `2026. 07. 01.` pedig
+# az, amit a magyar Excel ír vissza mentéskor. Nap-hónap sorrendű alakot
+# (`01.07.2026`) szándékosan nem fogadunk el: a `07/01` és az `01.07`
+# ugyanazt a napot más hónapba tenné, és ezt semmi nem jelezné.
+_DATE_FORMATS = (
+    "%Y-%m-%d",
+    "%Y-%m-%d %H:%M",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%dT%H:%M:%S",
+    "%m/%d/%Y",
+    "%m/%d/%Y %H:%M",
+    "%m/%d/%Y %H:%M:%S",
+    "%Y. %m. %d.",
+    "%Y. %m. %d. %H:%M",
+    "%Y. %m. %d. %H:%M:%S",
+    "%Y.%m.%d.",
+    "%Y.%m.%d",
+    "%Y.%m.%d. %H:%M",
+    "%Y.%m.%d %H:%M",
+)
+
+
+def parse_date(value) -> date | None:
+    """Dátum a cellából, a Meta és a magyar Excel alakjaiban. `None`, ha nem az."""
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = " ".join(str(value or "").split())
+    if not text:
+        return None
+    for pattern in _DATE_FORMATS:
+        try:
+            return datetime.strptime(text, pattern).date()
+        except ValueError:
+            continue
+    return None
 
 
 def _text(value) -> str:

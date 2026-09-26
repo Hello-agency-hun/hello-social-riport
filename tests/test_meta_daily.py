@@ -72,10 +72,33 @@ def test_truncated_file_raises_a_pipeline_error(tmp_path):
 def test_malformed_date_row_names_the_row(tmp_path):
     bad = _write(
         tmp_path / "Rossz.csv",
-        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n"2026-07-01","3"\n',
+        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n"július 1.","3"\n',
     )
     with pytest.raises(PipelineError, match="értelmezhetetlen sor"):
         parse(bad)
+
+
+def test_malformed_value_row_names_the_row(tmp_path):
+    """Egy napi érték csendes nullázása a havi összeget hamisítaná meg."""
+    bad = _write(
+        tmp_path / "Rossz.csv",
+        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n'
+        '"2026-07-01T00:00:00","sok"\n',
+    )
+    with pytest.raises(PipelineError, match="értelmezhetetlen sor"):
+        parse(bad)
+
+
+def test_excel_resaved_daily_tile_keeps_its_days_and_values(tmp_path):
+    """A magyar Excel a dátumot `2026. 07. 01. 0:00`, a nagy számot `1 234`
+    alakban menti vissza. Mindkettő ugyanaz a nap és ugyanaz az érték."""
+    resaved = _write(
+        tmp_path / "Ujramentett.csv",
+        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n'
+        '"2026. 07. 01. 0:00","1 234"\n"2026. 07. 02. 0:00",""\n',
+    )
+    series = parse(resaved).payload
+    assert series.points == [(date(2026, 7, 1), 1234), (date(2026, 7, 2), 0)]
 
 
 def test_file_without_daily_rows_raises(tmp_path):
