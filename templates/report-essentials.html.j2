@@ -1,27 +1,26 @@
-{% from "macros.html.j2" import slot, delta, delta_value %}
-<!doctype html>
-<html lang="{{ data.meta.language }}">
-<head>
-<meta charset="utf-8">
-<title>{{ data.meta.client }} — {{ period_name }}</title>
-<style>{{ css | safe }}</style>
-</head>
-<body>
+{% extends "base.html.j2" %}
+{% from "macros.html.j2" import slot, delta, delta_value with context %}
 
-<button class="pdf-button no-print" onclick="window.print()">{{ t.download_pdf }}</button>
-
+{% block pages %}
 {# 1. Címlap #}
 <section class="page" style="justify-content:flex-end">
   <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
   <div class="eyebrow">{{ t.cover_eyebrow }}</div>
   <h1>{{ data.meta.client }}</h1>
   <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">{{ period_name }}</h2>
-  <p class="note" style="margin-top:18px">{{ period_range }}</p>
+  <p class="note" style="margin-top:18px">{{ t.measured_period }}: {{ period_range }}</p>
+  {# A változás-nyilak ebben a riportban több oldalon is szerepelnek. Ha a
+     mérési időszak rést vagy átfedést hagy az előző hónappal, azt az
+     ügyfélnek is látnia kell — a teljes riport címlapja eddig is kimondta,
+     az Essentialsé hallgatott róla. #}
+  {% if period_warning %}
+  <div class="period-warning" style="margin-top:14px">{{ period_warning }}</div>
+  {% endif %}
 </section>
 
 {# 2. A hónap számokban — ezt másolja ki elsőként a kapcsolattartó #}
 <section class="page">
-  <div class="eyebrow">{{ t.essentials_month_in_numbers }}</div>
+  <div class="eyebrow">{{ t.overview }}</div>
   <h2 style="margin-bottom:40px">{{ t.essentials_month_in_numbers }}</h2>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="panel">
@@ -39,17 +38,18 @@
   </div>
 </section>
 
-{# 2. Közönségnövekedés #}
+{# 3. Közönségnövekedés #}
 <section class="page">
-  <div class="eyebrow">{{ t.essentials_audience }}</div>
+  <div class="eyebrow">{{ t.essentials_audience_eyebrow }}</div>
   <h2 style="margin-bottom:36px">{{ t.essentials_audience }}</h2>
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for name, block in data.audience.items() %}
+    {% set follower_stock = (data.comparison.get(name) or {}).get("followers") if data.comparison else none %}
+    {% set follow_change = (data.comparison.get(name) or {}).get("follows") if data.comparison else none %}
     <div class="panel">
       <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
       <div class="stat">{{ block.followers | num }}</div>
       <div class="stat-label">{{ t.followers }}</div>
-      {% set follower_stock = (data.comparison[name] or {}).get("followers") if data.comparison and data.comparison.get(name) else none %}
       {% if follower_stock %}
       <div class="stat-label" style="text-transform:none;letter-spacing:0;margin-top:6px">
         {{ delta(follower_stock.diff) }} {{ delta_value(follower_stock.diff, follower_stock.pct) }}
@@ -58,12 +58,11 @@
       {% endif %}
       <div class="rule" style="margin:14px 0"></div>
       <table style="font-size:15px">
-        {% set follow_change = (data.comparison[name] or {}).get("follows") if data.comparison and data.comparison.get(name) else none %}
         <tr><td>{{ t.new_followers_label }}{% if follow_change %}<br>
             <span class="note">{{ delta(follow_change.diff) }} {{ delta_value(follow_change.diff, follow_change.pct) }} {{ t.vs_previous_month }}</span>{% endif %}</td>
             <td class="num"><strong>{{ block.new_followers | signed }}</strong></td></tr>
         {% if block.growth is not none %}
-        <tr><td>{{ t.essentials_audience }}</td>
+        <tr><td>{{ t.essentials_growth_rate }}</td>
             <td class="num">{{ (block.growth * 100) | num(2) }}%</td></tr>
         {% endif %}
       </table>
@@ -72,19 +71,20 @@
   </div>
 </section>
 
-{# 3. Elérés és megjelenés #}
+{# 4. Elérés és megjelenés #}
 <section class="page">
-  <div class="eyebrow">{{ t.essentials_reach_impressions }}</div>
+  <div class="eyebrow">{{ t.essentials_visibility_eyebrow }}</div>
   <h2 style="margin-bottom:36px">{{ t.essentials_reach_impressions }}</h2>
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for name, block in data.channels.items() %}
+    {% set reach_change = (data.comparison.get(name) or {}).get("monthly_reach") if data.comparison else none %}
+    {% set view_change = (data.comparison.get(name) or {}).get("views") if data.comparison else none %}
+    {% set monthly_reach = (data.audience.get(name) or {}).get("monthly_reach") %}
     <div class="panel">
       <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
       <table style="font-size:17px">
-        {% set reach_change = (data.comparison[name] or {}).get("monthly_reach") if data.comparison and data.comparison.get(name) else none %}
         <tr><td>{{ t.reach }}<br><span class="note">{{ t.page_level }}{% if reach_change %} · {{ delta(reach_change.diff) }} {{ delta_value(reach_change.diff, reach_change.pct) }} {{ t.vs_previous_month }}{% endif %}</span></td>
-            <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td></tr>
-        {% set view_change = (data.comparison[name] or {}).get("views") if data.comparison and data.comparison.get(name) else none %}
+            <td class="num"><strong>{{ monthly_reach | num if monthly_reach else "–" }}</strong></td></tr>
         <tr><td>{{ t.essentials_impressions }}{% if view_change %}<br>
             <span class="note">{{ delta(view_change.diff) }} {{ delta_value(view_change.diff, view_change.pct) }} {{ t.vs_previous_month }}</span>{% endif %}</td>
             <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td></tr>
@@ -94,39 +94,52 @@
   </div>
 </section>
 
-{# 4. Elköteleződés és kattintások #}
+{# 5. Elköteleződés és kattintások.
+   Két forrás, két csoport: a reakció, a hozzászólás és a megosztás a
+   hónapban mért posztokból jön, a kattintás és a felkeresés az oldal
+   egészéről. Korábban egyetlen táblában álltak, fölöttük egy „a mért
+   posztokból — az oldal egészéről: Interakciók” töredékkel, és az oldal
+   szintű Interakciók szám nem is szerepelt a táblában. #}
 <section class="page">
-  <div class="eyebrow">{{ t.essentials_engagement }}</div>
+  <div class="eyebrow">{{ t.essentials_activity_eyebrow }}</div>
   <h2 style="margin-bottom:8px">{{ t.essentials_engagement }}</h2>
-  <p class="note" style="margin-bottom:22px;max-width:900px">{{ t.from_measured_posts }} — {{ t.page_level }}: {{ "interactions" | field }}</p>
+  <p class="note" style="margin-bottom:22px;max-width:900px">{{ t.essentials_engagement_note }}</p>
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for name, block in data.channels.items() %}
     <div class="panel">
       <div class="eyebrow" style="margin-bottom:10px">{{ name | channel }}</div>
       <table style="font-size:15px">
-        <tr><td>{{ t.reactions }}</td><td class="num">{{ block.engagement.reactions | num }}</td></tr>
-        <tr><td>{{ t.comments }}</td><td class="num">{{ block.engagement.comments | num }}</td></tr>
-        <tr><td>{{ t.shares }}</td><td class="num">{{ block.engagement.shares | num }}</td></tr>
+        {# Mért poszt nélkül a posztokból számolt összeg nem nulla, hanem
+           ismeretlen: „0 reakció” azt állítaná, hogy mértük, és senki nem
+           reagált. #}
+        {% set measured = block.engagement.posts_counted %}
+        <tr class="group-row"><th colspan="2">{{ t.from_measured_posts }}</th></tr>
+        <tr><td>{{ t.reactions }}</td><td class="num">{{ block.engagement.reactions | num if measured else "–" }}</td></tr>
+        <tr><td>{{ t.comments }}</td><td class="num">{{ block.engagement.comments | num if measured else "–" }}</td></tr>
+        <tr><td>{{ t.shares }}</td><td class="num">{{ block.engagement.shares | num if measured else "–" }}</td></tr>
         {# A mért nulla látszik, a nem mért nem: a Facebook exportjában nincs is
            `Mentések` oszlop, ott a nulla olyat állítana, amit sosem mértünk. #}
         {% if block.engagement.saves_measured %}
         <tr><td>{{ t.saves }}</td><td class="num">{{ block.engagement.saves | num }}</td></tr>
         {% endif %}
-        <tr><td><strong>{{ t.essentials_engagement }}</strong><br>
-            <span class="note">{{ t.from_measured_posts }}</span></td>
-            <td class="num"><strong>{{ block.engagement.total | num }}</strong></td></tr>
+        <tr><td><strong>{{ t.essentials_engagement }}</strong></td>
+            <td class="num"><strong>{{ block.engagement.total | num if measured else "–" }}</strong></td></tr>
+        <tr class="group-row"><th colspan="2">{{ t.page_level }}</th></tr>
+        <tr><td>{{ "interactions" | field }}</td>
+            <td class="num">{{ block.totals.interactions | num if block.totals.interactions is defined else "–" }}</td></tr>
         <tr><td>{{ "link_clicks" | field }}</td>
-            <td class="num">{{ block.totals.link_clicks | num if block.totals.link_clicks else "–" }}</td></tr>
+            <td class="num">{{ block.totals.link_clicks | num if block.totals.link_clicks is defined else "–" }}</td></tr>
         <tr><td>{{ "visits" | field }}</td>
-            <td class="num">{{ block.totals.visits | num if block.totals.visits else "–" }}</td></tr>
+            <td class="num">{{ block.totals.visits | num if block.totals.visits is defined else "–" }}</td></tr>
       </table>
     </div>
     {% endfor %}
   </div>
 </section>
 
-{# 5–8. Csatornánként: a hónap számai, majd a három legjobb poszt #}
+{# 6–10. Csatornánként: a hónap számai, majd a három legjobb poszt #}
 {% for name, block in data.channels.items() %}
+{% set monthly_reach = (data.audience.get(name) or {}).get("monthly_reach") %}
 <section class="page">
   <div class="eyebrow">{{ name | channel }}</div>
   <h2 style="margin-bottom:{{ 18 if essentials_overview.get(name) else 44 }}px">{{ t.month_performance }}</h2>
@@ -136,16 +149,16 @@
   {% endif %}
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="panel">
-      <div class="stat">{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</div>
+      <div class="stat">{{ monthly_reach | num if monthly_reach else "–" }}</div>
       <div class="stat-label">{{ t.reach }}</div>
     </div>
     {% for key, value in block.totals.items() %}
-    {% set change = (data.comparison[name] or {}).get(key) if data.comparison and data.comparison.get(name) else none %}
+    {% set change = (data.comparison.get(name) or {}).get(key) if data.comparison else none %}
     <div class="panel">
       <div class="stat">{{ value | num }}</div>
       <div class="stat-label">{{ key | field }}</div>
-      {# „Nőttünk vagy csökkentünk?” — ez az elso kerdes, amit az ugyfel feltesz.
-         Csak ott jelenik meg, ahol van elozo havi ertek: kitalalt valtozast nem
+      {# „Nőttünk vagy csökkentünk?” — ez az első kérdés, amit az ügyfél feltesz.
+         Csak ott jelenik meg, ahol van előző havi érték: kitalált változást nem
          mutatunk. #}
       {% if change %}
       <div class="stat-label" style="text-transform:none;letter-spacing:0;margin-top:6px">
@@ -166,7 +179,7 @@
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
     <div class="panel">
-      <img class="thumb" src="{{ post.thumb }}" data-post-id="{{ post.post_id }}" alt="">
+      <img class="thumb" src="{{ post.thumb }}" data-post-id="{{ post.post_id }}" alt="{{ post.caption | short(120) }}">
       {% if name != "facebook" %}
       <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
       {% endif %}
@@ -198,7 +211,7 @@
 {% if narrative and narrative.next_steps %}
 <section class="page">
   <div class="eyebrow">{{ t.essentials_next_steps }}</div>
-  <h2 style="margin-bottom:32px">{{ t.essentials_next_steps }}</h2>
+  <h2 style="margin-bottom:32px">{{ t.next_month }}</h2>
   <div class="fill">
   <ol style="padding-left:26px">
     {% for item in narrative.next_steps %}
@@ -210,19 +223,30 @@
 </section>
 {% endif %}
 
-{# 9. Összesített összefoglaló #}
+{# Összesített összefoglaló — a két csatorna egymás mellett, egy pillantásra. #}
 <section class="page">
   <div class="eyebrow">{{ t.summary }}</div>
   <h2 style="margin-bottom:36px">{{ t.essentials_summary_title }}</h2>
-  <table style="font-size:19px">
+  <table class="summary-table">
     <tr><td></td>
       {% for name in data.channels.keys() %}
-      <th class="num" style="padding-bottom:14px">{{ name | channel }}</th>
+      <th class="num">{{ name | channel }}</th>
       {% endfor %}
     </tr>
     <tr><td>{{ t.followers }}</td>
       {% for name in data.channels.keys() %}
-      <td class="num"><strong>{{ data.audience[name].followers | num if data.audience.get(name) else "–" }}</strong></td>
+      <td class="num"><strong>{{ (data.audience.get(name) or {}).get("followers") | num }}</strong></td>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ t.new_followers_label }}</td>
+      {% for name in data.channels.keys() %}
+      <td class="num">{{ (data.audience.get(name) or {}).get("new_followers") | signed }}</td>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ t.reach }}</td>
+      {% for name in data.channels.keys() %}
+      {% set monthly_reach = (data.audience.get(name) or {}).get("monthly_reach") %}
+      <td class="num"><strong>{{ monthly_reach | num if monthly_reach else "–" }}</strong></td>
       {% endfor %}
     </tr>
     <tr><td>{{ t.essentials_impressions }}</td>
@@ -230,21 +254,18 @@
       <td class="num"><strong>{{ block.totals.views | num if block.totals.views else "–" }}</strong></td>
       {% endfor %}
     </tr>
-    <tr><td>{{ t.reach }}</td>
-      {% for name in data.channels.keys() %}
-      <td class="num"><strong>{{ data.audience[name].monthly_reach | num if data.audience.get(name) and data.audience[name].monthly_reach else "–" }}</strong></td>
+    <tr><td>{{ t.essentials_engagement }} <span class="note">({{ t.from_measured_posts }})</span></td>
+      {% for name, block in data.channels.items() %}
+      <td class="num">{{ block.engagement.total | num if block.engagement.posts_counted else "–" }}</td>
+      {% endfor %}
+    </tr>
+    <tr><td>{{ "link_clicks" | field }}</td>
+      {% for name, block in data.channels.items() %}
+      <td class="num">{{ block.totals.link_clicks | num if block.totals.link_clicks is defined else "–" }}</td>
       {% endfor %}
     </tr>
   </table>
 </section>
 
-{# 10. Záróoldal #}
-<section class="page" style="justify-content:flex-end">
-  <div style="width:240px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
-  <h2>{{ data.meta.client }}</h2>
-  <p class="note" style="margin-top:12px">{{ data.meta.contact_email }}</p>
-</section>
-
-<script>{{ review_js | safe }}</script>
-</body>
-</html>
+{% include "sections/closing.html.j2" %}
+{% endblock %}

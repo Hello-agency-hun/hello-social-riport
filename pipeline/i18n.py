@@ -99,6 +99,13 @@ STRINGS = {
         "essentials_engagement": "Elköteleződés",
         "essentials_clicks": "Kattintások",
         "essentials_summary_title": "A két csatorna egy lapon",
+        "essentials_audience_eyebrow": "Közönség",
+        "essentials_visibility_eyebrow": "Láthatóság",
+        "essentials_activity_eyebrow": "Aktivitás",
+        "essentials_growth_rate": "Növekedési ütem",
+        "essentials_engagement_note": "A reakciók, a hozzászólások és a "
+        "megosztások a hónapban mért posztokból számolódnak; az interakciók, a "
+        "kattintások és a felkeresések az oldal egészére vonatkoznak.",
         "comments": "Hozzászólás",
         "shares": "Megosztás",
         "followers": "Követő",
@@ -204,6 +211,13 @@ STRINGS = {
         "no_data": "nincs adat",
         "peak": "csúcs",
         "total": "összesen",
+        "no_caption": "(nincs szöveg)",
+        "image_unavailable": "kép nem elérhető",
+        # változásjelzők — képernyőolvasónak
+        "delta_none": "nincs összehasonlítási alap",
+        "delta_up": "növekedés",
+        "delta_down": "csökkenés",
+        "delta_flat": "változatlan",
     },
     "en": {
         "save_to_folder": "Save to folder",
@@ -268,6 +282,13 @@ STRINGS = {
         "essentials_engagement": "Engagement",
         "essentials_clicks": "Clicks",
         "essentials_summary_title": "Both channels on one page",
+        "essentials_audience_eyebrow": "Audience",
+        "essentials_visibility_eyebrow": "Visibility",
+        "essentials_activity_eyebrow": "Activity",
+        "essentials_growth_rate": "Growth rate",
+        "essentials_engagement_note": "Reactions, comments and shares are "
+        "counted from the posts measured this month; interactions, clicks and "
+        "visits cover the whole page.",
         "comments": "Comments",
         "shares": "Shares",
         "followers": "Followers",
@@ -366,6 +387,12 @@ STRINGS = {
         "no_data": "no data",
         "peak": "peak",
         "total": "total",
+        "no_caption": "(no caption)",
+        "image_unavailable": "image not available",
+        "delta_none": "no basis for comparison",
+        "delta_up": "increase",
+        "delta_down": "decrease",
+        "delta_flat": "unchanged",
     },
 }
 

@@ -1,0 +1,12 @@
+{# Záróoldal — minden riportváltozatban ugyanaz. Az Essentials korábban
+   csak az ügyfél nevét és egy e-mail-címet mutatott, telefonszám és
+   köszönet nélkül: a riport úgy ért véget, mintha lemaradt volna a vége. #}
+<section class="page" style="justify-content:flex-end">
+  <div style="width:150px;color:var(--ink);margin-bottom:auto">{{ logo_mark | safe }}</div>
+  <h2>{{ t.lets_talk }}</h2>
+  {# Ügyfelenként külön postafiók van. A cím a `client.yaml`-ből jön; ha ott
+     nincs megadva, a mappanévből tippelünk, és a `--validate` szól érte. #}
+  <p style="margin-top:22px">+36 1 365 1788 · {{ data.meta.contact_email }} · helloagency.hu</p>
+  <p style="margin-top:26px;font-size:22px;color:var(--ink-soft)">{{ t.thanks }}</p>
+  <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
+</section>

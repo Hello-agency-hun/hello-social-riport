@@ -13,17 +13,11 @@ Ahol tényleg szám kell, ott adat van mögötte — tehát van mire hivatkozni.
 import html
 import re
 
-from pipeline.labels import currency_label, money_digits
-
+from pipeline import formatting
 from pipeline.errors import NarrativeError
 
 REFERENCE = re.compile(r"\{([a-z_]+(?:\.[a-z_]+)*)(?:\|([a-z]+))?\}")
 DIGIT = re.compile(r"\d")
-
-MONTHS_HU = [
-    "január", "február", "március", "április", "május", "június",
-    "július", "augusztus", "szeptember", "október", "november", "december",
-]
 
 # A blokkok, amiket Claude ír. A `guidance` a SKILL.md-be és a
 # narrative-guide.md-be kerül — a séma írja le önmagát.
@@ -73,11 +67,6 @@ OPTIONAL_BLOCKS = {
 }
 
 
-def _number(value, digits: int = 0) -> str:
-    text = f"{float(value):,.{digits}f}"
-    return text.replace(",", " ").replace(".", ",")
-
-
 def _lookup(path: str, data: dict):
     current = data
     for part in path.split("."):
@@ -87,19 +76,31 @@ def _lookup(path: str, data: dict):
     return current
 
 
-def _format(value, formatter: str | None, data: dict) -> str:
+def _format(value, formatter: str | None, data: dict, path: str = "") -> str:
+    """A hivatkozott érték a riport nyelvén formázva.
+
+    Korábban itt mindig magyar formázás állt, így az angol riport vezetői
+    összefoglalójában `33,2×` és „2026. július” szerepelt — ugyanazon a lapon,
+    ahol a sablon `33.2×`-et írt. A nyelvet a riportadat mondja meg.
+    """
+    language = (data.get("meta") or {}).get("language") or "hu"
+    if value is None:
+        # Egy nem számolható érték (pl. nincs organikus poszt, tehát nincs
+        # szorzó) nem lehet „0” a szövegben — az állítás volna, nem hiány.
+        raise NarrativeError(
+            f"a(z) {path or 'hivatkozott'} érték ebben a riportban nem "
+            "számolható (nincs adat) — fogalmazd át a mondatot nélküle"
+        )
     if formatter in (None, "num"):
-        return _number(value)
+        return formatting.number(value, 0, language)
     if formatter == "money":
-        currency = data["paid"]["currency"]
-        return f"{_number(value, money_digits(currency))} {currency_label(currency)}"
+        return formatting.money(value, data["paid"]["currency"], language)
     if formatter == "pct":
-        return f"{_number(float(value) * 100, 1)}%"
+        return formatting.percent(value, 1, language)
     if formatter == "x":
-        return f"{_number(value, 1)}×"
+        return formatting.multiplier(value, language)
     if formatter == "month":
-        year, month = str(value).split("-")
-        return f"{year}. {MONTHS_HU[int(month) - 1]}"
+        return formatting.month(value, language)
     if formatter == "raw":
         return str(value)
     raise NarrativeError(f"ismeretlen formázó: {formatter!r}")
@@ -130,7 +131,9 @@ def resolve(text: str, data: dict) -> str:
     _check_digits(text)
 
     def replace(match: re.Match) -> str:
-        return _format(_lookup(match.group(1), data), match.group(2), data)
+        return _format(
+            _lookup(match.group(1), data), match.group(2), data, match.group(1)
+        )
 
     return REFERENCE.sub(replace, text)
 
@@ -155,7 +158,9 @@ def resolve_markup(text: str, data: dict) -> str:
     position = 0
     for match in REFERENCE.finditer(text):
         parts.append(_escape(text[position : match.start()]))
-        value = _format(_lookup(match.group(1), data), match.group(2), data)
+        value = _format(
+            _lookup(match.group(1), data), match.group(2), data, match.group(1)
+        )
         parts.append(
             f'<span class="val" contenteditable="false" '
             f'data-ref="{html.escape(match.group(0), quote=True)}">'

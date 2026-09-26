@@ -125,3 +125,62 @@ def test_the_hungarian_report_stays_hungarian(tmp_path):
     assert "A hónap számokban" in html
     assert "összesen" in html, "a diagram lába magyarul"
     assert "Köszönjük a kíváncsiságot" in html
+
+
+def test_narrative_references_follow_the_report_language():
+    """A narratíva hivatkozásai korábban mindig magyarul formázódtak: az angol
+    riport vezetői összefoglalójában `33,2×`, `91,7%` és „2026. július” állt,
+    miközben ugyanazon a lapon a sablon `33.2×`-et írt."""
+    from pipeline.narrative import resolve
+
+    data = {
+        "meta": {"period": "2026-07", "language": "en"},
+        "paid": {"currency": "EUR"},
+        "cross": {"reach_multiplier": 33.2, "boosted_share_of_post_reach": 0.917,
+                  "avg_reach_boosted_post": 4312, "boost_spend": 1234.5},
+    }
+    assert resolve("{cross.reach_multiplier|x}", data) == "33.2×"
+    assert resolve("{cross.boosted_share_of_post_reach|pct}", data) == "91.7%"
+    assert resolve("{cross.avg_reach_boosted_post}", data) == "4,312"
+    assert resolve("{cross.boost_spend|money}", data) == "1,234.50 EUR"
+    assert resolve("{meta.period|month}", data) == "July 2026"
+
+
+def test_every_visible_word_of_the_english_report_is_english(english_html):
+    """A korábbi teszt csak a címeket nézte. A szivárgás a jegyzetekben
+    („+5 a hónapban”), a képernyőolvasónak szóló feliratokban („növekedés”),
+    a diagramok üres állapotában és a képhelyőrzőben maradt meg."""
+    for phrase in ("a hónapban", "növekedés", "csökkenés", "kézi adat",
+                   "nincs szöveg", "nincs adat", "kép nem elérhető"):
+        assert phrase not in english_html, f"magyarul maradt: {phrase!r}"
+    assert "+5 this month" in english_html
+
+
+def test_the_english_ranking_chart_uses_a_decimal_point(english_html):
+    ranking = re.findall(r"(\d+[.,]\d)×", english_html)
+    assert ranking, "a rangsor-diagram szorzói"
+    assert all("," not in value for value in ranking), ranking
+
+
+def test_the_english_placeholder_image_speaks_english(english_html):
+    import base64
+
+    encoded = re.findall(r'src="data:image/svg\+xml;base64,([^"]+)"', english_html)
+    assert encoded, "offline renderben helyőrzők állnak a kreatívok helyén"
+    decoded = base64.b64decode(encoded[0]).decode("utf-8")
+    assert "image not available" in decoded
+    assert "sans-serif" in decoded, "a lap betűje, nem talpas alapértelmezés"
+
+
+@pytest.mark.parametrize("variant", ["full", "essentials"])
+def test_every_variant_injects_its_button_labels(tmp_path, variant):
+    """Az Essentials sablonból kimaradt a feliratok beinjektálása, és élesben a
+    riport minden gombja üres felirattal jelent meg. A közös alapsablon óta ez
+    minden változatban ott van — ez a teszt azt őrzi, hogy ott is maradjon."""
+    data = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    data["meta"]["variant"] = variant
+    html = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    labels = re.search(r"window\.__helloLabels = (\{.*?\});", html, re.S)
+    assert labels and json.loads(labels.group(1))["comment"] == "megjegyzés"
+    assert "window.__helloReport = " in html

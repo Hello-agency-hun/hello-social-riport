@@ -162,6 +162,12 @@ strong { color: var(--ink); font-weight: 700; }
 .accent { color: var(--accent); }
 
 table { width: 100%; border-collapse: collapse; }
+/* Csoportfejléc egy panel tábláján belül: ha két forrás számai állnak egy
+   táblában (a mért posztok és az oldal egésze), a határ látszódjon. */
+.group-row th { padding: 14px 8px 6px 0; font-size: 11px; }
+.group-row:first-child th { padding-top: 0; }
+.summary-table td, .summary-table th { font-size: 19px; }
+.summary-table th { font-size: 12px; padding-bottom: 14px; }
 th { text-align: left; font-size: 12px; font-weight: 700; letter-spacing: .1em;
      text-transform: uppercase; color: var(--ink-soft);
      padding: 0 12px 10px 0; border-bottom: 1px solid var(--rule); }
@@ -190,6 +196,17 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
                   font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .status-pill { display: inline-block; border: 1px solid var(--rule); border-radius: 999px;
                padding: 5px 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
+/* Az állapotot a felirat mondja ki; a pont csak gyorsítja a ránézést.
+   Futó kampány: akcentus. Szünetel: napsárga. Lezárult és ismeretlen:
+   semleges — a lezárulás nem hiba, nem kap riasztó színt. */
+.status-pill::before, .status-count::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px;
+  border-radius: 50%; background: var(--rule); vertical-align: 1px;
+}
+.status-pill--ongoing::before, .status-pill--active::before,
+.status-count--ongoing::before, .status-count--active::before { background: var(--accent); }
+.status-pill--paused::before, .status-count--paused::before { background: var(--brand-sun); }
+.status-pill--completed::before, .status-count--completed::before { background: var(--ink-soft); }
 .campaign-duration { margin-top: 3px; color: var(--ink-soft); font-size: 11px; }
 .campaign-duration::before { content: ""; display: inline-block; width: 22px; height: 3px;
                              margin-right: 7px; vertical-align: middle;
@@ -199,8 +216,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
    Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */
 .manual-slot { border: 1.5px dashed var(--rule); border-radius: 12px; padding: 20px; }
+/* Ránézésre beviteli mező legyen: szaggatott aláhúzás és szövegkurzor.
+   Korábban csak egy halvány gondolatjel állt a keretben, és nem látszott,
+   hogy bele lehet írni. */
 .manual-input { font-size: 48px; font-weight: 900; line-height: 1;
-                min-height: 50px; outline: none; color: var(--ink); }
+                min-height: 50px; outline: none; color: var(--ink); cursor: text;
+                border-bottom: 2px dashed var(--rule); padding-bottom: 4px; }
 .manual-input:empty::before { content: attr(data-placeholder); color: var(--rule); }
 .manual-input:focus { border-bottom: 2px solid var(--accent); }
 .manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }

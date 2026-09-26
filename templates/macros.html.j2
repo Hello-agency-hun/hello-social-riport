@@ -1,3 +1,8 @@
+{# A makrók a hívó sablon kontextusával importálódnak (`with context`): a
+   feliratok (`t`) így itt is a riport nyelvén szólnak. Korábban a
+   képernyőolvasónak szóló „növekedés” és a „kézi adat” felirat az angol
+   riportban is magyarul maradt. #}
+
 {# Változásjelző nyíl. Minden kiszámolt változás mellett ez áll — az irányt a
    nyíl mutatja, nem a szín. Ezért mindkét irány ugyanaz a pink: egy csökkenést
    pirosra festeni ítélet volna, márpedig nem minden visszaesés rossz hír (a
@@ -9,15 +14,15 @@
    azt, hogy nincs összehasonlítási alapunk. Egy jellel a kettő egybemosódna. #}
 {% macro delta(diff) %}
 {%- if diff is none -%}
-<span class="delta delta--none" aria-label="nincs összehasonlítási alap">·</span>
+<span role="img" class="delta delta--none" aria-label="{{ t.delta_none }}">·</span>
 {%- elif diff > 0 -%}
-<span class="delta delta--up" aria-label="növekedés">↑</span>
+<span role="img" class="delta delta--up" aria-label="{{ t.delta_up }}">↑</span>
 {%- elif diff < 0 -%}
-<span class="delta delta--down" aria-label="csökkenés">↓</span>
+<span role="img" class="delta delta--down" aria-label="{{ t.delta_down }}">↓</span>
 {%- else -%}
 {# Gondolatjel volt itt, és mínuszjelnek látszott: úgy tűnt, mintha csökkent
    volna, pedig épp hogy nem mozdult. Karika, a nyilak színében. #}
-<span class="delta delta--flat" aria-label="változatlan">○</span>
+<span role="img" class="delta delta--flat" aria-label="{{ t.delta_flat }}">○</span>
 {%- endif -%}
 {% endmacro %}
 
@@ -28,15 +33,26 @@
   <span class="delta-pct">{{ pct | num(1) }}%</span>{% endif %}</span>
 {% endmacro %}
 
+{# A boost-szorzó. Ha nincs mihez mérni — nincs mért organikus vagy boostolt
+   poszt —, a szorzó nem nulla, hanem nem értelmezhető. A „0,0×” a riport
+   legnagyobb, zöld számaként azt állította volna, hogy a boost semmit nem ért. #}
+{% macro ratio(cross) %}
+{%- if cross.posts_boosted and cross.posts_organic and cross.avg_reach_organic_post -%}
+{{ cross.reach_multiplier | num(1) }}×
+{%- else -%}
+–
+{%- endif -%}
+{% endmacro %}
+
 {% macro slot(key, value, label, hint) %}
 {% if value is not none %}
 <div class="panel">
   <div class="stat">{{ value | num }}</div>
-  <div class="stat-label">{{ label }} <span class="manual-mark">kézi adat</span></div>
+  <div class="stat-label">{{ label }} <span class="manual-mark">{{ t.manual_mark }}</span></div>
 </div>
 {% else %}
 <div class="manual-slot no-print" data-manual="{{ key }}">
-  <div class="manual-input" contenteditable="true" data-placeholder="—"></div>
+  <div class="manual-input" contenteditable="true" role="textbox" aria-label="{{ label }}" data-placeholder="—"></div>
   <div class="stat-label">{{ label }}</div>
   <p class="note" style="margin-top:6px">{{ hint }}</p>
 </div>

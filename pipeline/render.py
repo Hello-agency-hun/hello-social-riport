@@ -8,42 +8,19 @@ from typing import Callable
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from pipeline import charts, i18n, images, kpi, labels
+from pipeline import charts, formatting, i18n, images, kpi, labels
 from pipeline import manual as manual_module
 from pipeline import performance
 from pipeline import narrative as narrative_module
-from pipeline.assets import TEMPLATES, logo, stylesheet
+from pipeline.assets import TEMPLATES, logo, review_script, stylesheet
 
-MONTHS_HU = [
-    "január", "február", "március", "április", "május", "június",
-    "július", "augusztus", "szeptember", "október", "november", "december",
-]
-
-
-def _number(value, digits: int = 0, language: str = "hu") -> str:
-    """Magyar: szóköz ezres, vessző tizedes. Angol: vessző ezres, pont tizedes.
-
-    Egyetlen riporton belül nem keveredhet a kettő: magyar szövegben egy
-    angolosan tördelt szám elírásnak látszik, és fordítva.
-    """
-    if value is None:
-        return "–"
-    text = f"{float(value):,.{digits}f}"
-    if language != "hu":
-        return text
-    return text.replace(",", " ").replace(".", ",")
-
-
-def _signed(value, digits: int = 0, language: str = "hu") -> str:
-    """Előjeles változás: `+412` vagy `−87`.
-
-    A mínusz valódi mínuszjel (U+2212), nem kötőjel — a kötőjel a számjegyek
-    mellett elvész, és egy csökkenés úgy néz ki, mintha növekedés volna.
-    """
-    if value is None:
-        return "–"
-    text = _number(abs(value), digits, language)
-    return f"+{text}" if value > 0 else (f"−{text}" if value < 0 else text)
+# A formázás a `formatting` modulban él, egy helyen — a narratíva is azt
+# használja, hogy egy riporton belül ne keveredjen kétféle számjelölés. Ezek a
+# nevek a sablonszűrők és a meglévő tesztek kedvéért maradnak.
+_number = formatting.number
+_signed = formatting.signed
+_money = formatting.money
+_period_name = formatting.month
 
 
 # Az Essentials riport rövidebb: tíz dia, és a legjobb posztok sorrendjét nem
@@ -104,22 +81,6 @@ def _assessment_font(what_worked, what_to_improve) -> int:
         if longest <= limit:
             return size
     return ASSESSMENT_MIN
-
-
-def _money(value, currency: str, language: str = "hu") -> str:
-    """A pénznem helye nyelvfüggő: a szimbólumok (`$`, `£`) angolul a szám elé
-    kerülnek, a betűkódok (HUF, EUR) mindkét nyelven mögé."""
-    amount = _number(value, labels.money_digits(currency), language)
-    symbols = {"USD": "$", "GBP": "£"}
-    if language != "hu" and currency in symbols:
-        return f"{symbols[currency]}{amount}"
-    return f"{amount} {labels.currency_label(currency)}"
-
-
-def _period_name(period: str, language: str = "hu") -> str:
-    year, month = period.split("-")
-    name = i18n.months(language)[int(month) - 1]
-    return f"{year}. {name}" if language == "hu" else f"{name} {year}"
 
 
 def _period_range(period: str) -> str:
@@ -194,17 +155,52 @@ def _fixed_chunks(items: list, per_page: int = 8) -> list[list]:
     return [items[index : index + per_page] for index in range(0, len(items), per_page)]
 
 
-def _campaign_status(campaign: dict, text) -> str:
+# Az állapotok sorrendje az összesítőben: ami fut, az elöl.
+STATUS_ORDER = ("ongoing", "active", "paused", "completed", "unknown")
+
+
+def _campaign_status_kind(campaign: dict) -> str:
+    """Gépi állapot — a címke színe ebből jön, a felirat a nyelvből."""
     if campaign.get("is_ongoing"):
-        return text.campaign_ongoing
+        return "ongoing"
     status = str(campaign.get("delivery_status") or campaign.get("status") or "").casefold()
     if status in {"active", "in_process", "in progress"}:
-        return text.campaign_active
+        return "active"
     if status in {"completed", "recently_completed", "finished"}:
-        return text.campaign_completed
+        return "completed"
     if status in {"paused", "inactive"}:
-        return text.campaign_paused
-    return text.campaign_unknown
+        return "paused"
+    return "unknown"
+
+
+def _campaign_status(campaign: dict, text) -> str:
+    return text[f"campaign_{_campaign_status_kind(campaign)}"]
+
+
+def _report_identity(data: dict) -> dict:
+    """Ez az egy riport — a böngészőoldali mentés ehhez kötődik.
+
+    A `review.js` a félkész munkát (kézi számok, megjegyzések, átírt
+    szövegek) a böngésző tárhelyében őrzi. Ez a tárhely eredetenként közös:
+    ha minden riport ugyanarról a szerverről nyílik meg, egy közös kulcs
+    mellett az egyik ügyfél kézi adatai és megjegyzései a másik ügyfél
+    `review.json`-jába kerültek. A kulcs ezért az ügyfél, a pontos időszak és
+    a változat; a `revision` pedig az adott renderelés, hogy egy már
+    feldolgozott kör megjegyzései ne kerüljenek vissza a következőbe.
+    """
+    meta = data.get("meta") or {}
+    key = "|".join(
+        str(meta.get(field) or "")
+        for field in ("client", "period", "measurement_start", "measurement_end", "variant")
+    )
+    return {"key": key, "revision": date.today().isoformat() + ":" + _fingerprint(data)}
+
+
+def _fingerprint(data: dict) -> str:
+    import hashlib
+
+    raw = json.dumps(data, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
 
 
 def render(
@@ -230,6 +226,7 @@ def render(
     campaign_rows = []
     for campaign in data.get("paid", {}).get("campaign_details", []):
         row = dict(campaign)
+        row["status_kind"] = _campaign_status_kind(campaign)
         row["display_status"] = _campaign_status(campaign, text)
         row["display_end"] = (
             text.campaign_ongoing
@@ -244,8 +241,19 @@ def render(
     if campaign_rows:
         campaign_pages = [campaign_rows[:6]]
         campaign_pages.extend(_fixed_chunks(campaign_rows[6:], per_page=8))
-    campaign_status_counts = sorted(
-        Counter(row["display_status"] for row in campaign_rows).items()
+    # (gépi állapot, felirat, darab) — a futó kampányok elöl. Korábban ábécé
+    # szerint álltak, így a „lezárult” megelőzhette az „aktív”-at.
+    counted = Counter(row["status_kind"] for row in campaign_rows)
+    campaign_status_counts = [
+        (kind, text[f"campaign_{kind}"], counted[kind])
+        for kind in STATUS_ORDER
+        if counted[kind]
+    ]
+    # Az eredménytípusok költés szerint csökkenő sorrendben: ami a keret
+    # nagyobbik részét vitte, az van felül.
+    result_rows = sorted(
+        (data.get("paid", {}).get("by_result_type") or {}).items(),
+        key=lambda item: -(item[1].get("spend") or 0),
     )
 
     credibility = data.get("meta", {}).get("measurement_credibility")
@@ -283,6 +291,7 @@ def render(
                     colour=curve_colours[index % len(curve_colours)],
                     language=language,
                     total_label=text.total,
+                    empty_label=text.no_data,
                 ),
             )
             for index, field in enumerate(sorted(block["daily"]))
@@ -329,7 +338,14 @@ def render(
                     sources = [fallback]
 
             uris = images.embed(sources, cache_dir=cache_dir, fetcher=fetcher)
-            post["thumb"] = uris[0] if uris else images.PLACEHOLDER
+            # A helyőrző is a riport nyelvén szól: az angol riportban egy
+            # „kép nem elérhető” felirat hanyagságnak látszana.
+            thumb = uris[0] if uris else images.PLACEHOLDER
+            post["thumb"] = (
+                images.placeholder(text.image_unavailable)
+                if thumb == images.PLACEHOLDER
+                else thumb
+            )
         channel_posts[name] = _balanced_chunks(selected)
         # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,
         # amit a kártyák oldalanként háromra bontva nem tudnak.
@@ -347,14 +363,15 @@ def render(
             ranking[name] = charts.bar_chart(
                 [
                     (
-                        labels.shorten(post["caption"], 44) or "(nincs szöveg)",
+                        labels.shorten(post["caption"], 44) or text.no_caption,
                         post["score"]["vs_typical"] or 0,
                     )
                     for post in measured
                 ],
                 label=f"{labels.channel(name)} — {text.performance_vs_typical}",
                 language=language,
-                value_format=lambda value: _number(value, 1) + "×",
+                value_format=lambda value: formatting.multiplier(value, language),
+                empty_label=text.no_data,
             )
 
     template = _environment(language).get_template(
@@ -394,6 +411,7 @@ def render(
         },
         campaign_pages=campaign_pages,
         campaign_status_counts=campaign_status_counts,
+        result_rows=result_rows,
         ads_period=data.get("quality", {}).get("ads_period") or {},
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
@@ -402,6 +420,7 @@ def render(
         # A gombfeliratok a JavaScriptbe is átmennek: az a kód a sablonon kívül
         # él, és az angol próbán pont ezek maradtak magyarul.
         ui_labels=json.dumps(i18n.ui(language), ensure_ascii=False),
+        report_identity=_report_identity(data),
         period_name=_period_name(data["meta"]["period"], language),
         period_range=_measured_range(data["meta"]),
         period_warning=period_warning,
@@ -412,10 +431,11 @@ def render(
                 [(text.boosted_posts_label, boosted), (text.organic_posts_label, organic)],
                 label=text.reach_split_label,
                 language=language,
+                empty_label=text.no_data,
             ),
         },
         currency=data["paid"]["currency"],
         manual=manual or {},
         manual_slots=manual_module.SLOTS,
-        review_js=(TEMPLATES / "review.js").read_text(encoding="utf-8"),
+        review_js=review_script(),
     )

@@ -1,0 +1,42 @@
+{#- Minden riportváltozat közös kerete: fej, eszköztár, szerkesztő-script.
+
+    Az Essentials sablon a teljes riport másolataként indult, és a másolásból
+    kimaradt a gombfeliratok beinjektálása: élesben a riport összes gombja
+    (megjegyzés, mentés) üres felirattal jelent meg. Ami minden változatban
+    ugyanaz, az ezért egy helyen él — egy új változat nem felejthet ki belőle
+    semmit, csak a `pages` blokkot tölti ki.
+
+    A `.pdf-button`, a `data-narrative`, a `data-manual` és a `data-post-id`
+    horgok maradnak: a webes felület ezekre építhet. -#}
+<!doctype html>
+<html lang="{{ data.meta.language }}">
+<head>
+<meta charset="utf-8">
+<title>{{ data.meta.client }} — {{ page_title or period_name }}</title>
+{# A stíluslap a saját tartalmunk, nem felhasználói adat. Escape-elve az
+   idézőjelek `&#34;`-re válnának, amitől a `@font-face src` és a `--font`
+   érvénytelen lenne — a riport néma talpas fallback fontra váltana. #}
+<style>{{ css | safe }}</style>
+</head>
+<body>
+
+{# Egy sorba rendezett eszköztár. A gombok korábban egyenként, fix
+   pixel-eltolással álltak a jobb felső sarokban, és hosszabb (angol)
+   feliratnál egymásra csúsztak. A `review.js` a mentésgombokat ide teszi. #}
+<div class="toolbar no-print" role="toolbar">
+  <button class="pdf-button no-print" type="button" onclick="window.print()">{{ t.download_pdf }}</button>
+</div>
+
+{% block pages %}{% endblock %}
+
+{# A gombfeliratok a riport nyelvén — a JavaScript a sablonon kívül él.
+   A kulcs pedig ezt az egy riportot azonosítja: a böngésző tárhelye
+   eredetenként (origin) közös, és egy közös kulccsal az egyik ügyfél kézi
+   adatai és megjegyzései a másik ügyfél review.json-jába kerültek. #}
+<script>
+window.__helloLabels = {{ ui_labels | safe }};
+window.__helloReport = {{ report_identity | tojson }};
+</script>
+<script>{{ review_js | safe }}</script>
+</body>
+</html>

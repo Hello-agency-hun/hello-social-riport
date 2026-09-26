@@ -1,18 +1,6 @@
-{% from "macros.html.j2" import slot, delta %}
-<!doctype html>
-<html lang="{{ data.meta.language }}">
-<head>
-<meta charset="utf-8">
-<title>{{ data.meta.client }} — {{ period_name }}</title>
-{# A stíluslap a saját tartalmunk, nem felhasználói adat. Escape-elve az
-   idézőjelek `&#34;`-re válnának, amitől a `@font-face src` és a `--font`
-   érvénytelen lenne — a riport néma talpas fallback fontra váltana. #}
-<style>{{ css | safe }}</style>
-</head>
-<body>
-
-<button class="pdf-button no-print" onclick="window.print()">{{ t.download_pdf }}</button>
-
+{% extends "base.html.j2" %}
+{% from "macros.html.j2" import slot, delta, ratio with context %}
+{% block pages %}
 <section class="page" style="justify-content:flex-end">
   <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
   <div class="eyebrow">{{ t.cover_eyebrow }}</div>
@@ -50,7 +38,7 @@
       <div class="stat-label">{{ t.ad_spend }}</div>
     </div>
     <div>
-      <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
+      <div class="stat accent">{{ ratio(data.cross) }}</div>
       <div class="stat-label">{{ t.boosted_vs_organic }}</div>
     </div>
   </div>
@@ -98,7 +86,7 @@
   <table>
     <tr><th>{{ t.result_type }}</th><th class="num">{{ t.campaign }}</th>
         <th class="num">{{ t.spend | capitalize }}</th><th class="num">{{ t.result }}</th></tr>
-    {% for kind, block in data.paid.by_result_type.items() %}
+    {% for kind, block in result_rows %}
     <tr>
       <td>{{ kind | result }}</td>
       <td class="num">{{ block.campaigns }}</td>
@@ -140,8 +128,8 @@
 
   {% if loop.first and campaign_status_counts %}
   <div class="status-counts">
-    {% for status, count in campaign_status_counts %}
-    <span class="status-count" data-status-count><strong>{{ count }}</strong> {{ status }}</span>
+    {% for kind, status, count in campaign_status_counts %}
+    <span class="status-count status-count--{{ kind }}" data-status-count><strong>{{ count }}</strong> {{ status }}</span>
     {% endfor %}
   </div>
   {% endif %}
@@ -155,7 +143,7 @@
         <div class="campaign-duration">{{ campaign.start_date }} → {{ campaign.display_end }}</div>
         {% endif %}
       </div>
-      <div><span class="status-pill">{{ campaign.display_status }}</span></div>
+      <div><span class="status-pill status-pill--{{ campaign.status_kind }}">{{ campaign.display_status }}</span></div>
       <div><span class="campaign-label">{{ t.campaign_end }}</span>{{ campaign.display_end }}</div>
       <div class="num"><span class="campaign-label">{{ t.campaign_result }}</span>{{ campaign.results | num }} · {{ campaign.result_type | result }}</div>
     </div>
@@ -218,7 +206,7 @@
       <div class="stat-label">{{ t.avg_organic_reach }}</div>
     </div>
     <div>
-      <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
+      <div class="stat accent">{{ ratio(data.cross) }}</div>
       <div class="stat-label">{{ t.boost_multiplier }}</div>
     </div>
   </div>
@@ -237,7 +225,7 @@
       <div class="stat-label">{{ name | channel }} {{ t.follower }}</div>
       {% if block.new_followers %}
       <p class="note" style="margin-top:6px">
-        {{ delta(block.new_followers) }} {{ block.new_followers | signed }} a hónapban
+        {{ delta(block.new_followers) }} {{ block.new_followers | signed }} {{ t.in_month }}
       </p>
       {% endif %}
     </div>
@@ -263,19 +251,6 @@
   </p>
 </section>
 
-<section class="page" style="justify-content:flex-end">
-  <div style="width:150px;color:var(--ink);margin-bottom:auto">{{ logo_mark | safe }}</div>
-  <h2>{{ t.lets_talk }}</h2>
-  {# Ügyfelenként külön postafiók van. A cím a `client.yaml`-ből jön; ha ott
-     nincs megadva, a mappanévből tippelünk, és a `--validate` szól érte. #}
-  <p style="margin-top:22px">+36 1 365 1788 · {{ data.meta.contact_email }} · helloagency.hu</p>
-  <p style="margin-top:26px;font-size:22px;color:var(--ink-soft)">{{ t.thanks }}</p>
-  <div class="eyebrow" style="margin-top:36px">HELLO Agency</div>
-</section>
+{% include "sections/closing.html.j2" %}
 
-{# A gombfeliratok a riport nyelvén — a JavaScript a sablonon kívül él, és
-   az angol próbán pont ezek maradtak magyarul egy egyébként angol riporton. #}
-<script>window.__helloLabels = {{ ui_labels | safe }};</script>
-<script>{{ review_js | safe }}</script>
-</body>
-</html>
+{% endblock %}

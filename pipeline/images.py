@@ -12,7 +12,7 @@ import base64
 import hashlib
 import io
 import re
-from html import unescape
+from html import escape, unescape
 from pathlib import Path
 from typing import Callable
 
@@ -22,19 +22,25 @@ MAX_WIDTH = 480
 QUALITY = 82
 TIMEOUT = 30
 
-# Semleges helyőrző, ha egy kép nem tölthető le. Szándékosan felismerhető:
-# a riportban látszania kell, hogy itt kép lett volna.
-PLACEHOLDER = (
-    "data:image/svg+xml;base64,"
-    + base64.b64encode(
-        (
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3">'
-            '<rect width="4" height="3" fill="#E4E0D8"/>'
-            '<text x="2" y="1.7" text-anchor="middle" font-size=".32" '
-            'fill="#6B665D">kép nem elérhető</text></svg>'
-        ).encode("utf-8")
-    ).decode("ascii")
-)
+def placeholder(text: str = "kép nem elérhető") -> str:
+    """Semleges helyőrző, ha egy kép nem tölthető le. Szándékosan
+    felismerhető: a riportban látszania kell, hogy itt kép lett volna.
+
+    A szöveg a riport nyelvén jön. A betűtípust ki kell mondani: a data URI-s
+    SVG nem örökli a lap fontját, és alapértelmezésben talpas betűvel jelent
+    meg — idegen testként a riport tipográfiájában.
+    """
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3">'
+        '<rect width="4" height="3" fill="#E4E0D8"/>'
+        '<text x="2" y="1.62" text-anchor="middle" font-size=".2" '
+        'font-family="Helvetica Neue, Helvetica, Arial, sans-serif" '
+        f'fill="#6B665D">{escape(text)}</text></svg>'
+    )
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+PLACEHOLDER = placeholder()
 
 
 def fetch(url: str) -> bytes:

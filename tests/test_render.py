@@ -190,9 +190,42 @@ def test_six_posts_are_shown_for_the_measured_channel(html):
 
 
 def test_post_metrics_show_measured_numbers_not_a_subtraction(html):
-    """Összes elérés és fizetett kampány-elérés — organikus becslés nélkül."""
-    assert "ebből fizetett" in html
+    """Összes elérés és fizetett kampány-elérés — organikus becslés nélkül.
+
+    Ez a teszt korábban az „ebből fizetett” szót kereste, és csak azért ment
+    át, mert a kifejezés a beágyazott stíluslap egy kommentjében szerepelt: a
+    két megjelenített boostolt Facebook-posztnál a fizetett elérés nagyobb a
+    teljesnél, tehát ott az „ebből” sosem volt igaz. Most a kártya sorát
+    nézzük, nem a lap forrását.
+    """
+    rows = re.findall(r'<td class="accent">(.*?)</td>', html)
+    assert rows, "a boostolt kártyán ott a fizetett elérés"
+    assert set(rows) <= {"ebből fizetett", "fizetett elérés", "költés"}
     assert "becsült" not in html.lower()
+
+
+def _card_html(data, tmp_path, reach, paid_reach):
+    post = next(
+        post for post in data["channels"]["facebook"]["posts"] if post.get("paid")
+    )
+    post["reach"] = reach
+    post["paid"]["reach"] = paid_reach
+    return render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+
+def test_of_which_paid_only_when_paid_reach_is_part_of_the_total(data, tmp_path):
+    """„Ebből fizetett” csak akkor, ha a fizetett elérés része az összesnek.
+
+    A Meta a két számot külön méri; a Gambas Pil-Pil posztnál a fizetett
+    elérés (4 251) nagyobb volt, mint a poszt teljes elérése (4 142). Ott az
+    „ebből” ellentmondás, amit az ügyfél elsőként kiszúr.
+    """
+    assert "ebből fizetett" in _card_html(data, tmp_path, 9000, 4000)
+
+
+def test_a_larger_paid_reach_is_not_called_a_part_of_the_total(data, tmp_path):
+    html = _card_html(data, tmp_path, 4142, 4251)
+    assert "fizetett elérés" in html
 
 
 def test_page_count_stays_within_the_agreed_limit(html):
@@ -467,3 +500,46 @@ def test_assessment_font_follows_the_longer_panel():
     assert _assessment_font(["a" * 1500], ["rövid"]) == _assessment_font(
         ["rövid"], ["a" * 1500]
     )
+
+
+def test_the_reach_multiplier_is_a_dash_when_there_is_nothing_to_compare(data, tmp_path):
+    """Organikus poszt nélkül a szorzó nem nulla, hanem nem értelmezhető.
+
+    A „0,0×” a riport legnagyobb, zöld számaként azt állította volna, hogy a
+    boost semmit nem ért.
+    """
+    data["cross"].update(
+        posts_organic=0, avg_reach_organic_post=0, reach_multiplier=0.0
+    )
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+    assert "0,0×" not in out
+    assert '<div class="stat accent">–</div>' in out
+
+
+def test_result_types_are_listed_by_spend(html):
+    """Ami a keret nagyobbik részét vitte, az van felül — nem a CSV sorrendje."""
+    table = html[html.index("Kampányok eredménytípus szerint") :]
+    table = table[: table.index("</table>")]
+    amounts = [
+        float(value.replace("\xa0", "").replace(",", "."))
+        for value in re.findall(r'<td class="num">([\d\xa0]+,\d\d) EUR</td>', table)
+    ]
+    assert len(amounts) == 6
+    assert amounts == sorted(amounts, reverse=True)
+
+
+def test_running_campaigns_are_counted_first(html):
+    """Az összesítőben elöl az áll, ami még fut — nem ábécérendben a „lezárult”."""
+    counts = re.findall(r'class="status-count status-count--(\w+)"', html)
+    assert counts == ["active", "completed"]
+    pills = set(re.findall(r'class="status-pill status-pill--(\w+)"', html))
+    assert pills == {"active", "completed"}
+
+
+def test_internal_notes_do_not_ship_inside_the_report(html):
+    """A stíluslap és a szerkesztő-script kommentjei fejlesztői jegyzetek.
+    Beágyazva minden kiküldött riport forrásában ott utaztak."""
+    style = html[html.index("<style>") : html.index("</style>")]
+    assert "/*" not in style
+    script = html[html.rindex("<script>") :]
+    assert not any(line.lstrip().startswith("//") for line in script.splitlines())

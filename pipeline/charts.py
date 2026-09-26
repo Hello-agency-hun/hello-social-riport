@@ -5,8 +5,10 @@ Az SVG vektoros (a PDF-ben éles marad), nulla függőség, és a színei a bran
 tokenjeiből jönnek — ha az akcentus változik, a grafikonok követik.
 """
 
+import math
 from datetime import date
 
+from pipeline import i18n
 from pipeline.labels import shorten
 
 W, H = 620, 260
@@ -20,6 +22,12 @@ MIN_PEAK_GAP = 5
 
 SERIES_TOKENS = ["var(--accent)", "var(--brand-rose)", "var(--brand-blue)",
                  "var(--brand-sun)", "var(--brand-pink)"]
+
+# A rács felső értéke ennyivel a csúcs fölött van. Enélkül a legerősebb nap
+# pontosan a diagram tetejére esett, és a fölé írt dátumcímke kilógott a
+# rajzterületből — épp a hónap legfontosabb napjának dátuma nem látszott.
+HEADROOM = 1.15
+NICE_STEPS = (1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10)
 
 
 def _escape(text: str) -> str:
@@ -37,6 +45,25 @@ def _open(label: str, width: int = W, height: int = H) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
         f'role="img" aria-label="{_escape(label)}" class="chart">'
     )
+
+
+def _nice_top(peak: float) -> int:
+    """A rács teteje: kerek, páros szám a csúcs fölött.
+
+    Korábban a csúcs maga volt a rács teteje, így a tengelyen `31` és `15`
+    állt — a félérték csonkolva, a lépték önkényesnek látszott. Kerek
+    értékkel (`40`, `20`) a görbe ránézésre leolvasható. Páros, hogy a
+    félútnál is egész szám álljon.
+    """
+    target = peak * HEADROOM
+    if target <= 2:
+        return 2
+    magnitude = 10 ** math.floor(math.log10(target))
+    for step in NICE_STEPS:
+        top = step * magnitude
+        if top >= target and top == int(top) and int(top) % 2 == 0:
+            return int(top)
+    return int(10 * magnitude)
 
 
 def _empty(label: str, width: int = W, height: int = H, empty_label: str = "nincs adat") -> str:
@@ -65,6 +92,17 @@ def _thousands_hu(value: float) -> str:
     return f"{int(value):,}".replace(",", " ")
 
 
+def _day(day: date, language: str = "hu") -> str:
+    """Rövid napfelirat: magyarul `07.14.`, angolul `Jul 14`.
+
+    Az angol riportban a `07.14.` sem hónap-nap, sem nap-hónap sorrendként
+    nem egyértelmű — a hónap nevével viszont igen.
+    """
+    if language == "hu":
+        return day.strftime("%m.%d.")
+    return f"{i18n.months(language)[day.month - 1][:3]} {day.day}"
+
+
 def _percent(share: float, language: str = "hu") -> str:
     """Magyar tizedesjel vesszővel, angol ponttal — a riport szövegével egyezően."""
     text = f"{share * 100:.1f}"
@@ -78,6 +116,7 @@ def line_chart(
     colour: str = "var(--accent)",
     language: str = "hu",
     total_label: str = "összesen",
+    empty_label: str = "nincs adat",
 ) -> str:
     """Napi idősor. Egyetlen pontnál vízszintes vonalat rajzol, nem oszt nullával.
 
@@ -90,10 +129,10 @@ def line_chart(
     pedig azért, hogy egy oldalon a négy görbe ne legyen mind ugyanolyan zöld.
     """
     if not points:
-        return _empty(label, W, height)
+        return _empty(label, W, height, empty_label)
 
     values = [value for _, value in points]
-    top = max(values) or 1
+    top = _nice_top(max(values))
     span = max(len(points) - 1, 1)
 
     gutter = 52  # hely a rácsvonalak értékeinek
@@ -111,7 +150,7 @@ def line_chart(
 
     parts = [_open(label, W, height)]
 
-    # Rácsvonalak: nulla, fél, csúcs — így minden pont leolvasható.
+    # Rácsvonalak: nulla, fél, tető — kerek értékekkel, így minden pont leolvasható.
     for share in (0.0, 0.5, 1.0):
         y = PAD_T + inner_h * (1 - share)
         parts.append(
@@ -150,25 +189,28 @@ def line_chart(
         anchor = "start" if index < len(values) * 0.72 else "end"
         offset = 8 if anchor == "start" else -8
         strong = rank == 0
+        # A két címke (érték és dátum) a pont fölé kerül. Ha ott nincs hely —
+        # alacsony diagramon előfordulhat —, a pont alá, hogy ne vágódjon le.
+        value_y, date_y = (py - 9, py - 23) if py - 23 >= 12 else (py + 18, py + 30)
         parts.append(
             f'<circle cx="{px:.1f}" cy="{py:.1f}" r="{4 if strong else 3}" '
             f'fill="{colour}" stroke="var(--paper)" stroke-width="2"/>'
-            f'<text x="{px + offset:.1f}" y="{py - 9:.1f}" text-anchor="{anchor}" '
+            f'<text x="{px + offset:.1f}" y="{value_y:.1f}" text-anchor="{anchor}" '
             f'font-size="{13 if strong else 12}" '
             f'font-weight="{700 if strong else 500}" '
             f'fill="var(--ink{"" if strong else "-soft"})">'
             f"{_thousands(values[index], language)}</text>"
-            f'<text x="{px + offset:.1f}" y="{py - 23:.1f}" text-anchor="{anchor}" '
+            f'<text x="{px + offset:.1f}" y="{date_y:.1f}" text-anchor="{anchor}" '
             f'font-size="10" fill="var(--ink-soft)">'
-            f'{_escape(points[index][0].strftime("%m.%d."))}</text>'
+            f"{_escape(_day(points[index][0], language))}</text>"
         )
 
     parts.append(
         f'<text x="{gutter}" y="{height - 6}" font-size="11" fill="var(--ink-soft)">'
-        f'{_escape(points[0][0].strftime("%m.%d."))}</text>'
+        f"{_escape(_day(points[0][0], language))}</text>"
         f'<text x="{gutter + inner_w}" y="{height - 6}" text-anchor="end" '
         f'font-size="11" fill="var(--ink-soft)">'
-        f'{_escape(points[-1][0].strftime("%m.%d."))}</text>'
+        f"{_escape(_day(points[-1][0], language))}</text>"
         f'<text x="{gutter + inner_w / 2}" y="{height - 6}" text-anchor="middle" '
         f'font-size="11" fill="var(--ink-soft)">{total_label} {_thousands(sum(values), language)}</text>'
     )
@@ -182,6 +224,7 @@ def bar_chart(
     colour: str = "var(--brand-rose)",
     value_format=None,
     language: str = "hu",
+    empty_label: str = "nincs adat",
 ) -> str:
     """Vízszintes oszlopok, értékkel a végükön.
 
@@ -190,7 +233,7 @@ def bar_chart(
     értelmetlen volna.
     """
     if not items:
-        return _empty(label)
+        return _empty(label, empty_label=empty_label)
     fmt = value_format or (lambda v: _thousands(v, language))
 
     top = max(value for _, value in items) or 1
@@ -214,11 +257,16 @@ def bar_chart(
     return "".join(parts)
 
 
-def donut(parts: list[tuple[str, float]], label: str, language: str = "hu") -> str:
+def donut(
+    parts: list[tuple[str, float]],
+    label: str,
+    language: str = "hu",
+    empty_label: str = "nincs adat",
+) -> str:
     """Gyűrűdiagram `stroke-dasharray`-jel — nincs szükség ív-matematikára."""
     total = sum(value for _, value in parts)
     if not parts or total <= 0:
-        return _empty(label, 300, 300)
+        return _empty(label, 300, 300, empty_label)
 
     radius = 60
     circumference = 2 * 3.141592653589793 * radius
