@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -8,6 +9,8 @@ import yaml
 from pipeline.build import build, load_narrative
 from pipeline.build import load_config as build_module_config
 from pipeline.errors import FixtureAsClientError, PipelineError
+from pipeline.formatting import money, number
+from pipeline.labels import result_type
 from pipeline.textio import force_utf8_output
 
 
@@ -18,25 +21,28 @@ def _campaign_map(data: dict) -> str:
     block = data["campaign"]
     totals = block["totals"]
     currency = data["paid"]["currency"]
+    # Ezt a menedzser is látja (a kiválasztást vele kell jóváhagyatni), ezért
+    # ugyanúgy írjuk a számokat, mint a riport: „144 000 Ft”, nem „144000.00 HUF”.
     lines = [
         f"Kampány         „{block['title']}” — {totals['campaigns']} kampány, "
-        f"{totals['spend']:.2f} {currency} · {block['start']} – {block['end']} "
+        f"{money(totals['spend'], currency)} · {block['start']} – {block['end']} "
         f"({block['days']} nap)",
     ]
     lines += [
-        f"                · {row['name'][:70]} — {row['spend']:.2f} {currency}"
+        f"                · {row['name'][:70]} — {money(row['spend'], currency)}"
         for row in block["campaigns"]
     ]
     outside = block["outside"]
     if outside["campaigns"]:
         lines.append(
             f"                Kimaradt: {outside['campaigns']} kampány, "
-            f"{outside['spend']:.2f} {currency} (nem illik a mintára)"
+            f"{money(outside['spend'], currency)} (nem illik a mintára)"
         )
     if block["primary"]:
         primary = block["primary"]
         lines.append(
-            f"Elsődleges eredmény  {primary['results']} × {primary['result_type']}"
+            f"Elsődleges eredmény  {number(primary['results'])} × "
+            f"{result_type(primary['result_type'])}"
         )
     points = (block.get("timeline") or {}).get("points") or []
     lines.append(
@@ -98,7 +104,7 @@ def _report_map(data: dict) -> str:
         for item in data["inventory"]
     )
 
-    return "\n".join(
+    text = "\n".join(
         [
             f"Ügyfél:   {data['meta']['client']}",
             f"Időszak:  {data['meta']['period']}",
@@ -106,8 +112,13 @@ def _report_map(data: dict) -> str:
             "Így értelmeztem a mappát — nézd át, mielőtt továbbmegyünk:",
             interpretation,
             "",
-            f"ZoomSphere      {content['total']} tartalom — "
-            + ", ".join(f"{count} {name}" for name, count in content["by_type"].items()),
+            f"ZoomSphere      {content['total']} tartalom"
+            + (
+                " — "
+                + ", ".join(f"{count} {name}" for name, count in content["by_type"].items())
+                if content["by_type"]
+                else ""
+            ),
             f"Posztok         {quality['posts_total']} összesen · "
             f"{quality['posts_measured']} mért organikus teljesítménnyel · "
             f"{quality['posts_with_creative']} kreatívval · "
@@ -234,6 +245,9 @@ def _report_map(data: dict) -> str:
             ),
         ]
     )
+    # Az üresen maradt szakaszok (nincs figyelmeztetés, nincs képernyőkép)
+    # üres sorokat hagynak maguk után — a kampányriportnál hatot egymás alatt.
+    return re.sub(r"\n{3,}", "\n\n", text)
 
 
 def _refuse_the_fixture(directory: Path, allowed: bool) -> None:

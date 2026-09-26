@@ -254,12 +254,98 @@ def test_the_validate_map_names_the_selection(project, capsys):
     assert "facebook/visits" in out
 
 
+def test_the_validate_map_reads_like_the_report(project, capsys):
+    """A kiválasztást a menedzserrel kell jóváhagyatni, tehát ő is olvassa:
+    „144 000 Ft” és „Érkezésioldal-megtekintés”, nem „144000.00 HUF” és
+    nyers Meta-kulcs. Az üresen maradt szakaszok sem hagynak hat üres sort."""
+    main([str(project), "--period", "2026-07", "--validate"])
+    out = capsys.readouterr().out
+    assert "2 kampány, 144\u00a0000 Ft" in out
+    assert "Kimaradt: 1 kampány, 50\u00a0000 Ft" in out
+    assert "× Érkezésioldal-megtekintés" in out
+    assert "\n\n\n" not in out
+    assert "ZoomSphere      0 tartalom\n" in out, "nincs lógó gondolatjel"
+
+
+def test_a_time_broken_down_export_counts_campaigns_not_rows(project, capsys):
+    """Heti bontásnál egy kampány hetente külön sorban jön. A „15 kampány”
+    félrevezetett: három kampány van, tizenöt sorban."""
+    main([str(project), "--period", "2026-07", "--validate"])
+    out = capsys.readouterr().out
+    assert "3 kampány (0 boost) · 15 sor, idő szerint bontva, HUF" in out
+
+
+def test_two_campaigns_with_one_name_are_not_a_breakdown(project, capsys):
+    """Ugyanazt a posztot kétszer hirdetve két azonos nevű kampány jön,
+    ugyanarra a lekérési ablakra. Ez két kampány, nem idő szerinti bontás."""
+    (project / "input" / "kampanyok.csv").write_text(
+        HEADER
+        + f"{START},{END},Toborzás_Budapest,completed,100,"
+        "actions:omni_landing_page_view,5000,1.5,10000,2026-07-26,2026-06-01,8000,120\n"
+        + f"{START},{END},Toborzás_Budapest,completed,80,"
+        "actions:omni_landing_page_view,4000,1.5,8000,2026-07-26,2026-06-15,6000,90\n",
+        encoding="utf-8",
+    )
+    main([str(project), "--period", "2026-07", "--validate"])
+    out = capsys.readouterr().out
+    assert "2 kampány (0 boost), HUF" in out
+    assert "idő szerint bontva" not in out
+
+
+def test_a_left_placeholder_never_reaches_the_cover(project):
+    """A vázból bennmaradt „<…>” nincs megadva: a kötelező cím hiánya megállít,
+    az opcionális cél pedig kimarad — a helyőrző nem kerül az ügyfél elé."""
+    config = CONFIG.format(language="hu")
+    (project / "client.yaml").write_text(
+        config.replace('"Nyári toborzás"', '"<a kampány neve a címlapon>"'),
+        encoding="utf-8",
+    )
+    with pytest.raises(MissingConfigError, match="melyik kampányról szól"):
+        build(project, "2026-07")
+
+    (project / "client.yaml").write_text(
+        config.replace('"Jelentkezések a karrieroldalon"', '"<a kampány célja egy mondatban>"'),
+        encoding="utf-8",
+    )
+    assert build(project, "2026-07")["campaign"]["goal"] == ""
+
+
+def test_a_campaign_folder_without_config_gets_a_campaign_skeleton(project):
+    """Kampánymappában a hiányzó client.yaml helyett kampányváz jár: a havi
+    váz követőszámot kért, ami ide nem kell, a kampány kiválasztása pedig
+    kimaradt belőle."""
+    (project / "client.yaml").unlink()
+    with pytest.raises(MissingConfigError) as caught:
+        build(project, "2026-07", "2026-06-01", "2026-07-26", variant="campaign")
+    message = str(caught.value)
+    assert "variant: campaign" in message
+    assert "measurement_start: 2026-06-01" in message
+    assert "campaign:\n  title:" in message
+    assert "followers:" not in message
+
+
 def test_the_checklist_is_about_the_campaign():
     text = checklist({"fb_page_id": "1"}, "clients/teszt/2026-07-toborzas", variant="campaign")
     assert "Kampányriport" in text
     assert "Bontás → Idő → Hét" in text
     assert "campaign.reach" in text
     assert "előtte lévő, ugyanolyan hosszú időszakra" in text
+
+
+def test_the_checklist_yaml_is_complete_and_safe_to_paste():
+    """A megadott dátumok bekerülnek, az opcionális mezők pedig kommentként
+    állnak: ha a kitöltésük elmarad, nem kerül helyőrző a riportba."""
+    text = checklist(
+        {"fb_page_id": "1"},
+        "clients/teszt/2026-07-toborzas",
+        measurement_start="2026-06-01",
+        measurement_end="2026-07-26",
+        variant="campaign",
+    )
+    assert "    measurement_start: 2026-06-01" in text
+    assert "    measurement_end: 2026-07-26" in text
+    for optional in ("goal", "post_match", "reach"):
+        assert f"    # {optional}:" in text
 
 
 def test_the_monthly_report_is_untouched(fixture_dir, tmp_path):

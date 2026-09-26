@@ -37,8 +37,10 @@
       {% endif %}
     </div>
     {% endfor %}
-    {% if not block %}
-    {% for key in data.channels[name].totals %}
+    {# A még hiányzó mezők akkor is kitölthetők maradnak, ha egy részük már
+       megvan. Korábban csak az üres csatornán jelentek meg: aki az első körben
+       egy értéket írt be, a többit a következő riportban már nem tudta. #}
+    {% for key in (data.channels.get(name) or {}).get("totals", {}) if key not in block %}
     {{ slot(
          "prev_" ~ name ~ "_" ~ key,
          none,
@@ -46,7 +48,6 @@
          t.previous_month_hint
        ) }}
     {% endfor %}
-    {% endif %}
   </div>
 </section>
 {% endfor %}

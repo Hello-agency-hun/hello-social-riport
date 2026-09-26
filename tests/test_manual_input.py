@@ -49,12 +49,43 @@ def test_a_non_number_is_rejected_rather_than_coerced():
 def test_applied_manual_values_survive_later_review_rounds():
     """Az újrarenderelt összehasonlító kártyának már nincs ``data-manual``
     mezője. A következő mentés ezért a korábbi értékekből induljon, különben
-    egy puszta narratívajavítás kitörli az előző havi számokat."""
+    egy puszta narratívajavítás kitörli az előző havi számokat.
+
+    A forrás maga a riport, nem csak a böngésző tárhelye: egy másik
+    böngészőből (vagy a webes eszközből) mentve a tárhely üres volt, és a
+    review.json üres ``manual``-lal ment ki. A beépített érték a tárhelyben
+    ragadt régebbit is felülírja."""
     collector = REVIEW_JS[REVIEW_JS.index("function collect") :]
     collector = collector[: collector.index("var edits")]
 
-    assert "Object.assign({}, stored.manual || {})" in collector
+    assert "var APPLIED = REPORT.manual || {};" in REVIEW_JS
+    assert "Object.assign({}, stored.manual || {}, APPLIED)" in collector
     assert "delete manual[field.dataset.manual]" in collector
+
+
+def test_the_report_carries_its_applied_manual_values(tmp_path):
+    """A review.js csak akkor tudja továbbvinni a beépített kézi számokat, ha
+    a riport átadja neki őket."""
+    import json
+
+    from pipeline.render import render
+
+    golden = (
+        Path(__file__).parent / "fixtures" / "larus-2026-07" / "report_data.golden.json"
+    )
+    data = json.loads(golden.read_text(encoding="utf-8"))
+    html = render(
+        data,
+        cache_dir=tmp_path,
+        fetcher=lambda url: b"",
+        manual={"prev_facebook_visits": 1400, "prev_instagram_views": 0},
+    )
+    found = re.search(r"window\.__helloReport = (\{.*?\});\n", html)
+    assert found, "a riport azonosítója a lapon"
+    assert json.loads(found.group(1))["manual"] == {
+        "prev_facebook_visits": 1400,
+        "prev_instagram_views": 0,
+    }
 
 
 def test_review_js_keeps_line_breaks():

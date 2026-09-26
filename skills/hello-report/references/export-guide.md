@@ -93,20 +93,40 @@ Ugyanaz a fiókváltás után, öt csempe:
 
 ## 7. Havi elérés és követőszám
 
-**Ezeket nem kell letölteni** — a riportban ott lesz a helyük szaggatott kerettel.
+**Ezeket nem kell letölteni** — exportban nincsenek, csak a felületről
+olvashatók le. A menedzser képernyőképet tesz az `input/` mappába (vagy
+bemondja a számot), te pedig a `client.yaml`-be írod:
 
-Statisztika → **Elérés** csempe, az időszak a pontos mérési dátumokra állítva.
-Csatornánként egy szám. Ugyanígy a követő-összlétszám a Közönség alatt.
+```yaml
+monthly_reach:
+  facebook: <szám>
+  instagram: <szám>
+followers:
+  facebook: <szám>
+  instagram: <szám>
+```
 
-A menedzser beírja a riportba, megnyomja a **Mentés** gombot, és a letöltött
-`review.json`-t a hónap mappájába teszi. A következő hónaptól a követőszám már
-automatikus, mert az előző riportból jön.
+- **Havi elérés:** Business Suite → Eredmények, az időszak a pontos mérési
+  dátumokra állítva. A **Facebookon a „Nézők” csempe** az elérés: „Elérés”
+  csempe ott nincs, a „Megtekintések” pedig megjelenést mér, nem embert.
+  Az Instagramon az **„Elérés”** csempe.
+- **Követőszám:** Business Suite → Közönség (az oldal fejléce kerekít, ez
+  nem). A következő hónaptól magától számolódik — előző állomány + havi új
+  követés —, amíg a hónapok egymás után jönnek, és van követés-csempe. Ha a
+  lánc megszakad, a `--validate` újra kéri.
+
+A riportban nincs rájuk kitölthető mező: amit a `--validate` hiányol, azt a
+`client.yaml`-ben pótoljuk, nem az ügyfélnek szánt oldalon.
 
 ## 8. Előző hónap (opcionális)
 
-Az összehasonlító oldalakhoz. Két út:
+Az összehasonlító oldalakhoz. Három út:
 
 - **Egyszerű:** az előző havi `report_data.json` átmásolva `previous.json` néven.
+- **Kézzel:** ahol nincs előző havi érték, az összehasonlító oldalon
+  szaggatott keretű mező áll. A menedzser beírja, **Mentés**, és a
+  `review.json` a hónap mappájába kerül. A kimaradt mezők a következő körben is
+  kitölthetők.
 - **Első hónapban:** a korábbi riport PDF-jéből javaslat kérhető:
 
   ```bash

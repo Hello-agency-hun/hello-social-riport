@@ -15,10 +15,20 @@ A lista a `client.yaml`-ből szűkül: akinek nincs Instagram-fiókja, ne kapjon
 Instagram-sorokat.
 """
 
+from pipeline.campaign import yaml_lines
+
 FIVE_TILES = "Felkeresések · Hivatkozáskattintások · Interakciók · Követők · Megtekintések"
 
 
-def _campaign(client: dict, directory: str, exact_range: str, has_fb: bool, has_ig: bool) -> str:
+def _campaign(
+    client: dict,
+    directory: str,
+    exact_range: str,
+    has_fb: bool,
+    has_ig: bool,
+    measurement_start: str | None = None,
+    measurement_end: str | None = None,
+) -> str:
     """A kampányriport listája. Más a kérdés, más a letöltés: a Meta Ads
     export a lényeg, a kampány teljes idejére — a többi kiegészítés."""
     lines = [
@@ -51,14 +61,8 @@ def _campaign(client: dict, directory: str, exact_range: str, has_fb: bool, has_
         "□ ZoomSphere → Scheduler → export a kampány idejére → .XLSX   (a kreatívokhoz)",
         "",
         "A client.yaml-be:",
-        "  report:",
-        "    variant: campaign",
-        "  campaign:",
-        '    title: "<a kampány neve a címlapon>"',
-        '    match: ["<a kampánynevekben közös szórészlet>"]',
-        '    goal: "<a kampány célja egy mondatban — opcionális>"',
-        '    post_match: ["<#hashtag vagy kulcsszó a kapcsolódó posztokhoz — opcionális>"]',
     ]
+    lines += ["  " + line for line in yaml_lines(measurement_start, measurement_end)]
     return "\n".join(lines)
 
 
@@ -90,6 +94,8 @@ def render(
             else "a kampány első és utolsó napja",
             has_fb,
             has_ig,
+            measurement_start,
+            measurement_end,
         )
 
     lines = [

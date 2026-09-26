@@ -315,7 +315,7 @@ def _campaign_view(data: dict, language: str, text, cache_dir: Path, fetcher) ->
     }
 
 
-def _report_identity(data: dict) -> dict:
+def _report_identity(data: dict, manual: dict | None = None) -> dict:
     """Ez az egy riport — a böngészőoldali mentés ehhez kötődik.
 
     A `review.js` a félkész munkát (kézi számok, megjegyzések, átírt
@@ -325,13 +325,24 @@ def _report_identity(data: dict) -> dict:
     `review.json`-jába kerültek. A kulcs ezért az ügyfél, a pontos időszak és
     a változat; a `revision` pedig az adott renderelés, hogy egy már
     feldolgozott kör megjegyzései ne kerüljenek vissza a következőbe.
+
+    A `manual` a riportba már beépített kézi számok. Ezeknek a helyén az
+    újrarenderelt riportban kész kártya áll, beviteli mező nélkül, így a
+    következő `review.json` csak innen tudja továbbvinni őket. Korábban csak
+    a böngésző tárhelye őrizte őket: egy másik böngészőből (vagy a webes
+    eszközből) mentett review.json üres `manual`-lal ment ki, és felülírva
+    a régit, eltüntette az előző havi számokat.
     """
     meta = data.get("meta") or {}
     key = "|".join(
         str(meta.get(field) or "")
         for field in ("client", "period", "measurement_start", "measurement_end", "variant")
     )
-    return {"key": key, "revision": date.today().isoformat() + ":" + _fingerprint(data)}
+    return {
+        "key": key,
+        "revision": date.today().isoformat() + ":" + _fingerprint(data),
+        "manual": manual or {},
+    }
 
 
 def _fingerprint(data: dict) -> str:
@@ -549,7 +560,7 @@ def render(
         # A gombfeliratok a JavaScriptbe is átmennek: az a kód a sablonon kívül
         # él, és az angol próbán pont ezek maradtak magyarul.
         ui_labels=json.dumps(i18n.ui(language), ensure_ascii=False),
-        report_identity=_report_identity(data),
+        report_identity=_report_identity(data, manual),
         period_name=_period_name(data["meta"]["period"], language),
         period_range=_measured_range(data["meta"]),
         period_warning=period_warning,

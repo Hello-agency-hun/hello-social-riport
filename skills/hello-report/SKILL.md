@@ -168,7 +168,8 @@ Futtasd újra a 3. lépést, majd mondd meg a menedzsernek, hol a `Riport.html`,
 és hogy:
 
 - a jobb felső gombbal PDF-be nyomtathatja,
-- a szaggatott keretű mezőkbe beírhatja azt, amit a Meta nem exportál,
+- az összehasonlító oldalak szaggatott keretű mezőibe beírhatja az előző havi
+  számokat (ahol nincs `previous.json`),
 - bármelyik szövegblokkba belekattinthat és átírhatja,
 - bármelyik oldalhoz megjegyzést fűzhet,
 - a **Mentés** gomb egyetlen `review.json`-t tölt le, amit a hónap mappájába kell tennie.

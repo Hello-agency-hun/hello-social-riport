@@ -65,11 +65,17 @@ def _serialise(value):
     return value
 
 
-def load_config(directory: Path) -> dict:
+def load_config(
+    directory: Path,
+    variant: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict:
     """Az ügyfél beállításai. Új ügyfélnél ez még nincs meg — a hibaüzenet
     ezért a kitöltött sablont adja vissza, nem csak a hiány tényét. Amit az
     exportokból ki lehet olvasni, azt ki is olvassuk: az oldalazonosítót
-    bekérni olyasmi, amit már megkaptunk."""
+    bekérni olyasmi, amit már megkaptunk. A `variant` és a dátumok csak a
+    sablont alakítják: egy kampánymappa kampányvázat kap, nem havit."""
     path = Path(directory) / "client.yaml"
     if not path.exists():
         found = bootstrap.suggest(Path(directory) / "input")
@@ -80,7 +86,7 @@ def load_config(directory: Path) -> dict:
         )
         raise MissingConfigError(
             f"nincs client.yaml itt: {path.parent}\n{lead}\n\n"
-            f"{bootstrap.template(found)}"
+            f"{bootstrap.template(found, variant, start_date, end_date)}"
         )
     # A követőszámot itt még nem ellenőrizzük: lehet, hogy nem is kell megadni,
     # mert az előző hónapból továbbszámolható. Ahhoz viszont a napi adat kell,
@@ -387,7 +393,7 @@ def build(
     attól, ami az utolsó riportban van.
     """
     directory = Path(directory)
-    config = load_config(directory)
+    config = load_config(directory, variant, start_date, end_date)
     if variant:
         config.setdefault("report", {})["variant"] = variant
     client = config["client"]
@@ -437,12 +443,20 @@ def build(
             parsed = meta_ads.parse(source.path)
             ads_payload = parsed.payload
             campaigns = parsed.payload.campaigns
-            boosts = sum(1 for c in campaigns if c.is_boost)
+            # Idő szerint bontott exportban egy kampány hetente (naponta) külön
+            # sorban jön: a sorok száma ilyenkor nem a kampányok száma. A
+            # bontást a lekérési ablak mutatja meg, nem a név — ugyanazt a
+            # posztot kétszer hirdetve két azonos nevű kampány is lehet.
+            distinct, breakdown_rows = campaign_mod.consolidate(campaigns)
+            boosts = sum(1 for c in distinct if c.is_boost)
+            rows = (
+                f" · {len(campaigns)} sor, idő szerint bontva" if breakdown_rows else ""
+            )
             inventory.append(
                 (
                     source.path.name,
                     "Meta Ads",
-                    f"{len(campaigns)} kampány ({boosts} boost), "
+                    f"{len(distinct)} kampány ({boosts} boost){rows}, "
                     f"{parsed.payload.currency}"
                     + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
                 )
@@ -711,11 +725,17 @@ def build(
         config.get("monthly_reach") or {},
         previous_audience=(previous or {}).get("audience") or {},
     )
+    # Az előző havi riport az erősebb forrás; a kézi érték csak azt a metrikát
+    # pótolja, ami abból hiányzik. Az összehasonlító oldal minden hiányzó
+    # metrikára kitölthető mezőt mutat, és annak previous.json mellett is
+    # hatnia kell — különben a mező semmit nem csinálna.
     comparison = {
         name: compare.deltas(
             block["totals"],
-            (previous or {}).get("channels", {}).get(name, {}).get("totals")
-            or compare.previous_from_manual(manual_values, name, block["totals"]),
+            {
+                **compare.previous_from_manual(manual_values, name, block["totals"]),
+                **((previous or {}).get("channels", {}).get(name, {}).get("totals") or {}),
+            },
         )
         for name, block in channels.items()
     }

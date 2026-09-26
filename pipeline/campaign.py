@@ -18,6 +18,7 @@ deduplikált elérését csak az Ads Manager összesítő sora tudja), eltérő
 eredménytípusok nem adhatók össze, és ami nincs, az nem nulla.
 """
 
+import re
 import unicodedata
 from datetime import date, timedelta
 
@@ -44,8 +45,53 @@ def cost_per_result(spend: float, results: int, result_type: str) -> float | Non
         return None
     scale = 1000 if result_type in PER_MILLE else 1
     return round(spend * scale / results, 4)
+
+
 # Egy kampányriport posztkártyáinak felső határa.
 POST_LIMIT = 6
+# A kitöltetlenül hagyott sablonmező: `"<a kampány neve a címlapon>"`.
+PLACEHOLDER = re.compile(r"\s*<[^<>]*>\s*")
+
+
+def _given(value):
+    """A kitöltetlenül hagyott sablonmező nincs megadva — különben a helyőrző
+    szövege kerülne az ügyfél címlapjára."""
+    if isinstance(value, str) and PLACEHOLDER.fullmatch(value):
+        return None
+    return value
+
+
+def yaml_lines(
+    measurement_start: str | None = None,
+    measurement_end: str | None = None,
+    language: str | None = None,
+    currency: str | None = None,
+) -> list[str]:
+    """A kampányriport `client.yaml`-szakaszai, kitöltendő vázként.
+
+    A checklist és a hiányzó `client.yaml` sablonja is ezt adja — egy helyen,
+    hogy a kettő ne csússzon el. A kötelező mezők helyőrzővel állnak (így
+    kitöltetlenül a build megáll), az opcionálisak kommentként: ha a
+    kitöltésük elmarad, nem kerül helyőrző a riportba.
+    """
+    lines = ["report:", "  variant: campaign"]
+    if measurement_start and measurement_end:
+        lines += [
+            f"  measurement_start: {measurement_start}",
+            f"  measurement_end: {measurement_end}",
+        ]
+    if language:
+        lines.append(f"  language: {language}")
+    if currency:
+        lines.append(f"  currency: {currency}")
+    return lines + [
+        "campaign:",
+        '  title: "<a kampány neve a címlapon>"',
+        '  match: ["<a kampánynevekben közös szórészlet>"]   # kisbetű, ékezet mindegy',
+        '  # goal: "<a kampány célja egy mondatban>"',
+        '  # post_match: ["<#hashtag vagy kulcsszó a kapcsolódó posztokhoz>"]',
+        "  # reach: <több kampánynál: az Ads Manager összesítő sorának „Elérés” értéke>",
+    ]
 
 
 def _fold(text: str) -> str:
@@ -66,7 +112,9 @@ def _ratio(numerator, denominator, digits: int):
 
 def _setup_help(campaigns: list[Campaign]) -> str:
     listed = sorted(campaigns, key=lambda c: -c.spend)[:LISTED]
-    names = "\n".join(f"  · {c.name}  ({c.spend:.2f} {c.currency})" for c in listed)
+    from pipeline.formatting import money
+
+    names = "\n".join(f"  · {c.name}  ({money(c.spend, c.currency)})" for c in listed)
     more = len(campaigns) - len(listed)
     return (
         "Az exportban ezek a kampányok vannak (költés szerint):\n"
@@ -83,9 +131,11 @@ def _setup_help(campaigns: list[Campaign]) -> str:
 def select(campaigns: list[Campaign], config: dict) -> tuple[list[Campaign], list[Campaign]]:
     """(kiválasztott, többi). Semmit nem találgatunk: minta nélkül megállunk."""
     config = config or {}
-    names = {_fold(name) for name in config.get("names") or [] if _fold(name)}
-    fragments = [_fold(part) for part in config.get("match") or [] if _fold(part)]
-    if not config.get("title") or not (names or fragments):
+    names = {_fold(name) for name in config.get("names") or [] if _given(name) and _fold(name)}
+    fragments = [
+        _fold(part) for part in config.get("match") or [] if _given(part) and _fold(part)
+    ]
+    if not _given(config.get("title")) or not (names or fragments):
         raise MissingConfigError(
             "a kampányriporthoz meg kell mondani, melyik kampányról szól.\n"
             + _setup_help(campaigns)
@@ -293,7 +343,9 @@ def lift(raw_series: list, start: date, end: date) -> dict:
 def _related_posts(posts: list, config: dict) -> list:
     """A kampány posztjai: amelyiket a kiválasztott kampányok hirdették, és
     amelyik szövege a `post_match` valamelyik töredékét tartalmazza."""
-    fragments = [_fold(part) for part in config.get("post_match") or [] if _fold(part)]
+    fragments = [
+        _fold(part) for part in config.get("post_match") or [] if _given(part) and _fold(part)
+    ]
     related = [
         post
         for post in posts
@@ -378,8 +430,8 @@ def summarise(
     best = min(comparable, key=lambda row: row["cost_per_result"]) if len(comparable) > 1 else None
 
     return {
-        "title": str(config.get("title") or "").strip(),
-        "goal": str(config.get("goal") or "").strip(),
+        "title": str(_given(config.get("title")) or "").strip(),
+        "goal": str(_given(config.get("goal")) or "").strip(),
         "start": start,
         "end": end,
         "days": days,

@@ -13,6 +13,9 @@
   var REPORT = window.__helloReport || {};
   var KEY = "hello-report-review:" + (REPORT.key || location.pathname);
   var REVISION = REPORT.revision || "";
+  // A riportba már beépített kézi számok. Ezek helyén már kész kártya áll,
+  // beviteli mező nélkül — a következő review.json innen viszi tovább őket.
+  var APPLIED = REPORT.manual || {};
   var REFERENCE = /\{[a-z_]+(?:\.[a-z_]+)*(?:\|[a-z]+)?\}/g;
 
   // A tárhely lehet letiltva (privát ablak, szigorú böngésző-beállítás). Ilyenkor
@@ -58,7 +61,12 @@
     // összehasonlító kártyává alakul, ezért többé nincs data-manual mezője a
     // DOM-ban. A következő mentési kör mégis a korábbi értékekből induljon:
     // egy puszta szövegjavítás nem törölheti ki az előző havi adatokat.
-    var manual = Object.assign({}, stored.manual || {});
+    //
+    // A forrásuk maga a riport (APPLIED), nem csak a böngésző tárhelye: egy
+    // másik böngészőből vagy a webes eszközből mentve a tárhely üres, és a
+    // review.json üres `manual`-lal ment ki. A beépített érték erősebb a
+    // tárhelyben ragadt régebbinél; a lapon most beírt mindkettőnél.
+    var manual = Object.assign({}, stored.manual || {}, APPLIED);
     document.querySelectorAll("[data-manual]").forEach(function (field) {
       var value = readNumber(field.querySelector(".manual-input").textContent);
       if (value !== null) manual[field.dataset.manual] = value;

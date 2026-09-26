@@ -86,9 +86,14 @@ def suggest(input_dir) -> dict[str, str]:
     return found
 
 
-def template(found: dict[str, str]) -> str:
+def template(
+    found: dict[str, str],
+    variant: str | None = None,
+    measurement_start: str | None = None,
+    measurement_end: str | None = None,
+) -> str:
     values = {key: found.get(key) or default for key, default in PLACEHOLDERS.items()}
-    return (
+    client = (
         "client:\n"
         f'  name: "{values["name"]}"\n'
         f'  fb_page_id: "{values["fb_page_id"]}"\n'
@@ -97,6 +102,17 @@ def template(found: dict[str, str]) -> str:
         "  # A záróoldal kapcsolati címe. Ügyfelenként külön postafiók van;\n"
         "  # ha nem adod meg, a mappanévből tippelek (<mappa>@helloagency.hu).\n"
         f'  contact_email: "{values["contact_email"]}"\n'
+    )
+    if variant == "campaign":
+        # A kampányriport nem a hónap végi állapotról szól: követőszám nem kell
+        # hozzá, a kampány kiválasztása viszont igen.
+        from pipeline.campaign import yaml_lines
+
+        lines = yaml_lines(
+            measurement_start, measurement_end, language="hu", currency=values["currency"]
+        )
+        return client + "\n" + "\n".join(lines) + "\n"
+    return client + (
         "\n"
         "# Követőszám a hónap végén — a profilról olvasható le.\n"
         "followers:\n"
