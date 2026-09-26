@@ -12,15 +12,23 @@ import base64
 import hashlib
 import io
 import re
+from concurrent.futures import ThreadPoolExecutor
 from html import escape, unescape
 from pathlib import Path
 from typing import Callable
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 MAX_WIDTH = 480
 QUALITY = 82
 TIMEOUT = 30
+# Egyszerre ennyi kép töltődik. Korábban egyenként, egymás után mentek, és
+# képenként 30 másodperces időkorláttal egy lassú CDN mellett a renderelés
+# percekig tartott.
+MAX_WORKERS = 8
+# Az átlátszó képek (PNG-logók) háttere: a lap színe. A JPEG-be alakítás
+# enélkül feketére festette az átlátszó részt.
+PAPER = (255, 253, 249)
 
 def placeholder(text: str = "kép nem elérhető") -> str:
     """Semleges helyőrző, ha egy kép nem tölthető le. Szándékosan
@@ -100,8 +108,25 @@ def creative_from_permalink(
     return unescape(found.group(1)), "megvan"
 
 
+def parallel(function: Callable, items: list) -> list:
+    """`function` minden elemre, párhuzamosan, a sorrendet megtartva."""
+    if not items:
+        return []
+    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(items))) as pool:
+        return list(pool.map(function, items))
+
+
 def to_data_uri(raw: bytes, max_width: int = MAX_WIDTH) -> str:
-    image = Image.open(io.BytesIO(raw)).convert("RGB")
+    image = Image.open(io.BytesIO(raw))
+    # A telefonos fotók elforgatását az EXIF mondja meg, és a JPEG-újrakódolás
+    # ezt eldobná: a kép oldalra fordulva jelent volna meg.
+    image = ImageOps.exif_transpose(image)
+    if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
+        rgba = image.convert("RGBA")
+        image = Image.new("RGB", rgba.size, PAPER)
+        image.paste(rgba, mask=rgba.getchannel("A"))
+    else:
+        image = image.convert("RGB")
     if image.width > max_width:
         height = round(image.height * max_width / image.width)
         image = image.resize((max_width, height), Image.LANCZOS)
@@ -117,23 +142,32 @@ def embed(
     fetcher: Callable[[str], bytes] = fetch,
     max_width: int = MAX_WIDTH,
 ) -> list[str]:
-    """Minden URL-ből data URI. Ami nem tölthető le, helyőrzőt kap."""
+    """Minden URL-ből data URI. Ami nem tölthető le, helyőrzőt kap.
+
+    Minden URL-t egyszer, párhuzamosan töltünk le. A gyorsítótár kulcsa
+    szándékosan csak az URL: a Facebook CDN-linkjei lejárnak, és egy régi
+    riport újrarenderelésekor a képnek sokszor a gyorsítótár az egyetlen
+    példánya.
+    """
     cache = Path(cache_dir)
     cache.mkdir(parents=True, exist_ok=True)
-    results = []
 
-    for url in urls:
+    def one(url: str) -> str:
         key = hashlib.sha256(url.encode("utf-8")).hexdigest()[:24]
         cached = cache / f"{key}.txt"
         if cached.exists():
-            results.append(cached.read_text(encoding="ascii"))
-            continue
+            return cached.read_text(encoding="ascii")
         try:
             uri = to_data_uri(fetcher(url), max_width=max_width)
         except Exception:
-            results.append(PLACEHOLDER)
-            continue
-        cached.write_text(uri, encoding="ascii")
-        results.append(uri)
+            return PLACEHOLDER
+        # Előbb ideiglenes fájlba, aztán átnevezés: egy megszakított futás ne
+        # hagyjon félig írt, olvashatatlan képet a gyorsítótárban.
+        partial = cached.with_suffix(".part")
+        partial.write_text(uri, encoding="ascii")
+        partial.replace(cached)
+        return uri
 
-    return results
+    unique = list(dict.fromkeys(urls))
+    resolved = dict(zip(unique, parallel(one, unique)))
+    return [resolved[url] for url in urls]

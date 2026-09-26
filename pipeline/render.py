@@ -177,6 +177,39 @@ def _campaign_status(campaign: dict, text) -> str:
     return text[f"campaign_{_campaign_status_kind(campaign)}"]
 
 
+def _attach_thumbnails(posts: list[dict], cache_dir: Path, fetcher, unavailable: str) -> None:
+    """A kártyák képei — egy párhuzamos körben, nem posztonként egymás után.
+
+    Ha a ZoomSphere nem tud a posztról (közvetlenül a felületen ment ki), a
+    kreatív hiányzik, de a Facebook és az Instagram `og:image`-e megvan.
+    Kiegészítés, nem forrás: ha nem jön össze, marad a helyőrző, és a
+    `--validate` akkor is felsorolja a posztot.
+    """
+    orphans = [post for post in posts if not post["creatives"] and post.get("permalink")]
+    recovered = images.parallel(
+        lambda post: images.creative_from_permalink(post["permalink"], fetcher=fetcher),
+        orphans,
+    )
+    fallback: dict[int, str] = {}
+    for post, (found, why) in zip(orphans, recovered):
+        # Az indoklást akkor is eltesszük, ha sikerült: a menedzser csak így
+        # tudja eldönteni, érdemes-e kézzel pótolni a képet.
+        post["creative_recovery"] = why
+        if found:
+            fallback[id(post)] = found
+
+    sources = [(post["creatives"][:1] or [fallback.get(id(post))])[0] for post in posts]
+    uris = images.embed(
+        [source for source in sources if source], cache_dir=cache_dir, fetcher=fetcher
+    )
+    embedded = iter(uris)
+    for post, source in zip(posts, sources):
+        thumb = next(embedded) if source else images.PLACEHOLDER
+        # A helyőrző is a riport nyelvén szól: az angol riportban egy „kép
+        # nem elérhető” felirat hanyagságnak látszana.
+        post["thumb"] = images.placeholder(unavailable) if thumb == images.PLACEHOLDER else thumb
+
+
 def _report_identity(data: dict) -> dict:
     """Ez az egy riport — a böngészőoldali mentés ehhez kötődik.
 
@@ -321,31 +354,7 @@ def render(
             # Ezen a csatornán nincs mért elérés — a boostoltakat emeljük ki,
             # mert azokról van mért fizetett adatunk.
             selected = [post for post in ranked if post.get("paid")][:6]
-        for post in selected:
-            sources = post["creatives"][:1]
-            # Ha a ZoomSphere nem tud a posztról (közvetlenül a felületen ment
-            # ki), a kreatív hiányzik, de a Facebook `og:image`-e megvan.
-            # Kiegészítés, nem forrás: ha nem jön össze, marad a helyőrző, és a
-            # `--validate` akkor is felsorolja a posztot.
-            if not sources and post.get("permalink"):
-                fallback, why = images.creative_from_permalink(
-                    post["permalink"], fetcher=fetcher
-                )
-                # Az indoklást akkor is eltesszük, ha sikerült: a menedzser
-                # csak így tudja eldönteni, érdemes-e kézzel pótolni a képet.
-                post["creative_recovery"] = why
-                if fallback:
-                    sources = [fallback]
-
-            uris = images.embed(sources, cache_dir=cache_dir, fetcher=fetcher)
-            # A helyőrző is a riport nyelvén szól: az angol riportban egy
-            # „kép nem elérhető” felirat hanyagságnak látszana.
-            thumb = uris[0] if uris else images.PLACEHOLDER
-            post["thumb"] = (
-                images.placeholder(text.image_unavailable)
-                if thumb == images.PLACEHOLDER
-                else thumb
-            )
+        _attach_thumbnails(selected, cache_dir, fetcher, text.image_unavailable)
         channel_posts[name] = _balanced_chunks(selected)
         # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,
         # amit a kártyák oldalanként háromra bontva nem tudnak.
