@@ -4,6 +4,19 @@ from pipeline.guards import sum_additive, sum_results
 from pipeline.schema import Campaign, ContentItem, DailySeries, Post
 
 
+def money_sum(values) -> float:
+    """Pénzösszeg, két tizedesre kerekítve.
+
+    A lebegőpontos összeadás nem pontos: 13,90 + 13,95 + … a Larus
+    profil-felkeresés kampányainál `52.85000000000001`-et adott `52.85`
+    helyett. A riportban ez a formázás miatt nem látszik, a
+    `report_data.json`-ban viszont igen — és a golden file-teszt pont ezen
+    bukott el. A forrásban minden költés két tizedesre van megadva, tehát
+    a kerekítés nem veszít adatot, csak a zajt vágja le.
+    """
+    return round(sum(values), 2)
+
+
 def content_summary(items: list[ContentItem]) -> dict:
     stories = Counter()
     for item in items:
@@ -29,20 +42,20 @@ def paid_totals(campaigns: list[Campaign]) -> dict:
     for result_type, group in grouped.items():
         by_type[result_type] = {
             "campaigns": len(group),
-            "spend": sum(c.spend for c in group),
+            "spend": money_sum(c.spend for c in group),
             "results": sum_results(group),
         }
 
     def block(group: list[Campaign]) -> dict:
         return {
             "campaigns": len(group),
-            "spend": sum(c.spend for c in group),
+            "spend": money_sum(c.spend for c in group),
             "impressions": sum(c.impressions for c in group),
             "link_clicks": sum(c.link_clicks for c in group),
         }
 
     return {
-        "spend": sum(c.spend for c in campaigns),
+        "spend": money_sum(c.spend for c in campaigns),
         "currency": campaigns[0].currency if campaigns else "EUR",
         "always_on": block(always_on),
         "boosted": block(boosted),
@@ -131,7 +144,7 @@ def cross_channel(posts: list[Post]) -> dict:
             round(boosted_reach / total_reach, 3) if total_reach else 0.0
         ),
         "reach_multiplier": round(avg_boosted / avg_organic, 1) if avg_organic else 0.0,
-        "boost_spend": sum(p.paid.spend for p in boosted),
+        "boost_spend": money_sum(p.paid.spend for p in boosted),
     }
 
 
