@@ -123,6 +123,46 @@ követőtábor {audience.instagram.growth|pct}-kal bővült" — ez használhat�
 elérés {audience.instagram.monthly_reach}, a megjelenés {channels.instagram.totals.views}"
 — ez fölösleges, mert ugyanaz olvasható a panelekben.
 
+## Ha `report.variant: campaign` — kampányriport
+
+Ugyanaz az öt blokk, ugyanazzal a számjegy-tilalommal — de a kérdés más. Nem
+az, hogy „milyen volt a hónap”, hanem hogy **megérte-e ez a kampány, és mit
+csinálnánk másképp a következőben.** A `report_data.json` `campaign` blokkja
+adja hozzá a mezőket:
+
+| hivatkozás | mit mond |
+|---|---|
+| `{campaign.totals.spend\|money}`, `{campaign.totals.daily_spend\|money}` | mennyi ment el, naponta átlagosan |
+| `{campaign.totals.impressions}`, `{campaign.totals.reach}` | hányszor és hány embernek jelent meg (az elérés csak akkor létezik, ha tudható) |
+| `{campaign.totals.frequency\|x}` | hányszor látta egy ember |
+| `{campaign.totals.ctr\|pct}`, `{campaign.totals.cpc\|money}` | átkattintási arány, egy kattintás ára |
+| `{campaign.primary.results}`, `{campaign.primary.cost_per_result\|money}` | az elsődleges eredmény és egy eredmény ára |
+| `{campaign.primary.results_per_click\|pct}` | a kattintók hányada ért el a céloldalra (csak forgalmi kampánynál) |
+| `{campaign.best.name\|raw}`, `{campaign.best.cost_per_result\|money}` | a legkedvezőbb eredményárú rész |
+| `{campaign.lift.channels.facebook.visits.pct}` | az oldal mozgása a kampány alatt, az előtte lévő időszakhoz képest |
+
+**Amire érdemes építeni:**
+
+- **Egy eredmény ára** a legerősebb szám: ezt veti össze az ügyfél azzal,
+  amit egy jelentkező / érdeklődő ér neki. Toborzásnál ez a „mennyibe került
+  egy jelentkező”.
+- **A legkedvezőbb rész** (`best`) — ha van, nevezd meg, és mondd ki, mit
+  jelent a keret elosztására nézve.
+- **A kattintási arány alakulása** az idővonalon: ha hétről hétre csökken, a
+  kreatív kifáradt. Ez a következő kampány legközvetlenebb tanulsága.
+- **Érkezési arány** — ha a kattintók jelentős része nem ért el a céloldalra,
+  az nem a hirdetés hibája, hanem a céloldalé. Ezt ki kell mondani.
+
+**Az „alatt vs. előtte” összevetésről csak óvatosan.** A `lift` blokk
+együttmozgást mutat, nem bizonyított hatást: az oldalt a kampányon kívül más is
+mozgatja. Írd így: „a kampány ideje alatt a felkeresések száma
+{campaign.lift.channels.facebook.visits.pct}%-kal haladta meg az előtte lévő
+időszakét” — ne így: „a kampány megnövelte a felkereséseket”.
+
+Ha egy mező `null` (pl. több kampánynál nincs deduplikált elérés), a build nem
+engedi rá hivatkozni. Ilyenkor az a szám **nincs**, és a mondatot nélküle kell
+megírni.
+
 ## Jó és rossz példa ugyanarra
 
 ❌ **Rossz**

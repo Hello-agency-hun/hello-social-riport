@@ -213,6 +213,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
                              margin-right: 7px; vertical-align: middle;
                              background: var(--accent); border-radius: 3px; }
 .campaign-window-note { margin-top: auto; padding-top: 12px; }
+/* Kampányriport: öt oszlop — név, állapot, költés, kattintás, eredmény.
+   A számok jobbra zártak, hogy a sorok egymás alatt összevethetők legyenek. */
+.campaign-breakdown-page .campaign-row {
+  grid-template-columns: minmax(0,2fr) .8fr .9fr .9fr 1.4fr; }
+.campaign-row .num { text-align: right; font-variant-numeric: tabular-nums; }
+.campaign-row .note { font-size: 11px; }
+.campaign-row--head { min-height: 34px; }
+/* A legkedvezőbb eredményár: akcentus-szegély, nem háttérszín — a sor
+   olvasható marad, és nyomtatásban sem folyik szét. */
+.campaign-row--best { box-shadow: inset 4px 0 0 var(--accent); padding-left: 12px; }
+.campaign-best { margin-top: 3px; font-size: 11px; font-weight: 700;
+                 letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
 
 /* Kézi adat: ami hiányzik, de beszerezhető, az látható és kitölthető marad.
    Nyomtatásban viszont soha nem megy ki üres keret az ügyfélhez. */

@@ -30,7 +30,10 @@ ESSENTIALS_POSTS = 3
 TEMPLATES_BY_VARIANT = {
     "essentials": "report-essentials.html.j2",
     "full": "report.html.j2",
+    "campaign": "report-campaign.html.j2",
 }
+# A kampánytábla egy oldalon: a sűrű sorok nyomtatásbiztos felső határa.
+CAMPAIGN_ROWS_PER_PAGE = 8
 
 
 def _template_name(variant) -> str:
@@ -134,6 +137,8 @@ def _environment(language: str = "hu") -> Environment:
     env.filters["channel"] = labels.channel
     env.filters["ptype"] = lambda k: labels.post_type(k, language)
     env.filters["short"] = labels.shorten
+    env.filters["longdate"] = lambda value: formatting.long_date(value, language)
+    env.globals["date_range"] = lambda start, end: formatting.date_range(start, end, language)
     return env
 
 
@@ -208,6 +213,106 @@ def _attach_thumbnails(posts: list[dict], cache_dir: Path, fetcher, unavailable:
         # A helyőrző is a riport nyelvén szól: az angol riportban egy „kép
         # nem elérhető” felirat hanyagságnak látszana.
         post["thumb"] = images.placeholder(unavailable) if thumb == images.PLACEHOLDER else thumb
+
+
+def _campaign_view(data: dict, language: str, text, cache_dir: Path, fetcher) -> dict:
+    """A kampányriport oldalaihoz kellő, már formázott részletek.
+
+    Minden szám a `campaign` blokkból jön; itt csak diagram, lapozás és
+    kép készül belőle.
+    """
+    block = data["campaign"]
+    currency = data["paid"]["currency"]
+    money = lambda value: formatting.money(value, currency, language)  # noqa: E731
+    count = lambda value: formatting.number(value, 0, language)  # noqa: E731
+    percent = lambda value: formatting.percent(value, 1, language)  # noqa: E731
+
+    points = (block.get("timeline") or {}).get("points") or []
+    timeline_charts = []
+    if points:
+        series = {
+            "spend": (text.campaign_spend, money),
+            "impressions": (text.campaign_impressions, count),
+            "results": (text.campaign_results_over_time, count),
+            "ctr": (text.campaign_ctr, percent),
+        }
+        colours = ["var(--accent)", "var(--brand-blue)", "var(--brand-rose)", "var(--brand-pink)"]
+        for index, (key, (title, fmt)) in enumerate(series.items()):
+            values = [
+                (date.fromisoformat(point["start"]), point[key])
+                for point in points
+                if point.get(key) is not None
+            ]
+            if not values:
+                continue
+            timeline_charts.append(
+                (
+                    title,
+                    charts.line_chart(
+                        values,
+                        label=f"{block['title']} — {title}",
+                        height=175,
+                        colour=colours[index % len(colours)],
+                        language=language,
+                        total_label=text.total,
+                        empty_label=text.no_data,
+                        # Aránynál és összegnél a tört tető és a saját formátum kell;
+                        # az arányok összege értelmetlen, ezért ott nincs összesen.
+                        value_format=None if fmt is count else fmt,
+                        show_total=key != "ctr",
+                    ),
+                )
+            )
+
+    gantt = None
+    if block.get("spans"):
+        gantt = charts.gantt(
+            [
+                {
+                    **span,
+                    "start": date.fromisoformat(span["start"]) if span["start"] else None,
+                    "end": date.fromisoformat(span["end"]) if span["end"] else None,
+                }
+                for span in block["spans"]
+            ],
+            date.fromisoformat(block["start"]),
+            date.fromisoformat(block["end"]),
+            label=f"{block['title']} — {text.campaign_when}",
+            language=language,
+            empty_label=text.no_data,
+        )
+
+    rows = []
+    for row in block["campaigns"]:
+        shown = dict(row)
+        shown["status_kind"] = _campaign_status_kind(row)
+        shown["display_status"] = _campaign_status(row, text)
+        shown["is_best"] = bool(block.get("best")) and row["name"] == block["best"]["name"]
+        rows.append(shown)
+
+    wanted = {(item["channel"], item["post_id"]) for item in block.get("posts") or []}
+    posts = [
+        post
+        for channel in data.get("channels", {}).values()
+        for post in channel["posts"]
+        if (post["channel"], post["post_id"]) in wanted
+    ]
+    _attach_thumbnails(posts, cache_dir, fetcher, text.image_unavailable)
+
+    lift = block.get("lift") or {}
+    lift_rows = [
+        {"channel": channel, "field": field, **values}
+        for channel, fields in (lift.get("channels") or {}).items()
+        for field, values in fields.items()
+    ]
+
+    return {
+        "timeline_charts": _balanced_chunks(timeline_charts, per_page=4),
+        "gantt": gantt,
+        "row_pages": _fixed_chunks(rows, per_page=CAMPAIGN_ROWS_PER_PAGE),
+        "post_pages": _balanced_chunks(posts),
+        "lift_rows": lift_rows,
+    }
 
 
 def _report_identity(data: dict) -> dict:
@@ -296,6 +401,10 @@ def render(
         "nonstandard": text.period_nonstandard_warning,
         "assumed": text.period_assumed_warning,
     }.get(credibility)
+    if data.get("campaign") and credibility != "assumed":
+        # Egy kampány időszaka szándékosan nem naptári hónap, és nem az előző
+        # hónaphoz mérjük: a havi hitelességi figyelmeztetés itt félrevezetne.
+        period_warning = None
 
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
@@ -335,7 +444,10 @@ def render(
 
     channel_posts = {}
     ranking: dict[str, str] = {}
-    for name, block in data.get("channels", {}).items():
+    # A kampányriport a saját posztjait mutatja (`_campaign_view`); a havi
+    # rangsor képeit ott fölösleges volna letölteni.
+    monthly_channels = {} if data.get("campaign") else data.get("channels", {})
+    for name, block in monthly_channels.items():
         # Teljesítmény szerint, nem elérés szerint. Elérés szerint rangsorolni
         # annyi volna, mint költés szerint: amelyik posztra a legtöbb pénz ment,
         # az lenne elöl — ez tautológia, nem megállapítás. Lásd `performance.py`.
@@ -386,7 +498,15 @@ def render(
     template = _environment(language).get_template(
         _template_name(data.get("meta", {}).get("variant"))
     )
+    campaign_view = (
+        _campaign_view(data, language, text, cache_dir, fetcher)
+        if data.get("campaign")
+        else None
+    )
     return template.render(
+        campaign=data.get("campaign"),
+        campaign_view=campaign_view,
+        page_title=(data.get("campaign") or {}).get("title"),
         data=data,
         trends=trends,
         channel_posts=channel_posts,

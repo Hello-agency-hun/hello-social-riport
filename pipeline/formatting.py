@@ -60,3 +60,31 @@ def month(period: str, language: str = "hu") -> str:
     year, month_number = str(period).split("-")[:2]
     name = i18n.months(language)[int(month_number) - 1]
     return f"{year}. {name}" if language == "hu" else f"{name} {year}"
+
+
+def long_date(value, language: str = "hu") -> str:
+    """`2026-06-01` → `2026. június 1.` / `1 June 2026`."""
+    year, month_number, day = (int(part) for part in str(value)[:10].split("-"))
+    name = i18n.months(language)[month_number - 1]
+    return f"{year}. {name} {day}." if language == "hu" else f"{day} {name} {year}"
+
+
+def date_range(start, end, language: str = "hu") -> str:
+    """Tömör dátumtartomány: `2026. július 1–31.`, `2026. június 1. – július 31.`
+
+    A címlapon a teljes alak kétszer ismételné az évet és a hónapot.
+    """
+    y1, m1, d1 = (int(part) for part in str(start)[:10].split("-"))
+    y2, m2, d2 = (int(part) for part in str(end)[:10].split("-"))
+    months = i18n.months(language)
+    if language == "hu":
+        if (y1, m1) == (y2, m2):
+            return f"{y1}. {months[m1 - 1]} {d1}–{d2}."
+        if y1 == y2:
+            return f"{y1}. {months[m1 - 1]} {d1}. – {months[m2 - 1]} {d2}."
+        return f"{long_date(start, language)} – {long_date(end, language)}"
+    if (y1, m1) == (y2, m2):
+        return f"{d1}–{d2} {months[m1 - 1]} {y1}"
+    if y1 == y2:
+        return f"{d1} {months[m1 - 1]} – {d2} {months[m2 - 1]} {y1}"
+    return f"{long_date(start, language)} – {long_date(end, language)}"

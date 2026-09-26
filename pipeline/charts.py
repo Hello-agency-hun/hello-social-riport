@@ -6,7 +6,7 @@ tokenjeiből jönnek — ha az akcentus változik, a grafikonok követik.
 """
 
 import math
-from datetime import date
+from datetime import date, timedelta
 
 from pipeline import i18n
 from pipeline.labels import shorten
@@ -47,23 +47,32 @@ def _open(label: str, width: int = W, height: int = H) -> str:
     )
 
 
-def _nice_top(peak: float) -> int:
+def _nice_top(peak: float, integer: bool = True) -> float:
     """A rács teteje: kerek, páros szám a csúcs fölött.
 
     Korábban a csúcs maga volt a rács teteje, így a tengelyen `31` és `15`
     állt — a félérték csonkolva, a lépték önkényesnek látszott. Kerek
     értékkel (`40`, `20`) a görbe ránézésre leolvasható. Páros, hogy a
     félútnál is egész szám álljon.
+
+    Arányoknál és pénzösszegeknél (`integer=False`) tört tető is lehet: egy
+    `1,4%`-os átkattintási arány tengelye `0 · 0,75 · 1,5`, nem `0 · 1 · 2`.
     """
     target = peak * HEADROOM
-    if target <= 2:
+    if target <= 0:
+        return 2 if integer else 1
+    if integer and target <= 2:
         return 2
     magnitude = 10 ** math.floor(math.log10(target))
     for step in NICE_STEPS:
         top = step * magnitude
-        if top >= target and top == int(top) and int(top) % 2 == 0:
+        if top < target:
+            continue
+        if not integer:
+            return round(top, 10)
+        if top == int(top) and int(top) % 2 == 0:
             return int(top)
-    return int(10 * magnitude)
+    return 10 * magnitude if not integer else int(10 * magnitude)
 
 
 def _empty(label: str, width: int = W, height: int = H, empty_label: str = "nincs adat") -> str:
@@ -117,6 +126,8 @@ def line_chart(
     language: str = "hu",
     total_label: str = "összesen",
     empty_label: str = "nincs adat",
+    value_format=None,
+    show_total: bool = True,
 ) -> str:
     """Napi idősor. Egyetlen pontnál vízszintes vonalat rajzol, nem oszt nullával.
 
@@ -131,11 +142,16 @@ def line_chart(
     if not points:
         return _empty(label, W, height, empty_label)
 
+    # Darabszámnál ezres tagolás; aránynál és összegnél a hívó formáz.
+    fmt = value_format or (lambda value: _thousands(value, language))
     values = [value for _, value in points]
-    top = _nice_top(max(values))
+    top = _nice_top(max(values), integer=value_format is None)
     span = max(len(points) - 1, 1)
 
-    gutter = 52  # hely a rácsvonalak értékeinek
+    # Hely a rácsvonalak értékeinek — a leghosszabb felirathoz méretezve. Fix
+    # 52 pixelen a „30 000 Ft” eleje levágódott a diagram bal szélén.
+    widest = max(len(fmt(top * share)) for share in (0.0, 0.5, 1.0))
+    gutter = max(52, round(widest * 6.6 + 12))
     inner_w = W - gutter - PAD_R - 8
     inner_h = height - PAD_T - PAD_B
 
@@ -159,7 +175,7 @@ def line_chart(
             + ('' if share == 0 else ' stroke-dasharray="2 4"')
             + "/>"
             f'<text x="{gutter - 8}" y="{y + 4:.1f}" text-anchor="end" font-size="11" '
-            f'fill="var(--ink-soft)">{_thousands(top * share, language)}</text>'
+            f'fill="var(--ink-soft)">{_escape(fmt(top * share))}</text>'
         )
 
     area = (
@@ -199,7 +215,7 @@ def line_chart(
             f'font-size="{13 if strong else 12}" '
             f'font-weight="{700 if strong else 500}" '
             f'fill="var(--ink{"" if strong else "-soft"})">'
-            f"{_thousands(values[index], language)}</text>"
+            f"{_escape(fmt(values[index]))}</text>"
             f'<text x="{px + offset:.1f}" y="{date_y:.1f}" text-anchor="{anchor}" '
             f'font-size="10" fill="var(--ink-soft)">'
             f"{_escape(_day(points[index][0], language))}</text>"
@@ -211,8 +227,12 @@ def line_chart(
         f'<text x="{gutter + inner_w}" y="{height - 6}" text-anchor="end" '
         f'font-size="11" fill="var(--ink-soft)">'
         f"{_escape(_day(points[-1][0], language))}</text>"
-        f'<text x="{gutter + inner_w / 2}" y="{height - 6}" text-anchor="middle" '
-        f'font-size="11" fill="var(--ink-soft)">{total_label} {_thousands(sum(values), language)}</text>'
+        + (
+            f'<text x="{gutter + inner_w / 2}" y="{height - 6}" text-anchor="middle" '
+            f'font-size="11" fill="var(--ink-soft)">{total_label} {_escape(fmt(sum(values)))}</text>'
+            if show_total
+            else ""
+        )
     )
     parts.append("</svg>")
     return "".join(parts)
@@ -295,3 +315,76 @@ def donut(
     return "".join(
         [_open(label, 300, 300 + 22 * len(parts))] + segments + legend + ["</svg>"]
     )
+
+
+def gantt(
+    spans: list[dict],
+    start: date,
+    end: date,
+    label: str,
+    language: str = "hu",
+    colour: str = "var(--accent)",
+    empty_label: str = "nincs adat",
+) -> str:
+    """Mikor futott melyik kampány — sávok a riport időszakán belül.
+
+    A sáv a kampány saját kezdetétől a végéig tart, a riport időszakára
+    vágva; ami túlnyúlik rajta, annak a széle nyilat kap, hogy ne tűnjön
+    úgy, mintha ott ért volna véget. Csak valódi kezdődátumból rajzolunk:
+    a hívó (`campaign.py`) üres listát ad, ha egy kampánynak nincs ilyen.
+    """
+    if not spans or end <= start:
+        return _empty(label, 1100, 180, empty_label)
+
+    width, name_w, row = 1100, 330, 34
+    track = width - name_w - 20
+    height = PAD_T + row * len(spans) + 34
+    total = (end - start).days + 1
+
+    def x_of(day: date) -> float:
+        offset = min(max((day - start).days, 0), total)
+        return name_w + track * offset / total
+
+    parts = [_open(label, width, height)]
+    # Hónaphatárok halvány függőleges vonallal, hogy a sávok elhelyezhetők legyenek.
+    cursor = date(start.year, start.month, 1)
+    while cursor <= end:
+        if cursor >= start:
+            x = x_of(cursor)
+            parts.append(
+                f'<line x1="{x:.1f}" y1="{PAD_T - 4}" x2="{x:.1f}" y2="{height - 26}" '
+                'stroke="var(--rule)" stroke-dasharray="2 4"/>'
+                f'<text x="{x + 4:.1f}" y="{height - 10}" font-size="11" '
+                f'fill="var(--ink-soft)">{_escape(_day(cursor, language))}</text>'
+            )
+        cursor = date(cursor.year + cursor.month // 12, cursor.month % 12 + 1, 1)
+
+    for index, span in enumerate(spans):
+        y = PAD_T + row * index
+        first = span["start"] or start
+        last = span["end"] or end
+        x1, x2 = x_of(first), x_of(last + timedelta(days=1))
+        runs_on = span.get("ongoing") or (span["end"] is not None and span["end"] > end)
+        began_before = span["start"] is not None and span["start"] < start
+        parts.append(
+            f'<text x="0" y="{y + 17}" font-size="13" fill="var(--ink)">'
+            f"{_escape(shorten(span['name'], 40))}</text>"
+            f'<rect class="bar" x="{x1:.1f}" y="{y + 6}" width="{max(x2 - x1, 3):.1f}" '
+            f'height="16" rx="8" fill="{colour}"/>'
+        )
+        if began_before:
+            parts.append(
+                f'<text x="{x1 + 6:.1f}" y="{y + 18}" font-size="11" font-weight="700" '
+                'fill="var(--ink)">‹</text>'
+            )
+        if runs_on:
+            parts.append(
+                f'<text x="{x2 - 6:.1f}" y="{y + 18}" text-anchor="end" font-size="11" '
+                'font-weight="700" fill="var(--ink)">›</text>'
+            )
+    parts.append(
+        f'<text x="{width}" y="{height - 10}" text-anchor="end" font-size="11" '
+        f'fill="var(--ink-soft)">{_escape(_day(end, language))}</text>'
+    )
+    parts.append("</svg>")
+    return "".join(parts)

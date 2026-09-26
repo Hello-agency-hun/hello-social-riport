@@ -11,6 +11,68 @@ from pipeline.errors import FixtureAsClientError, PipelineError
 from pipeline.textio import force_utf8_output
 
 
+def _campaign_map(data: dict) -> str:
+    """A kampányriport összesítője a menedzsernek: mit választottunk ki, mi
+    maradt ki, és mire lesz elég az adat. A havi riport boost-szorzója itt
+    értelmetlen volna — a kiválasztás helyessége a kérdés."""
+    block = data["campaign"]
+    totals = block["totals"]
+    currency = data["paid"]["currency"]
+    lines = [
+        f"Kampány         „{block['title']}” — {totals['campaigns']} kampány, "
+        f"{totals['spend']:.2f} {currency} · {block['start']} – {block['end']} "
+        f"({block['days']} nap)",
+    ]
+    lines += [
+        f"                · {row['name'][:70]} — {row['spend']:.2f} {currency}"
+        for row in block["campaigns"]
+    ]
+    outside = block["outside"]
+    if outside["campaigns"]:
+        lines.append(
+            f"                Kimaradt: {outside['campaigns']} kampány, "
+            f"{outside['spend']:.2f} {currency} (nem illik a mintára)"
+        )
+    if block["primary"]:
+        primary = block["primary"]
+        lines.append(
+            f"Elsődleges eredmény  {primary['results']} × {primary['result_type']}"
+        )
+    points = (block.get("timeline") or {}).get("points") or []
+    lines.append(
+        f"Idővonal        {len(points)} pont ({block['timeline']['granularity']})"
+        if points
+        else "Idővonal        nincs idő szerinti bontás — heti görbéhez az Ads "
+        "Managerben: Bontás → Idő → Hét, és úgy exportálj"
+    )
+    lift = block.get("lift") or {}
+    lines.append(
+        "Hatás az oldalra  "
+        + ", ".join(
+            f"{channel}/{field}"
+            for channel, fields in sorted(lift["channels"].items())
+            for field in sorted(fields)
+        )
+        + f"  (előtte: {lift['baseline_start']} – {lift['baseline_end']})"
+        if lift
+        else "Hatás az oldalra  nincs — a napi csempék nem fedik le a kampány "
+        "előtti, ugyanolyan hosszú időszakot"
+    )
+    return "\n".join(lines)
+
+
+def _obtainable_yaml(items: list[dict]) -> str:
+    """`monthly_reach.facebook` → a client.yaml megfelelő szakasza."""
+    sections: dict[str, list[str]] = {}
+    for item in items:
+        section, key = item["key"].split(".", 1)
+        sections.setdefault(section, []).append(key)
+    return "\n".join(
+        f"  {section}:\n" + "\n".join(f"    {key}: <szám>" for key in keys)
+        for section, keys in sections.items()
+    )
+
+
 def _report_map(data: dict) -> str:
     quality = data["quality"]
     paid = data["paid"]
@@ -85,9 +147,13 @@ def _report_map(data: dict) -> str:
                 for name, origin in sorted(data.get("follower_origin", {}).items())
             ),
             "",
-            f"Organic poszt átlagos elérése:  {cross['avg_reach_organic_post']}",
-            f"Boostolt poszt átlagos elérése: {cross['avg_reach_boosted_post']}"
-            f"  ({cross['reach_multiplier']}×)",
+            (
+                _campaign_map(data)
+                if data.get("campaign")
+                else f"Organic poszt átlagos elérése:  {cross['avg_reach_organic_post']}\n"
+                f"Boostolt poszt átlagos elérése: {cross['avg_reach_boosted_post']}"
+                f"  ({cross['reach_multiplier']}×)"
+            ),
             "",
             (
                 "Hiányzó források:\n"
@@ -119,11 +185,8 @@ def _report_map(data: dict) -> str:
                 # A magyarázat egyszer szerepel, nem csatornánként: ugyanaz a
                 # mondat kétszer egymás alatt zajnak látszik, nem indoklásnak.
                 + f"\n\n  Miért nem tudjuk kiszámolni? {data['obtainable'][0]['why']}"
-                + "\n\n  monthly_reach:\n"
-                + "\n".join(
-                    f"    {item['key'].split('.')[1]}: <szám>"
-                    for item in data["obtainable"]
-                )
+                + "\n\n"
+                + _obtainable_yaml(data["obtainable"])
                 if data.get("obtainable")
                 else "Minden beszerezhető adat megvan."
             ),
@@ -197,7 +260,7 @@ def _refuse_the_fixture(directory: Path, allowed: bool) -> None:
         )
 
 
-def _also_worth_knowing(directory: Path, period: str) -> None:
+def _also_worth_knowing(directory: Path, period: str, variant: str | None = None) -> None:
     """A megállás után: mi az, ami úgyis hiányozni fog?
 
     A build az első hibánál megáll — muszáj, mert a többi számítás arra épül.
@@ -217,6 +280,9 @@ def _also_worth_knowing(directory: Path, period: str) -> None:
         if not path.exists():
             return
         config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if (variant or (config.get("report") or {}).get("variant")) == "campaign":
+            # A kampányriporthoz nem kell követőszám és havi elérés.
+            return
         client = config.get("client") or {}
         gaps = []
 
@@ -257,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--variant",
         default=None,
-        choices=["full", "essentials"],
+        choices=["full", "essentials", "campaign"],
         help="riportváltozat; felülírja a client.yaml beállítását",
     )
     parser.add_argument(
@@ -289,15 +355,16 @@ def main(argv: list[str] | None = None) -> int:
 
         directory = Path(args.directory)
         try:
-            client = (build_module_config(directory) or {}).get("client")
+            config = build_module_config(directory) or {}
         except PipelineError:
-            client = None
+            config = {}
         print(
             checklist.render(
-                client,
+                config.get("client"),
                 str(directory).replace("\\", "/"),
                 measurement_start=args.start_date,
                 measurement_end=args.end_date,
+                variant=args.variant or (config.get("report") or {}).get("variant"),
             )
         )
         return 0
@@ -313,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     except PipelineError as error:
         print(f"HIBA: {error}", file=sys.stderr)
-        _also_worth_knowing(Path(args.directory), args.period)
+        _also_worth_knowing(Path(args.directory), args.period, args.variant)
         return 1
 
     print(_report_map(data))
@@ -376,7 +443,8 @@ def main(argv: list[str] | None = None) -> int:
         # az adatból és ugyanabból a narratívából. Modellre nem bízzuk: a
         # konténerben futó modell a második renderelést két körön át kihagyta.
         also = (build_module_config(Path(args.directory)).get("report") or {}).get("also_variant")
-        if also and also != data["meta"].get("variant"):
+        # Egy kampánymappából nem készül havi riport: más az időszak és a kérdés.
+        if also and also != data["meta"].get("variant") and data["meta"].get("variant") != "campaign":
             # A második riport kiegészítés, nem szállítmány. Ha az adat nem
             # elégíti ki a másik változat követelményeit, azt megnevezzük — de
             # a kész fő riportot nem dobjuk el miatta.

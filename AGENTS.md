@@ -82,6 +82,9 @@ python -m pipeline.cli clients/<ugyfel>/<YYYY-MM> --period <YYYY-MM> --validate
 
 A `--validate` nélkül elkészül a `report_data.json` és a `Riport.html` is.
 
+Egy kampányról (nem egy hónapról) szóló riport a `--variant campaign`
+változat; a teendőket a `SKILL.md` „Kampányriport” szakasza írja le.
+
 ### Homokozóban: `--offline`
 
 Ha a környezeted nem enged hálózatot — a Codex sandbox alapból ilyen —, a

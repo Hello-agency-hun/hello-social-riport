@@ -117,6 +117,28 @@ Az összehasonlító oldalakhoz. Két út:
   (`149.3K` → 149 300), és idegen elrendezésnél félrecsúszhatnak, ezért a
   menedzsernek össze kell vetnie a PDF-fel, mielőtt beírja.
 
+## 9. Kampányriporthoz (`report.variant: campaign`)
+
+A kampányriport a **kampány teljes idejére** szól, nem naptári hónapra. Csak az
+Ads-export kötelező; a többi kiegészítés.
+
+1. **Ads Manager → Kampányok**, időszak: a kampány első és utolsó napja.
+   Nyugodtan exportálhatsz minden kampányt — a riport a `client.yaml`
+   `campaign.match` mintája szerint válogat, és a `--validate` kiírja, mit
+   választott ki.
+2. **Heti görbéhez:** exportálás előtt **Bontás → Idő → Hét**. Ilyenkor egy
+   kampány hetente külön sorban jön; a motor összevonja őket, és az idővonalat
+   rajzolja belőlük. Az elérést ilyenkor nem adja össze (aki két héten is
+   látta, egy ember).
+3. **Idővonalhoz:** az oszlopok közé vedd fel a **Kezdés** oszlopot. Nélküle
+   nincs „Mikor futott” oldal — kitalált kezdődátumot nem rajzolunk.
+4. **Deduplikált elérés, ha több kampány van:** jelöld ki a riport kampányait,
+   és az összesítő sor **Elérés** értékét írd a `client.yaml`-be
+   (`campaign.reach`). Kampányonként összeadni nem lehet.
+5. **Napi csempék (opcionális):** töltsd le őket a kampány idejére **és** az
+   előtte lévő, ugyanolyan hosszú időszakra, egyben (pl. egy kéthónapos
+   kampánynál négy hónapra). Ebből készül az „alatt vs. előtte” összevetés.
+
 ---
 
 ## Ha valami nem stimmel
