@@ -156,7 +156,15 @@ def table_format(path: Path) -> str:
     if head.startswith(OLE_MAGIC):
         return "xls"
     if zipfile.is_zipfile(path):
-        return "xlsx"
+        try:
+            with zipfile.ZipFile(path) as archive:
+                names = set(archive.namelist())
+            is_workbook = {"[Content_Types].xml", "xl/workbook.xml"}.issubset(names)
+            # Egy sérült/részleges XLSX is workbook-jelölt, nem exportcsomag.
+            # A parser majd érthetően jelzi, hogy nem olvasható.
+            return "xlsx" if is_workbook or any(name.startswith("xl/") for name in names) else "archive"
+        except (OSError, zipfile.BadZipFile):
+            return "csv"
     return "csv"
 
 

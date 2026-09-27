@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import hashlib
 from pathlib import Path
 import re
 
@@ -17,6 +18,15 @@ DAILY_METRICS = {
     # kézi override-ot kért rá, a README pedig azt állította, hogy Instagramon
     # „nincs napi követés-csempe" — ezért a követőszám-lánc ott sosem indult el.
     "Instagram-követések": ("instagram", "follows"),
+}
+
+GENERIC_DAILY_METRICS = {
+    "Megtekintések": "views",
+    "Megjelenések": "views",
+    "Felkeresések": "visits",
+    "Követések": "follows",
+    "Interakciók": "interactions",
+    "Hivatkozáskattintások": "link_clicks",
 }
 
 # Napi elérés-csempék. NEM hiba, ha bekerülnek — logikus, hogy a menedzser
@@ -70,6 +80,15 @@ def sniff(path: Path) -> str | None:
     return None
 
 
+def _infer_daily_channel(path: Path, lines: list[str]) -> str | None:
+    haystack = (path.name + "\n" + "\n".join(lines[:8])).casefold()
+    facebook = re.search(r"(^|[^a-z])(?:facebook|fb)([^a-z]|$)", haystack) is not None
+    instagram = re.search(r"(^|[^a-z])(?:instagram|insta|ig)([^a-z]|$)", haystack) is not None
+    if facebook == instagram:
+        return None
+    return "facebook" if facebook else "instagram"
+
+
 def identify(path: Path) -> Source:
     path = Path(path)
 
@@ -80,11 +99,16 @@ def identify(path: Path) -> Source:
     # A napi csempék speciális, kétsoros fejléce megelőzi a normál táblázatot.
     # Bináris Excelt nem próbálunk szövegként dekódolni.
     actual_format = table_format(path)
+    if actual_format == "archive":
+        return Source(path, "import_bundle")
     if actual_format == "csv":
         lines = read_lines(path)
         if lines and lines[0].lower().startswith("sep="):
             metric = lines[1].strip().strip('"') if len(lines) > 1 else ""
             channel, field = DAILY_METRICS.get(metric, (None, None))
+            if field is None and metric in GENERIC_DAILY_METRICS:
+                field = GENERIC_DAILY_METRICS[metric]
+                channel = _infer_daily_channel(path, lines)
             return Source(path, "meta_daily", metric=metric, channel=channel, field=field)
 
     try:
@@ -131,7 +155,24 @@ def _canonical_upload_name(path: Path) -> tuple[str, str]:
 
 
 def scan(directory: Path) -> list[Source]:
-    sources = [identify(p) for p in sorted(Path(directory).iterdir()) if p.is_file()]
+    from pipeline.imports import expand_bundles
+
+    expand_bundles(directory)
+    sources = [
+        identify(p)
+        for p in sorted(Path(directory).iterdir())
+        if p.is_file() and table_format(p) != "archive"
+    ]
+    seen_hashes: dict[tuple[str, str], str] = {}
+    for source in sources:
+        if source.kind == "unknown":
+            continue
+        digest = hashlib.sha256(source.path.read_bytes()).hexdigest()
+        key = source.kind, digest
+        if key in seen_hashes:
+            source.kind = "ignored_duplicate"
+        else:
+            seen_hashes[key] = source.path.name
     recognized_names = {
         _canonical_upload_name(source.path)
         for source in sources

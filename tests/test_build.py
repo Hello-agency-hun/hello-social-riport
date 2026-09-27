@@ -1,5 +1,6 @@
 import re
 import shutil
+import zipfile
 from datetime import date, timedelta
 
 import pytest
@@ -199,16 +200,32 @@ def test_two_zoomsphere_exports_are_rejected(fixture_dir, tmp_path):
     other = tmp_path / "larus-2026-07"
     shutil.copytree(fixture_dir, other)
     original = next(other.glob("input/*Scheduler*.xlsx"))
-    shutil.copy(original, original.with_name("export_masolat.xlsx"))
+    duplicate = original.with_name("export_masolat.xlsx")
+    shutil.copy(original, duplicate)
+    with zipfile.ZipFile(duplicate, "a") as archive:
+        archive.writestr("duplicate-marker.txt", "második, eltérő export")
     with pytest.raises(DuplicateSourceError, match="ZoomSphere"):
         build(other, period="2026-07")
+
+
+def test_exact_download_copy_does_not_change_the_report(fixture_dir, tmp_path):
+    other = tmp_path / "larus-2026-07"
+    shutil.copytree(fixture_dir, other)
+    original = next(other.glob("input/*Scheduler*.xlsx"))
+    shutil.copy(original, original.with_name("scheduler-pontos-masolat.xlsx"))
+    expected = build(fixture_dir, period="2026-07")
+    actual = build(other, period="2026-07")
+    assert actual["channels"] == expected["channels"]
 
 
 def test_two_ads_exports_are_rejected(fixture_dir, tmp_path):
     other = tmp_path / "larus-2026-07"
     shutil.copytree(fixture_dir, other)
     original = next(other.glob("input/*Kampányok*.csv"))
-    shutil.copy(original, original.with_name("kampanyok_masolat.csv"))
+    duplicate = original.with_name("kampanyok_masolat.csv")
+    shutil.copy(original, duplicate)
+    with duplicate.open("ab") as stream:
+        stream.write(b"\n")
     with pytest.raises(DuplicateSourceError, match="Meta Ads"):
         build(other, period="2026-07")
 
@@ -228,7 +245,10 @@ def test_two_content_exports_for_the_same_channel_are_rejected(fixture_dir, tmp_
     other = tmp_path / "larus-2026-07"
     shutil.copytree(fixture_dir, other)
     original = next(other.glob("input/Jul-01-2026*.csv"))
-    shutil.copy(original, original.with_name("Jul-01-2026_masodik_export.csv"))
+    duplicate = original.with_name("Jul-01-2026_masodik_export.csv")
+    shutil.copy(original, duplicate)
+    with duplicate.open("ab") as stream:
+        stream.write(b"\n")
 
     with pytest.raises(DuplicateSourceError, match="Tartalom export"):
         build(other, period="2026-07")
