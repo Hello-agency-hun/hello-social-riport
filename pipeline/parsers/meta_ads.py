@@ -1,13 +1,16 @@
 import re
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 
 from pipeline.errors import MissingColumnError
 from pipeline.schema import Campaign, ParsedSource
-from pipeline.tabular import read_table_rows
+from pipeline.tabular import parse_date, parse_number, read_table_rows
 
 BOOST_PREFIXES = {"Instagram-bejegyzés:": "instagram", "Bejegyzés:": "facebook"}
 REQUIRED = ["Eredmény jelzése", "Elérés", "Megjelenések"]
+# A lekérési ablak. Nem a kampány kezdete és vége, hanem az, amire a
+# menedzser az Ads Managerben szűrt — ebből dől el, pontos-e az Ads-időszak.
+REPORT_WINDOW = ("Jelentés kezdete", "Jelentés vége")
 NAME_COLUMNS = {
     "Kampány neve": "campaign",
     "Hirdetéssorozat neve": "adset",
@@ -32,23 +35,14 @@ def detect_currency(header: list[str]) -> str:
 
 
 def _number(value: str) -> float:
-    value = (value or "").strip()
-    try:
-        return float(value)
-    except ValueError:
-        return 0.0
+    """Üres vagy nem szám cella (`N/A`, `–`) nulla — a Meta így jelzi a
+    „nincs eredmény”-t. A tizedesvesszős alakot viszont már nem nullázzuk
+    le: lásd `tabular.parse_number`."""
+    return parse_number(value) or 0.0
 
 
 def _date(value: str) -> date | None:
-    text = str(value or "").strip()
-    if not text:
-        return None
-    for pattern in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%m/%d/%Y"):
-        try:
-            return datetime.strptime(text, pattern).date()
-        except ValueError:
-            continue
-    return None
+    return parse_date(value)
 
 
 def _first_date(row: dict[str, str], columns: tuple[str, ...]) -> date | None:
@@ -57,6 +51,23 @@ def _first_date(row: dict[str, str], columns: tuple[str, ...]) -> date | None:
         if found is not None:
             return found
     return None
+
+
+def _report_day(path, row: dict[str, str], column: str) -> date:
+    """A lekérési ablak egy napja. Nem kitalálható: ha hiányzik, megállunk.
+
+    Korábban nyers `strptime` állt itt, és az XLSX-ben mentett Ads-exporton
+    (ahol a cella dátum, nem szöveg) `ValueError`-ral, stack trace-szel állt
+    meg — a menedzser nem tudhatta, hogy a fájllal van baj, nem a programmal.
+    """
+    found = _date(row.get(column, ""))
+    if found is None:
+        raise MissingColumnError(
+            f"{path}: értelmezhetetlen dátum a(z) „{column}” oszlopban: "
+            f"{row.get(column, '')!r}. Várt alak: 2026-07-01. Töltsd le újra "
+            "az Ads Managerből, megnyitás és mentés nélkül."
+        )
+    return found
 
 
 # A boost nevét a Meta a bejegyzés típusából állítja elő, de az ügyfelek egy
@@ -81,7 +92,7 @@ def parse(path) -> ParsedSource:
         raise MissingColumnError(f"{path}: üres Ads export")
 
     header = list(rows[0].keys())
-    for column in REQUIRED:
+    for column in (*REQUIRED, *REPORT_WINDOW):
         if column not in header:
             raise MissingColumnError(f"{path}: hiányzó oszlop — {column}")
     name_column = next((column for column in NAME_COLUMNS if column in header), None)
@@ -98,8 +109,8 @@ def parse(path) -> ParsedSource:
     starts, ends = [], []
 
     for row in rows:
-        report_start = datetime.strptime(row["Jelentés kezdete"], "%Y-%m-%d").date()
-        report_end = datetime.strptime(row["Jelentés vége"], "%Y-%m-%d").date()
+        report_start = _report_day(path, row, "Jelentés kezdete")
+        report_end = _report_day(path, row, "Jelentés vége")
         starts.append(report_start)
         ends.append(report_end)
 

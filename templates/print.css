@@ -15,7 +15,8 @@
      hanem a dokumentum részei. A `-webkit-` előtag a Chrome és az Edge miatt
      kell, a PDF-mentés ott történik. */
   html, body, .page, .panel, .manual-slot, .pdf-button, .delta, .bar,
-  .period-warning, .status-pill, .campaign-duration::before {
+  .period-warning, .status-pill, .campaign-duration::before,
+  .status-pill::before, .status-count::before {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -44,9 +45,26 @@
   .page { box-shadow: 0 2px 24px rgba(0, 0, 0, .07); }
 }
 
-.pdf-button {
+/* Eszköztár: egy sorban, jobbról balra — elöl a PDF, mellette a mentés.
+   A gombok korábban egyenként, fix pixel-eltolással álltak, és hosszabb
+   (angol) feliratnál egymásra csúsztak. */
+.toolbar {
   position: fixed; top: 18px; right: 18px; z-index: 10;
+  display: flex; flex-direction: row-reverse; align-items: center; gap: 10px;
+}
+.pdf-button {
   font-family: var(--font); font-size: 14px; font-weight: 700;
   padding: 11px 18px; border-radius: 999px; cursor: pointer;
-  color: var(--ink); background: var(--accent); border: none;
+  color: var(--ink); background: var(--accent); border: 1px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+.pdf-button:hover { filter: brightness(.96); }
+.pdf-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* A mentés másodlagos gomb: a PDF a végtermék, a mentés a munka közbeni
+   lépés. Ha van még ki nem mentett változás, egy pont jelzi. */
+.toolbar-button { background: var(--paper); border-color: var(--rule); }
+.toolbar-button.is-dirty::before {
+  content: ""; display: inline-block; width: 8px; height: 8px;
+  margin-right: 8px; border-radius: 50%; background: var(--brand-rose);
+  vertical-align: 1px;
 }

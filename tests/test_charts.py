@@ -167,3 +167,54 @@ def test_peak_labels_do_not_collide():
         float(m) for m in _re.findall(r'<circle cx="([\d.]+)"', svg)
     )
     assert all(b - a >= 60 for a, b in zip(xs, xs[1:])), xs
+
+
+def _label_ys(svg: str) -> list[float]:
+    return [
+        float(t.get("y"))
+        for t in _parse(svg).iter("{http://www.w3.org/2000/svg}text")
+    ]
+
+
+@pytest.mark.parametrize("peak", [1, 7, 31, 64, 79, 93, 2022, 48213])
+def test_every_label_stays_inside_the_drawing(peak):
+    """A legerősebb nap pontosan a diagram tetejére esett, és a fölé írt
+    dátum kilógott a rajzterületből — épp a hónap csúcsnapjának dátuma nem
+    látszott. Minden felirat alapvonala a rajzterületen belül legyen, a
+    betűmagassággal együtt."""
+    series = [(date(2026, 7, day), peak if day == 21 else peak // 3) for day in range(1, 32)]
+    svg = line_chart(series, label="x", height=175)
+    assert all(10 <= y <= 175 for y in _label_ys(svg)), _label_ys(svg)
+
+
+def test_the_axis_uses_round_numbers():
+    """`0 · 15 · 31` helyett `0 · 20 · 40`: a görbe ránézésre leolvasható."""
+    peaks = [(date(2026, 7, day), 31 if day == 21 else 3) for day in range(1, 32)]
+    texts = [t.text for t in _parse(line_chart(peaks, label="x")).iter(
+        "{http://www.w3.org/2000/svg}text")]
+    assert "40" in texts and "20" in texts
+    assert "15" not in texts
+
+
+@pytest.mark.parametrize("peak, top", [(1, 2), (3, 4), (31, 40), (64, 80), (93, 120), (2022, 2500)])
+def test_the_axis_top_is_round_even_and_above_the_peak(peak, top):
+    from pipeline.charts import _nice_top
+
+    assert _nice_top(peak) == top
+
+
+def test_english_day_labels_name_the_month():
+    """Az angol riportban a `07.21.` nem egyértelmű; a `Jul 21` igen."""
+    svg = line_chart(SERIES, label="x", language="en", total_label="total")
+    texts = [t.text or "" for t in _parse(svg).iter("{http://www.w3.org/2000/svg}text")]
+    assert "Jul 1" in texts and "Jul 31" in texts
+    assert not any(text.endswith(".") and text[:2].isdigit() for text in texts)
+
+
+def test_empty_charts_speak_the_report_language():
+    for svg in (
+        line_chart([], label="x", empty_label="no data"),
+        bar_chart([], label="x", empty_label="no data"),
+        donut([], label="x", empty_label="no data"),
+    ):
+        assert "no data" in svg and "nincs adat" not in svg

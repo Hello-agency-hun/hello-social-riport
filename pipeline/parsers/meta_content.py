@@ -1,18 +1,15 @@
-from datetime import datetime
-
 from pipeline.errors import MissingColumnError
 from pipeline.schema import ParsedSource, Post
-from pipeline.tabular import read_table_rows
+from pipeline.tabular import parse_date, parse_number, read_table_rows
 
 REQUIRED = ["Bejegyzésazonosító", "Elérés", "Megtekintések", "Állandó hivatkozás"]
+PUBLISHED = "Közzététel időpontja"
 
 
 def _number(value: str) -> int:
-    value = (value or "").strip()
-    try:
-        return int(float(value))
-    except ValueError:
-        return 0
+    """Üres cella nulla. Az ezres tagolású `1 234` viszont nem az: korábban
+    az `int(float(…))` ezen elbukott, és a poszt elérése csendben nulla lett."""
+    return int(parse_number(value) or 0)
 
 
 def _channel(permalink: str) -> str:
@@ -26,7 +23,7 @@ def parse(path) -> ParsedSource:
     if not rows:
         raise MissingColumnError(f"{path}: üres Tartalom export")
 
-    for column in REQUIRED:
+    for column in (*REQUIRED, PUBLISHED):
         if column not in rows[0]:
             raise MissingColumnError(f"{path}: hiányzó oszlop — {column}")
 
@@ -35,9 +32,17 @@ def parse(path) -> ParsedSource:
 
     for row in rows:
         permalink = row.get("Állandó hivatkozás", "").strip()
-        published = datetime.strptime(
-            row["Közzététel időpontja"].strip(), "%m/%d/%Y %H:%M"
-        ).date()
+        # A Meta `07/04/2026 01:00` alakban adja; a magyar Excelben mentett
+        # példány `2026. 07. 04. 1:00`-t. Korábban csak az elsőt ismertük, és
+        # a másikon nyers `ValueError`-ral álltunk meg.
+        published = parse_date(row[PUBLISHED])
+        if published is None:
+            raise MissingColumnError(
+                f"{path}: értelmezhetetlen közzétételi időpont: {row[PUBLISHED]!r} "
+                f"(poszt: {row.get('Bejegyzésazonosító', '').strip() or '?'}). "
+                "Várt alak: 07/04/2026 01:00. Töltsd le újra a Business Suite-ból, "
+                "megnyitás és mentés nélkül."
+            )
         hints.setdefault("page_id", row.get("Oldalazonosító", "").strip())
         hints.setdefault("page_name", row.get("Oldal neve", "").strip())
 

@@ -49,16 +49,47 @@ def test_a_non_number_is_rejected_rather_than_coerced():
 def test_applied_manual_values_survive_later_review_rounds():
     """Az újrarenderelt összehasonlító kártyának már nincs ``data-manual``
     mezője. A következő mentés ezért a korábbi értékekből induljon, különben
-    egy puszta narratívajavítás kitörli az előző havi számokat."""
+    egy puszta narratívajavítás kitörli az előző havi számokat.
+
+    A forrás maga a riport, nem csak a böngésző tárhelye: egy másik
+    böngészőből (vagy a webes eszközből) mentve a tárhely üres volt, és a
+    review.json üres ``manual``-lal ment ki. A beépített érték a tárhelyben
+    ragadt régebbit is felülírja."""
     collector = REVIEW_JS[REVIEW_JS.index("function collect") :]
     collector = collector[: collector.index("var edits")]
 
-    assert "Object.assign({}, stored.manual || {})" in collector
+    assert "var APPLIED = REPORT.manual || {};" in REVIEW_JS
+    assert "Object.assign({}, stored.manual || {}, APPLIED)" in collector
     assert "delete manual[field.dataset.manual]" in collector
 
 
+def test_the_report_carries_its_applied_manual_values(tmp_path):
+    """A review.js csak akkor tudja továbbvinni a beépített kézi számokat, ha
+    a riport átadja neki őket."""
+    import json
+
+    from pipeline.render import render
+
+    golden = (
+        Path(__file__).parent / "fixtures" / "larus-2026-07" / "report_data.golden.json"
+    )
+    data = json.loads(golden.read_text(encoding="utf-8"))
+    html = render(
+        data,
+        cache_dir=tmp_path,
+        fetcher=lambda url: b"",
+        manual={"prev_facebook_visits": 1400, "prev_instagram_views": 0},
+    )
+    found = re.search(r"window\.__helloReport = (\{.*?\});\n", html)
+    assert found, "a riport azonosítója a lapon"
+    assert json.loads(found.group(1))["manual"] == {
+        "prev_facebook_visits": 1400,
+        "prev_instagram_views": 0,
+    }
+
+
 def test_review_js_keeps_line_breaks():
-    """A böngészőoldali gyűjtés sem moshatja el a sortörést.
+    r"""A böngészőoldali gyűjtés sem moshatja el a sortörést.
 
     Az `asTemplate` korábban `\s+`-t vont össze egyetlen szóközzé — a `\s`
     pedig a sortörést is jelenti. Így a mentés pillanatában elveszett minden
@@ -68,7 +99,7 @@ def test_review_js_keeps_line_breaks():
         Path(__file__).resolve().parent.parent / "templates" / "review.js"
     ).read_text(encoding="utf-8")
 
-    assert "/\s+/g" not in source, "a sortörést is összevonó minta"
+    assert r"/\s+/g" not in source, "a sortörést is összevonó minta"
     assert "BR" in source, "a <br> elemet külön kell kezelni"
     assert "\n" in source, "sortörést kell kiírnia"
 
@@ -93,3 +124,41 @@ def test_review_js_has_no_broken_string_literals():
         assert without_escapes.count('"') % 2 == 0, (
             f"{number}. sor: páratlan idézőjel — nyers sortörés a stringben?\n{line}"
         )
+
+
+def test_browser_storage_is_scoped_to_one_report():
+    """A tárhely eredetenként közös. Egy közös kulccsal az egyik ügyfél kézi
+    adatai és megjegyzései a másik ügyfél review.json-jába kerültek, ha a
+    riportokat ugyanarról a szerverről nyitották meg."""
+    assert 'var KEY = "hello-report-review";' not in REVIEW_JS
+    assert '"hello-report-review:" + (REPORT.key' in REVIEW_JS
+    assert "window.__helloReport" in REVIEW_JS
+
+
+def test_a_processed_rounds_comments_are_not_sent_again():
+    """Az újrarenderelt riport új revíziót kap; a régi kör megjegyzései nem
+    kerülhetnek bele a következő review.json-ba."""
+    assert "stored.revision === REVISION" in REVIEW_JS
+
+
+def test_unsaved_edits_survive_a_reload_but_never_overwrite_newer_text():
+    """Újratöltés után a javítás visszakerül a lapra — de csak akkor, ha
+    ugyanarra a szövegre készült, ami most a lapon áll. Egy újrarenderelt
+    riport (az agent közben továbbírta) szövegét a régi javítás nem írhatja
+    felül."""
+    assert "function restore" in REVIEW_JS
+    assert "(stored.bases || {})[path] === block.dataset.original" in REVIEW_JS
+
+
+def test_a_blocked_storage_does_not_kill_the_editor():
+    """Privát ablakban a `localStorage` kivételt dob. Korábban ettől az egész
+    szerkesztő leállt, gombok nélkül."""
+    loader = REVIEW_JS[REVIEW_JS.index("function load") :]
+    loader = loader[: loader.index("\n  }")]
+    assert "try" in loader and "catch" in loader
+    assert REVIEW_JS.count("localStorage.") == REVIEW_JS.count("localStorage.getItem") + REVIEW_JS.count("localStorage.setItem")
+
+
+def test_a_zero_manual_value_is_restored():
+    """A beírt nulla is érték — a korábbi `if (saved)` elhagyta."""
+    assert "if (saved) input.textContent = saved;" not in REVIEW_JS

@@ -1,6 +1,7 @@
 """A stíluslap, a fontok és a logó beágyazása."""
 
 import base64
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -28,11 +29,39 @@ def logo(name: str) -> str:
     return (ROOT / "assets" / "logo" / f"{name}.svg").read_text(encoding="utf-8")
 
 
+# A stíluslap és a szerkesztő-script kommentjei a fejlesztőknek szólnak.
+# Beágyazva minden kiküldött riport forrásában ott utaznának — belső
+# jegyzetként, ügyfélről ügyfélre, fölösleges kilobájtokként.
+CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
+
+
+def _without_css_comments(css: str) -> str:
+    # A base64 ábécében nincs `*`, így egy font data URI-ban sem fordulhat
+    # elő `/*` — a kommentek a fontok beillesztése előtt is, után is
+    # biztonsággal kivághatók. Mi előtte vágjuk, olcsóbb.
+    return re.sub(r"\n{3,}", "\n\n", CSS_COMMENT.sub("", css))
+
+
+def without_js_line_comments(source: str) -> str:
+    """A csak kommentből álló sorok nélkül. A sor végi kommentekhez nem
+    nyúlunk: JavaScriptet nem elemzünk, és egy `//` állhat stringben vagy
+    reguláris kifejezésben is."""
+    return "\n".join(
+        line for line in source.splitlines() if not line.lstrip().startswith("//")
+    )
+
+
 @lru_cache(maxsize=1)
 def stylesheet() -> str:
-    """brand.css + print.css, a fontokkal beágyazva."""
-    css = (TEMPLATES / "brand.css").read_text(encoding="utf-8")
+    """brand.css + print.css, a fontokkal beágyazva, kommentek nélkül."""
+    css = _without_css_comments((TEMPLATES / "brand.css").read_text(encoding="utf-8"))
     for slot, filename in FONT_SLOTS.items():
         css = css.replace(slot, _data_uri(FONTS / filename))
-    css += "\n" + (TEMPLATES / "print.css").read_text(encoding="utf-8")
+    css += "\n" + _without_css_comments((TEMPLATES / "print.css").read_text(encoding="utf-8"))
     return css
+
+
+@lru_cache(maxsize=1)
+def review_script() -> str:
+    """A böngészőoldali szerkesztő, a kommentsorok nélkül."""
+    return without_js_line_comments((TEMPLATES / "review.js").read_text(encoding="utf-8"))

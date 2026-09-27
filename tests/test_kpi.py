@@ -44,6 +44,22 @@ def test_paid_totals_group_by_result_type(input_file):
     assert "actions:omni_landing_page_view" in totals["by_result_type"]
 
 
+def test_money_sums_carry_no_float_noise(input_file):
+    """A `report_data.json`-ba pontos összeg kerül, nem lebegőpontos zaj.
+
+    A profil-felkeresés kampányok összege `52.85000000000001` volt — a
+    riportban nem látszott, a golden file-teszt viszont elbukott rajta, és
+    minden további adatfogyasztó (a webes felület) ezt a számot kapta.
+    """
+    campaigns = meta_ads.parse(input_file("Kampányok")).payload.campaigns
+    totals = paid_totals(campaigns)
+
+    assert totals["by_result_type"]["profile_visit_view"]["spend"] == 52.85
+    amounts = [totals["spend"], totals["always_on"]["spend"], totals["boosted"]["spend"]]
+    amounts += [block["spend"] for block in totals["by_result_type"].values()]
+    assert all(amount == round(amount, 2) for amount in amounts)
+
+
 def test_channel_totals_refuse_to_sum_reach():
     """A havi reach nem áll elő napi értékek összegeként — a kód se tegye."""
     bad = DailySeries(

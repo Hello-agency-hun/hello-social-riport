@@ -168,7 +168,8 @@ Futtasd újra a 3. lépést, majd mondd meg a menedzsernek, hol a `Riport.html`,
 és hogy:
 
 - a jobb felső gombbal PDF-be nyomtathatja,
-- a szaggatott keretű mezőkbe beírhatja azt, amit a Meta nem exportál,
+- az összehasonlító oldalak szaggatott keretű mezőibe beírhatja az előző havi
+  számokat (ahol nincs `previous.json`),
 - bármelyik szövegblokkba belekattinthat és átírhatja,
 - bármelyik oldalhoz megjegyzést fűzhet,
 - a **Mentés** gomb egyetlen `review.json`-t tölt le, amit a hónap mappájába kell tennie.
@@ -183,6 +184,49 @@ A szövegjavítások bekerülnek a `narrative.json`-be, a megjegyzések pedig
 **kiíródnak a konzolra**. Azokat neked kell feldolgoznod: ha strukturális
 kérést tartalmaznak („ide kérek egy kördiagramot"), a `references/` és a
 `templates/` keretein belül hajtsd végre — vagy mondd meg, miért nem megy.
+
+## Kampányriport — ha egy kampányról kérnek riportot
+
+Ha a menedzser nem a hónapról, hanem **egy kampányról** kér riportot („a
+kéthónapos toborzási kampányról kellene egy riport”), az a `campaign`
+változat. Egy kiválasztott kampány (vagy kampánycsoport) a **saját
+időszakára**: mennyibe került, kihez jutott el, mit hozott, hogyan alakult
+időben, melyik része működött, és mozdult-e közben az oldal.
+
+1. **Kérdezd meg** az ügyfelet, a kampány nevét (ahogy a címlapon álljon), az
+   első és utolsó napját, és egy szórészletet, ami minden érintett kampány
+   nevében szerepel (`toborzas`). A mappa: `clients/<ugyfel>/<YYYY-MM>-<kampany>/`,
+   ahol a hónap a kampány utolsó hónapja.
+2. **A checklist kampányváltozata**, szó szerint:
+
+   ```bash
+   python -m pipeline.cli clients/<ugyfel>/<YYYY-MM>-<kampany> --period <YYYY-MM> --variant campaign --start-date <első nap> --end-date <utolsó nap> --checklist
+   ```
+
+3. A `client.yaml`-be:
+
+   ```yaml
+   report:
+     variant: campaign
+     measurement_start: 2026-06-01
+     measurement_end: 2026-07-31
+   campaign:
+     title: "Nyári toborzás"
+     match: ["toborzas"]        # kis- és nagybetű, ékezet mindegy
+     goal: "Jelentkezések a karrieroldalon"   # opcionális
+     post_match: ["#karrier"]   # opcionális: a kapcsolódó organikus posztok
+     reach: 184320              # több kampánynál: az Ads Manager összesítő sorából
+   ```
+
+4. `--validate` — kiírja, **mely kampányokat választotta ki és mit hagyott
+   ki**. Ezt mutasd meg a menedzsernek, mielőtt továbbmész: a rossz minta nem
+   hibaüzenetként jelentkezik, hanem rossz riportként.
+5. Innen minden ugyanaz: build, narratíva (a `references/narrative-guide.md`
+   kampány-szakasza szerint), review-kör.
+
+Csak a Meta Ads export kötelező. A napi csempék a kampány **előtti, ugyanolyan
+hosszú időszakot is** lefedhetik — ebből készül az „alatt vs. előtte”
+összevetés. A követőszám itt nem kell.
 
 ## Mappaszerkezet
 

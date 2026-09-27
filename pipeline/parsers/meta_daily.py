@@ -1,5 +1,4 @@
 import csv
-from datetime import datetime
 from pathlib import Path
 
 from pipeline.detect import DAILY_METRICS, DAILY_REACH_TILES
@@ -10,6 +9,7 @@ from pipeline.errors import (
 )
 from pipeline.labels import PAGE_FIELDS
 from pipeline.schema import DailySeries, ParsedSource
+from pipeline.tabular import parse_date, parse_number
 from pipeline.textio import read_lines
 
 
@@ -96,15 +96,17 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
         if len(row) < 2 or row[0].strip().strip('"') in ("", "Dátum"):
             continue
         raw_day = row[0].strip().strip('"')
-        try:
-            day = datetime.strptime(raw_day, "%Y-%m-%dT%H:%M:%S").date()
-            value = int(float(row[1].strip().strip('"') or 0))
-        except ValueError as error:
+        raw_value = row[1].strip().strip('"')
+        day = parse_date(raw_day)
+        # Üres érték nulla (a Meta így jelzi az eseménytelen napot); az
+        # ezres tagolású `1 234` szám. Ami egyik sem, azon megállunk: egy
+        # napi érték csendes nullázása a havi összeget hamisítaná meg.
+        value = parse_number(raw_value) if raw_value else 0.0
+        if day is None or value is None:
             raise MissingColumnError(
-                f"{path}: értelmezhetetlen sor a(z) {metric!r} csempénél — "
-                f"{row!r} ({error})"
-            ) from error
-        points.append((day, value))
+                f"{path}: értelmezhetetlen sor a(z) {metric!r} csempénél — {row!r}"
+            )
+        points.append((day, int(value)))
 
     if not points:
         raise MissingColumnError(f"{path}: a(z) {metric!r} csempe egyetlen napi sort sem tartalmaz")

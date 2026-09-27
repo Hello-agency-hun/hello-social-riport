@@ -82,6 +82,12 @@ Elérés               9 046
 ebből fizetett       8 398        15,95 EUR
 ```
 
+Az „ebből” csak akkor igaz, ha a fizetett elérés **nem nagyobb** a teljesnél.
+A Meta a kettőt külön méri — a hirdetés más felületen és más időablakban is
+futhat —, és előfordul, hogy a fizetett a nagyobb (a Larus Gambas Pil-Pil
+posztjánál 4 251 a 4 142 mellett). Ilyenkor a kártya „fizetett elérés”-t ír,
+nem „ebből fizetett”-et.
+
 Organikus elérést **nem** számolunk kivonással. A két halmaz átfed — aki a
 hirdetést is és a hírfolyamban is látta, mindkettőben szerepel —, így a
 különbség nem tiszta organikus érték.
@@ -94,3 +100,28 @@ különbség nem tiszta organikus érték.
   Ilyenkor az Instagram-posztokról a kreatívot, a szöveget és a fizetett
   hátteret tudjuk — az organikus elérés nem nulla, hanem **ismeretlen**, és
   ezért nem is szerepel az átlagokban.
+
+## Kampányriport-mutatók
+
+**Átkattintási arány (CTR)** — hivatkozáskattintás ÷ megjelenés. Hány
+megjelenésből lett kattintás. Ha hétről hétre csökken, a kreatív kifáradt.
+
+**Egy kattintás ára (CPC)** — költés ÷ hivatkozáskattintás.
+
+**Ezer megjelenés ára (CPM)** — költés ÷ megjelenés × 1000. A közönség
+drágaságát mutatja, nem a kreatív minőségét.
+
+**Egy eredmény ára** — költés ÷ eredmény, **csak azonos eredménytípuson
+belül**. Elérés- és megjelenés-típusú eredménynél ezer eredményre vetítjük,
+ahogy a Meta is: egy elérés fillérekbe kerül, a „0,00 Ft / eredmény” semmit
+nem mondana.
+
+**Érkezési arány** — érkezésioldal-megtekintés ÷ hivatkozáskattintás, csak
+forgalmi kampánynál. Aki rákattint, de a céloldal nem töltődik be, elveszett:
+ez az arány a céloldal gyorsaságáról is szól.
+
+**Kampány-elérés** — egy kampánynál az exportból jön. Több kampány elérése
+**nem adható össze** (aki mindkettőt látta, egy ember); a deduplikált számot
+csak az Ads Manager összesítő sora tudja, onnan kell leolvasni
+(`campaign.reach`). Ha nincs megadva, a riport nem mutat elérést és
+gyakoriságot — nem becsüli meg.

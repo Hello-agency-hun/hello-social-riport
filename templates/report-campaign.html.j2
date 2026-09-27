@@ -1,0 +1,270 @@
+{% extends "base.html.j2" %}
+{#- Kampányriport: egy kiválasztott kampány a saját időszakára.
+
+    A sorrend a kérdéseké, amiket az ügyfél feltesz: mennyibe került és kihez
+    jutott el (a kampány számokban), mit hozott (eredmények), hogyan alakult
+    (időben), melyik része működött (kampányonként), mivel (posztok), és
+    mozdult-e közben az oldal. Minden szám a `campaign` blokkból jön. -#}
+{% from "macros.html.j2" import delta with context %}
+{% set view = campaign_view %}
+{% set totals = campaign.totals %}
+{% set primary = campaign.primary %}
+
+{% macro cost_label(row) -%}
+{{ t.campaign_cost_per_mille if row.per_mille else t.campaign_cost_per_result }}
+{%- endmacro %}
+
+{% block pages %}
+{# Címlap #}
+<section class="page" style="justify-content:flex-end">
+  <div style="width:300px;color:var(--ink);margin-bottom:auto">{{ logo_lockup | safe }}</div>
+  <div class="eyebrow">{{ t.campaign_eyebrow }} · {{ data.meta.client }}</div>
+  <h1>{{ campaign.title }}</h1>
+  <h2 style="color:var(--ink-soft);font-weight:500;margin-top:14px">
+    {{- date_range(campaign.start, campaign.end) }} · {{ campaign.days }} {{ t.campaign_days -}}
+  </h2>
+  {% if campaign.goal %}
+  <p style="margin-top:14px;font-size:20px"><strong>{{ t.campaign_goal }}:</strong> {{ campaign.goal }}</p>
+  {% endif %}
+  {% if period_warning %}
+  <div class="period-warning" style="margin-top:14px">{{ period_warning }}</div>
+  {% endif %}
+</section>
+
+{# A kampány számokban — a hirdetési tölcsér: költés → megjelenés → elérés
+   → kattintás. Az elérés csak akkor áll itt, ha tudható: több kampány
+   elérése nem adható össze, és amit nem mértünk, az nem kerül a riportba. #}
+<section class="page">
+  <div class="eyebrow">{{ t.overview }}</div>
+  <h2 style="margin-bottom:40px">{{ t.campaign_in_numbers }}</h2>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.spend | money(currency) }}</div>
+      <div class="stat-label">{{ t.campaign_spend }}</div>
+      {% if totals.daily_spend is not none %}
+      <p class="note" style="margin-top:6px">{{ totals.daily_spend | money(currency) }} {{ t.campaign_daily_spend }}</p>
+      {% endif %}
+    </div>
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.impressions | num }}</div>
+      <div class="stat-label">{{ t.campaign_impressions }}</div>
+    </div>
+    {% if totals.reach is not none %}
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.reach | num }}</div>
+      <div class="stat-label">{{ t.campaign_reach }}</div>
+    </div>
+    {% endif %}
+    {% if totals.frequency is not none %}
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.frequency | num(1) }}×</div>
+      <div class="stat-label">{{ t.campaign_frequency }}</div>
+      <p class="note" style="margin-top:6px">{{ t.campaign_frequency_note }}</p>
+    </div>
+    {% endif %}
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.link_clicks | num }}</div>
+      <div class="stat-label">{{ t.campaign_link_clicks }}</div>
+    </div>
+    {% if totals.ctr is not none %}
+    <div class="panel">
+      <div class="stat stat--sm accent">{{ (totals.ctr * 100) | num(2) }}%</div>
+      <div class="stat-label">{{ t.campaign_ctr }}</div>
+    </div>
+    {% endif %}
+    {% if totals.cpc is not none %}
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.cpc | money(currency) }}</div>
+      <div class="stat-label">{{ t.campaign_cpc }}</div>
+    </div>
+    {% endif %}
+    {% if totals.cpm is not none %}
+    <div class="panel">
+      <div class="stat stat--sm">{{ totals.cpm | money(currency) }}</div>
+      <div class="stat-label">{{ t.campaign_cpm }}</div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{# Mit hozott — az elsődleges eredmény nagyban, a többi típus külön sorban:
+   eltérő eredménytípusok nem adhatók össze. #}
+{% if primary %}
+<section class="page">
+  <div class="eyebrow">{{ t.campaign_results_eyebrow }}</div>
+  <h2 style="margin-bottom:36px">{{ t.campaign_results_title }}</h2>
+  {% set arrival = primary.results_per_click %}
+  <div class="grid" style="grid-template-columns:repeat({{ 3 if arrival is not none else 2 }},1fr);{% if campaign.results | length > 1 %}align-content:start{% endif %}">
+    <div class="panel">
+      <div class="stat accent">{{ primary.results | num }}</div>
+      <div class="stat-label">{{ primary.result_type | result }}</div>
+    </div>
+    <div class="panel">
+      <div class="stat">{{ primary.cost_per_result | money(currency) if primary.cost_per_result is not none else "–" }}</div>
+      <div class="stat-label">{{ cost_label(primary) }}</div>
+    </div>
+    {# Forgalmi kampánynál a kattintás és az oldalbetöltés nem ugyanaz: aki
+       rákattint, de a céloldal nem töltődik be, elveszett. Ez az arány a
+       céloldal gyorsaságáról is szól — nem csak a hirdetésről. #}
+    {% if arrival is not none %}
+    <div class="panel">
+      <div class="stat">{{ (arrival * 100) | num(0) }}%</div>
+      <div class="stat-label">{{ t.campaign_arrival }}</div>
+      <p class="note" style="margin-top:6px">{{ t.campaign_arrival_note }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% if campaign.results | length > 1 %}
+  <div style="margin-top:32px">
+  <table>
+    <tr><th>{{ t.result_type }}</th><th class="num">{{ t.campaign }}</th>
+        <th class="num">{{ t.spend | capitalize }}</th><th class="num">{{ t.result }}</th>
+        <th class="num">{{ t.campaign_cost_per_result | capitalize }}</th></tr>
+    {% for row in campaign.results %}
+    <tr>
+      <td>{{ row.result_type | result }}</td>
+      <td class="num">{{ row.campaigns }}</td>
+      <td class="num">{{ row.spend | money(currency) }}</td>
+      <td class="num">{{ row.results | num }}</td>
+      <td class="num">{{ row.cost_per_result | money(currency) if row.cost_per_result is not none else "–" }}{% if row.per_mille %} <span class="note">/ 1000</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  <p class="note" style="margin-top:auto">{{ t.result_types_note }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{# Időbeli alakulás — csak idő szerint bontott exportból. A CTR görbéje a
+   kreatív kifáradását mutatja: ha hétről hétre csökken, ideje cserélni. #}
+{% for chunk in view.timeline_charts %}
+<section class="page">
+  <div class="eyebrow">{{ t.campaign_over_time_eyebrow }} · {{ t["campaign_granularity_" ~ campaign.timeline.granularity] }}</div>
+  <h2 style="margin-bottom:28px">{{ t.campaign_over_time }}</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    {% for title, svg in chunk %}
+    <div class="panel">
+      <h3 style="font-size:15px;margin-bottom:8px">{{ title }}</h3>
+      {{ svg | safe }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{# Mikor futott — csak valódi kezdődátumokból. #}
+{% if view.gantt %}
+<section class="page">
+  <div class="eyebrow">{{ t.campaign_over_time_eyebrow }}</div>
+  <h2 style="margin-bottom:28px">{{ t.campaign_when }}</h2>
+  <div class="fill"><div class="chart-frame" style="max-width:none">{{ view.gantt | safe }}</div></div>
+</section>
+{% endif %}
+
+{# Kampányonként — a legkedvezőbb eredményár kiemelve, ha van mihez mérni. #}
+{% for rows in view.row_pages %}
+<section class="page campaign-breakdown-page">
+  <div class="eyebrow">{{ t.campaign_breakdown_eyebrow }}</div>
+  <h2 style="margin:10px 0 24px">{{ t.campaign_breakdown }}</h2>
+  <div class="campaign-list">
+    <div class="campaign-row campaign-row--head">
+      <div class="campaign-label">{{ t.campaign }}</div>
+      <div class="campaign-label">{{ t.campaign_status_col }}</div>
+      <div class="campaign-label num">{{ t.spend | capitalize }}</div>
+      <div class="campaign-label num">{{ t.campaign_clicks_col }}</div>
+      <div class="campaign-label num">{{ t.result }}</div>
+    </div>
+    {% for row in rows %}
+    <div class="campaign-row{% if row.is_best %} campaign-row--best{% endif %}">
+      <div class="campaign-name">
+        <strong>{{ row.name }}</strong>
+        {% if row.start_date %}<div class="campaign-duration">{{ row.start_date }} → {{ row.end_date or t.campaign_ongoing }}</div>{% endif %}
+        {% if row.is_best %}<div class="campaign-best">{{ t.campaign_best }}</div>{% endif %}
+      </div>
+      <div><span class="status-pill status-pill--{{ row.status_kind }}">{{ row.display_status }}</span></div>
+      <div class="num">{{ row.spend | money(currency) }}
+        {% if row.share_of_spend is not none %}<div class="note">{{ (row.share_of_spend * 100) | num(0) }}% {{ t.campaign_share_of_spend }}</div>{% endif %}</div>
+      <div class="num">{{ row.link_clicks | num }}
+        {% if row.ctr is not none %}<div class="note">{{ (row.ctr * 100) | num(2) }}%</div>{% endif %}</div>
+      <div class="num">{{ row.results | num }} · {{ row.result_type | result }}
+        {% if row.cost_per_result is not none %}<div class="note">{{ row.cost_per_result | money(currency) }} {{ cost_label(row) }}</div>{% endif %}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if loop.last and campaign.earlier_posts %}
+  <p class="note" style="margin-top:auto">{{ t.campaign_earlier_posts_note }}</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+{# A kampány posztjai — a hirdetettek, és ha a menedzser megadott kulcsszót
+   (`campaign.post_match`), a hozzá kapcsolódó organikus posztok. #}
+{% for chunk in view.post_pages %}
+<section class="page">
+  <div class="eyebrow">{{ t.campaign_posts_eyebrow }}</div>
+  <h2 style="margin-bottom:24px">{{ t.campaign_posts }}</h2>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+    {% for post in chunk %}
+    <div class="panel">
+      <img class="thumb" src="{{ post.thumb }}" data-post-id="{{ post.post_id }}" alt="{{ post.caption | short(120) }}">
+      <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
+      <div class="rule" style="margin:12px 0"></div>
+      <table style="font-size:14px">
+        {% if post.reach %}
+        <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
+        {% endif %}
+        {% if post.paid %}
+        <tr><td class="accent">{{ t.paid_reach }}</td>
+            <td class="num accent"><strong>{{ post.paid.reach | num }}</strong></td></tr>
+        <tr><td class="accent">{{ t.spend }}</td>
+            <td class="num accent">{{ post.paid.spend | money(currency) }}</td></tr>
+        {% endif %}
+        {% if post.organic_measured %}
+        <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
+        <tr><td>{{ t.comments }}</td><td class="num">{{ post.comments | num }}</td></tr>
+        <tr><td>{{ t.shares }}</td><td class="num">{{ post.shares | num }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{# Hatás az oldalra — csak ha a napi csempék a kampány előtti, ugyanolyan
+   hosszú időszakot is teljesen lefedik. Együttmozgás, nem bizonyított hatás;
+   a lap ezt ki is mondja. #}
+{% if view.lift_rows %}
+<section class="page">
+  <div class="eyebrow">{{ t.campaign_lift_eyebrow }}</div>
+  <h2 style="margin-bottom:8px">{{ t.campaign_lift }}</h2>
+  <p class="note" style="margin-bottom:26px;max-width:980px">
+    {{ t.campaign_lift_note_1 }} ({{ date_range(campaign.lift.baseline_start, campaign.lift.baseline_end) }}).
+    {{ t.campaign_lift_note_2 }}
+  </p>
+  {# Tábla a középre igazító burokban: `.page > table` a teljes oldalmagasságra
+     nyújtaná a sorokat, és egy-két sornál szétesne a lap. #}
+  <div class="fill">
+  <table>
+    <tr><th></th><th class="num">{{ t.campaign_before }}</th><th class="num">{{ t.campaign_during }}</th><th class="num">{{ t.campaign_change }}</th></tr>
+    {% for row in view.lift_rows %}
+    <tr>
+      <td>{{ row.channel | channel }} · {{ row.field | field }}</td>
+      <td class="num">{{ row.before | num }}</td>
+      <td class="num"><strong>{{ row.during | num }}</strong></td>
+      <td class="num">{{ delta(row.diff) }} {{ row.diff | signed }}{% if row.pct is not none %} <span class="note">({{ row.pct | num(1) }}%)</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{# Az oldal napi alakulása a kampány alatt — ugyanaz a nézet, mint a havi riportban. #}
+{% include "sections/trends.html.j2" %}
+
+{% include "sections/narrative.html.j2" %}
+
+{% include "sections/closing.html.j2" %}
+{% endblock %}

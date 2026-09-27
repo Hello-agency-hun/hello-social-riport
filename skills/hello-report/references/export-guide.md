@@ -93,20 +93,40 @@ Ugyanaz a fiókváltás után, öt csempe:
 
 ## 7. Havi elérés és követőszám
 
-**Ezeket nem kell letölteni** — a riportban ott lesz a helyük szaggatott kerettel.
+**Ezeket nem kell letölteni** — exportban nincsenek, csak a felületről
+olvashatók le. A menedzser képernyőképet tesz az `input/` mappába (vagy
+bemondja a számot), te pedig a `client.yaml`-be írod:
 
-Statisztika → **Elérés** csempe, az időszak a pontos mérési dátumokra állítva.
-Csatornánként egy szám. Ugyanígy a követő-összlétszám a Közönség alatt.
+```yaml
+monthly_reach:
+  facebook: <szám>
+  instagram: <szám>
+followers:
+  facebook: <szám>
+  instagram: <szám>
+```
 
-A menedzser beírja a riportba, megnyomja a **Mentés** gombot, és a letöltött
-`review.json`-t a hónap mappájába teszi. A következő hónaptól a követőszám már
-automatikus, mert az előző riportból jön.
+- **Havi elérés:** Business Suite → Eredmények, az időszak a pontos mérési
+  dátumokra állítva. A **Facebookon a „Nézők” csempe** az elérés: „Elérés”
+  csempe ott nincs, a „Megtekintések” pedig megjelenést mér, nem embert.
+  Az Instagramon az **„Elérés”** csempe.
+- **Követőszám:** Business Suite → Közönség (az oldal fejléce kerekít, ez
+  nem). A következő hónaptól magától számolódik — előző állomány + havi új
+  követés —, amíg a hónapok egymás után jönnek, és van követés-csempe. Ha a
+  lánc megszakad, a `--validate` újra kéri.
+
+A riportban nincs rájuk kitölthető mező: amit a `--validate` hiányol, azt a
+`client.yaml`-ben pótoljuk, nem az ügyfélnek szánt oldalon.
 
 ## 8. Előző hónap (opcionális)
 
-Az összehasonlító oldalakhoz. Két út:
+Az összehasonlító oldalakhoz. Három út:
 
 - **Egyszerű:** az előző havi `report_data.json` átmásolva `previous.json` néven.
+- **Kézzel:** ahol nincs előző havi érték, az összehasonlító oldalon
+  szaggatott keretű mező áll. A menedzser beírja, **Mentés**, és a
+  `review.json` a hónap mappájába kerül. A kimaradt mezők a következő körben is
+  kitölthetők.
 - **Első hónapban:** a korábbi riport PDF-jéből javaslat kérhető:
 
   ```bash
@@ -116,6 +136,28 @@ Az összehasonlító oldalakhoz. Két út:
   Ez **nem ír fájlt** — javaslatot nyomtat. A számok kerekítettek lehetnek
   (`149.3K` → 149 300), és idegen elrendezésnél félrecsúszhatnak, ezért a
   menedzsernek össze kell vetnie a PDF-fel, mielőtt beírja.
+
+## 9. Kampányriporthoz (`report.variant: campaign`)
+
+A kampányriport a **kampány teljes idejére** szól, nem naptári hónapra. Csak az
+Ads-export kötelező; a többi kiegészítés.
+
+1. **Ads Manager → Kampányok**, időszak: a kampány első és utolsó napja.
+   Nyugodtan exportálhatsz minden kampányt — a riport a `client.yaml`
+   `campaign.match` mintája szerint válogat, és a `--validate` kiírja, mit
+   választott ki.
+2. **Heti görbéhez:** exportálás előtt **Bontás → Idő → Hét**. Ilyenkor egy
+   kampány hetente külön sorban jön; a motor összevonja őket, és az idővonalat
+   rajzolja belőlük. Az elérést ilyenkor nem adja össze (aki két héten is
+   látta, egy ember).
+3. **Idővonalhoz:** az oszlopok közé vedd fel a **Kezdés** oszlopot. Nélküle
+   nincs „Mikor futott” oldal — kitalált kezdődátumot nem rajzolunk.
+4. **Deduplikált elérés, ha több kampány van:** jelöld ki a riport kampányait,
+   és az összesítő sor **Elérés** értékét írd a `client.yaml`-be
+   (`campaign.reach`). Kampányonként összeadni nem lehet.
+5. **Napi csempék (opcionális):** töltsd le őket a kampány idejére **és** az
+   előtte lévő, ugyanolyan hosszú időszakra, egyben (pl. egy kéthónapos
+   kampánynál négy hónapra). Ebből készül az „alatt vs. előtte” összevetés.
 
 ---
 

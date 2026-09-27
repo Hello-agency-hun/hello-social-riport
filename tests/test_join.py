@@ -130,3 +130,95 @@ def test_a_caption_that_merely_mentions_the_word_is_left_alone():
     assert normalize_caption("Ez a bejegyzés: nyári nyitvatartás") == (
         "ez a bejegyzés: nyári nyitvatartás"
     )
+
+
+def _fb_post(post_id: str, caption: str):
+    from datetime import date
+
+    from pipeline.schema import Post
+
+    return Post(
+        channel="facebook",
+        post_id=post_id,
+        published=date(2026, 7, 3),
+        caption=caption,
+        reach=100,
+        organic_measured=True,
+    )
+
+
+def _boost(caption: str, spend: float, reach: int, result_type: str = "reach", results: int = 0):
+    return Campaign(
+        name=f"Bejegyzés: „{caption}”",
+        spend=spend,
+        reach=reach,
+        impressions=reach * 2,
+        link_clicks=3,
+        results=results,
+        result_type=result_type,
+        channel="facebook",
+        is_boost=True,
+    )
+
+
+def test_a_post_boosted_twice_keeps_both_spends():
+    """Egy poszt kétszeri meghirdetése nem „korábbi poszt”.
+
+    A második kampány korábban nem talált posztot (az elsőt már lefoglalta),
+    és a riport az ügyfélnek azt írta, hogy egy korábbi hónapban megjelent
+    bejegyzést támogattunk — a költése pedig nem került a poszthoz.
+    """
+    post = _fb_post("1", "Nyári menü a teraszon, minden hétvégén")
+    first = _boost("Nyári menü a teraszon, minden hétvégén", 10.0, 1000, results=50)
+    second = _boost("Nyári menü a teraszon, minden hétvégén", 5.5, 1500, results=20)
+
+    joined = join_posts(content=[post], items=[], campaigns=[first, second])
+
+    assert joined.unmatched_boosts == []
+    paid = joined.posts[0].paid
+    assert paid.spend == 15.5
+    assert paid.impressions == 5000
+    assert paid.link_clicks == 6
+    # Az elérés nem adható össze: aki mindkettőt látta, egy ember.
+    assert paid.reach == 1500
+    assert paid.results == 70
+
+
+def test_reboost_with_a_different_result_type_does_not_add_results():
+    post = _fb_post("1", "Nyári menü a teraszon, minden hétvégén")
+    first = _boost("Nyári menü a teraszon, minden hétvégén", 10.0, 1000, "reach", 900)
+    second = _boost("Nyári menü a teraszon, minden hétvégén", 4.0, 800, "actions:link_click", 12)
+
+    paid = join_posts(content=[post], items=[], campaigns=[first, second]).posts[0].paid
+
+    assert paid.spend == 14.0
+    assert (paid.result_type, paid.results) == ("reach", 900)
+
+
+def test_two_posts_with_the_same_opening_get_one_boost_each():
+    """Heti visszatérő poszt: két boost két posztra kerül, nem egyre."""
+    week_one = _fb_post("1", "Heti menü: gulyás, rántott hús")
+    week_two = _fb_post("2", "Heti menü: gulyás, rántott hús")
+    boosts = [
+        _boost("Heti menü: gulyás, rántott hús", 7.0, 700),
+        _boost("Heti menü: gulyás, rántott hús", 8.0, 800),
+    ]
+
+    joined = join_posts(content=[week_one, week_two], items=[], campaigns=boosts)
+
+    assert [post.paid.spend for post in joined.posts] == [7.0, 8.0]
+
+
+def test_prefix_match_wins_over_a_mention_inside_another_caption():
+    """Egy rövid kampánynév egy másik poszt szövegének közepén is
+    előfordulhat — a költés akkor is ahhoz a poszthoz kerüljön, amelyik
+    ezzel a szöveggel KEZDŐDIK."""
+    mention = _fb_post("1", "Hétvégén is várunk! Ennyi! A többit a helyszínen")
+    real = _fb_post("2", "Ennyi! Nyár, terasz, limonádé")
+
+    joined = join_posts(
+        content=[mention, real], items=[], campaigns=[_boost("Ennyi!", 9.0, 900)]
+    )
+
+    assert joined.posts[0].paid is None
+    assert joined.posts[1].paid.spend == 9.0

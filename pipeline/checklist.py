@@ -15,7 +15,55 @@ A lista a `client.yaml`-ből szűkül: akinek nincs Instagram-fiókja, ne kapjon
 Instagram-sorokat.
 """
 
+from pipeline.campaign import yaml_lines
+
 FIVE_TILES = "Felkeresések · Hivatkozáskattintások · Interakciók · Követők · Megtekintések"
+
+
+def _campaign(
+    client: dict,
+    directory: str,
+    exact_range: str,
+    has_fb: bool,
+    has_ig: bool,
+    measurement_start: str | None = None,
+    measurement_end: str | None = None,
+) -> str:
+    """A kampányriport listája. Más a kérdés, más a letöltés: a Meta Ads
+    export a lényeg, a kampány teljes idejére — a többi kiegészítés."""
+    lines = [
+        f"Kampányriport — töltsd ide: {directory}/input/",
+        "Ne nevezd át a fájlokat — a nevük adatot hordoz.",
+        "",
+        f"Időszak: a kampány teljes ideje ({exact_range}).",
+        "",
+        "□ Meta Ads Manager → Kampányok → időszak: a kampány teljes ideje → Exportálás → .CSV  (NEM xlsx!)",
+        "  Heti görbéhez: előtte Bontás → Idő → Hét. Az idővonalhoz adj hozzá egy „Kezdés” oszlopot.",
+        "  Minden kampányt exportálhatsz — a riport a client.yaml `campaign.match` mintája szerint válogat.",
+        "□ Ads Manager → jelöld ki a riport kampányait → az összesítő sor „Elérés” értéke",
+        "  → client.yaml: campaign.reach   (több kampány elérése nem adható össze)",
+        "",
+        "Kiegészítés — ha megvan, a riport többet mond:",
+    ]
+    if has_fb:
+        lines.append("□ Business Suite → Eredmények → Facebook fül, öt csempe")
+    if has_ig:
+        lines.append("□ Business Suite → Eredmények → Instagram fül, öt csempe")
+    lines += [
+        "  A kampány idejére ÉS az előtte lévő, ugyanolyan hosszú időszakra együtt:",
+        "  ebből látszik, mozdult-e az oldal a kampány alatt.",
+    ]
+    if has_fb:
+        lines.append("□ Business Suite → Tartalom → FACEBOOK → .csv   (a hirdetett posztokhoz)")
+    if has_ig:
+        lines.append("□ Business Suite → Tartalom → INSTAGRAM → .csv")
+    lines += [
+        "□ ZoomSphere → Scheduler → export a kampány idejére → .XLSX   (a kreatívokhoz)",
+        "",
+        "A client.yaml-be:",
+    ]
+    lines += ["  " + line for line in yaml_lines(measurement_start, measurement_end)]
+    return "\n".join(lines)
 
 
 def render(
@@ -23,6 +71,7 @@ def render(
     directory: str,
     measurement_start: str | None = None,
     measurement_end: str | None = None,
+    variant: str | None = None,
 ) -> str:
     client = client or {}
     has_fb = bool(client.get("fb_page_id") or client.get("fb_page_name"))
@@ -37,6 +86,18 @@ def render(
         if measurement_start and measurement_end
         else "a kiválasztott pontos mérési időszak"
     )
+    if variant == "campaign":
+        return _campaign(
+            client,
+            directory,
+            exact_range if measurement_start and measurement_end
+            else "a kampány első és utolsó napja",
+            has_fb,
+            has_ig,
+            measurement_start,
+            measurement_end,
+        )
+
     lines = [
         f"Töltsd ide: {directory}/input/",
         "Ne nevezd át a fájlokat — a nevük adatot hordoz (lásd a Megtekintéseket).",

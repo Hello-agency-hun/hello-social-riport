@@ -62,3 +62,71 @@ def test_comparison_page_offers_fillable_fields_without_previous_data(tmp_path):
     assert "Változás az előző hónaphoz" in html
     assert 'class="page manual-only-page"' in html
     assert ".manual-only-page { display: none !important; }" in html
+
+
+def _work_copy(tmp_path):
+    """A fixture munkapéldánya: a teszt írhat bele review.json-t és
+    previous.json-t anélkül, hogy a fixture-höz nyúlna."""
+    import shutil
+    from pathlib import Path
+
+    fixture = Path(__file__).parent / "fixtures" / "larus-2026-07"
+    work = tmp_path / "larus" / "2026-07"
+    shutil.copytree(fixture, work)
+    (work / "report_data.golden.json").unlink()
+    return work
+
+
+def test_a_partial_fill_leaves_the_rest_fillable(tmp_path):
+    """Aki az első körben csak egy előző havi számot ír be, a többit a
+    következő riportban is be tudja írni.
+
+    Korábban a mezők csak a teljesen üres csatornán jelentek meg: egyetlen
+    beírt érték után a csatorna többi mezője eltűnt, és a riportból többé nem
+    volt pótolható.
+    """
+    from pipeline.build import build
+    from pipeline.render import render
+
+    work = _work_copy(tmp_path)
+    (work / "review.json").write_text(
+        json.dumps({"manual": {"prev_facebook_visits": 1400}}), encoding="utf-8"
+    )
+    data = build(work, "2026-07")
+    assert data["comparison"]["facebook"]["visits"]["before"] == 1400
+
+    html = render(
+        data, cache_dir=tmp_path / "cache", fetcher=lambda url: b"", manual=data["manual"]
+    )
+    assert 'data-manual="prev_facebook_visits"' not in html, "ez már kész kártya"
+    for key in ("link_clicks", "interactions", "follows"):
+        assert f'data-manual="prev_facebook_{key}"' in html
+    assert html.count('class="page manual-only-page"') == 1, "csak az Instagram-oldal üres"
+
+
+def test_a_manual_value_fills_only_what_the_previous_report_lacks(tmp_path):
+    """Az előző havi riport az erősebb forrás. A kézi érték csak azt pótolja,
+    ami abból hiányzik — erre a metrikára a riport kitölthető mezőt mutat, és
+    annak hatnia kell. Korábban previous.json mellett a kézi értéket meg sem
+    nézte."""
+    from pipeline.build import build
+
+    work = _work_copy(tmp_path)
+    (work / "previous.json").write_text(
+        json.dumps(
+            {
+                "meta": {"period": "2026-06"},
+                "channels": {"facebook": {"totals": {"visits": 1000}}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (work / "review.json").write_text(
+        json.dumps(
+            {"manual": {"prev_facebook_visits": 1, "prev_facebook_link_clicks": 900}}
+        ),
+        encoding="utf-8",
+    )
+    facebook = build(work, "2026-07")["comparison"]["facebook"]
+    assert facebook["visits"]["before"] == 1000, "az előző havi riport nyer"
+    assert facebook["link_clicks"]["before"] == 900, "a kézi érték a hiányt pótolja"

@@ -82,3 +82,64 @@ def test_real_creative_url_is_reachable():
         "prod/publisher/2026/d1110827-ba6b-4636-834d-3484893f1543.jpg"
     )
     assert raw and len(raw) > 1000
+
+
+def test_slow_downloads_overlap_instead_of_queueing(tmp_path):
+    """Korábban a képek egymás után töltődtek, képenként 30 másodperces
+    időkorláttal: egy lassú CDN mellett a renderelés percekig tartott."""
+    import time
+
+    def slow(url):
+        time.sleep(0.2)
+        return _jpeg(64, 48)
+
+    urls = [f"https://example.test/{index}.jpg" for index in range(8)]
+    started = time.perf_counter()
+    uris = embed(urls, cache_dir=tmp_path, fetcher=slow)
+    assert len(uris) == 8 and all(uri.startswith("data:image/jpeg") for uri in uris)
+    assert time.perf_counter() - started < 1.0, "nyolc kép nem várhat egymásra"
+
+
+def test_a_repeated_url_is_downloaded_once(tmp_path):
+    calls = []
+
+    def fetcher(url):
+        calls.append(url)
+        return _jpeg(64, 48)
+
+    uris = embed(["https://example.test/a.jpg"] * 3, cache_dir=tmp_path, fetcher=fetcher)
+    assert len(uris) == 3 and len(set(uris)) == 1
+    assert calls == ["https://example.test/a.jpg"]
+
+
+def test_no_half_written_file_is_left_in_the_cache(tmp_path):
+    embed(["https://example.test/a.jpg"], cache_dir=tmp_path, fetcher=lambda url: _jpeg())
+    assert not list(tmp_path.glob("*.part"))
+    assert len(list(tmp_path.glob("*.txt"))) == 1
+
+
+def _decoded(uri: str) -> Image.Image:
+    import base64
+
+    return Image.open(io.BytesIO(base64.b64decode(uri.split(",", 1)[1])))
+
+
+def test_transparent_areas_become_paper_not_black():
+    """A JPEG-be alakítás az átlátszó részt feketére festette — egy PNG-logó
+    fekete dobozként jelent meg a kártyán."""
+    buffer = io.BytesIO()
+    Image.new("RGBA", (40, 30), (0, 0, 0, 0)).save(buffer, format="PNG")
+    pixel = _decoded(to_data_uri(buffer.getvalue())).getpixel((20, 15))
+    assert all(channel > 240 for channel in pixel), pixel
+
+
+def test_phone_photos_are_turned_upright():
+    """A telefon az elforgatást EXIF-ben tárolja; a JPEG-újrakódolás ezt
+    eldobta, és a kép oldalra fordulva jelent meg."""
+    image = Image.new("RGB", (60, 20), (10, 120, 200))
+    exif = image.getexif()
+    exif[0x0112] = 6  # 90°-kal elforgatva tárolt kép
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG", exif=exif.tobytes())
+    upright = _decoded(to_data_uri(buffer.getvalue()))
+    assert upright.size == (20, 60)

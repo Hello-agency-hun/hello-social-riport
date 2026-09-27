@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from pipeline import bootstrap, compare, followers, guards, kpi, manual, periods
+from pipeline import campaign as campaign_mod
 from pipeline import performance as performance_mod
 from pipeline.detect import scan
 from pipeline.errors import (
@@ -64,11 +65,17 @@ def _serialise(value):
     return value
 
 
-def load_config(directory: Path) -> dict:
+def load_config(
+    directory: Path,
+    variant: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict:
     """Az ügyfél beállításai. Új ügyfélnél ez még nincs meg — a hibaüzenet
     ezért a kitöltött sablont adja vissza, nem csak a hiány tényét. Amit az
     exportokból ki lehet olvasni, azt ki is olvassuk: az oldalazonosítót
-    bekérni olyasmi, amit már megkaptunk."""
+    bekérni olyasmi, amit már megkaptunk. A `variant` és a dátumok csak a
+    sablont alakítják: egy kampánymappa kampányvázat kap, nem havit."""
     path = Path(directory) / "client.yaml"
     if not path.exists():
         found = bootstrap.suggest(Path(directory) / "input")
@@ -79,7 +86,7 @@ def load_config(directory: Path) -> dict:
         )
         raise MissingConfigError(
             f"nincs client.yaml itt: {path.parent}\n{lead}\n\n"
-            f"{bootstrap.template(found)}"
+            f"{bootstrap.template(found, variant, start_date, end_date)}"
         )
     # A követőszámot itt még nem ellenőrizzük: lehet, hogy nem is kell megadni,
     # mert az előző hónapból továbbszámolható. Ahhoz viszont a napi adat kell,
@@ -297,6 +304,23 @@ def _check_boost_matching(joined, campaigns: list) -> None:
     )
 
 
+CAMPAIGN_REACH = {
+    "label": "kampány-elérés (deduplikált)",
+    "hint": "Ads Manager → Kampányok → jelöld ki a riport kampányait → az "
+    "alattuk lévő összesítő sor „Elérés” értéke, a kampány teljes idejére.",
+    "why": "a kampányok elérése átfed: aki két kampány hirdetését is látta, "
+    "egy ember, tehát a kampányonkénti elérések összege több a valóságnál. "
+    "A deduplikált számot csak az Ads Manager összesítő sora tudja.",
+}
+
+
+def _campaign_obtainable(block: dict) -> list[dict]:
+    """Több kampány együttes elérése csak leolvasható, nem számolható."""
+    if block["totals"]["reach"] is not None:
+        return []
+    return [{"key": "campaign.reach", **CAMPAIGN_REACH}]
+
+
 def _obtainable(channels: dict, config: dict) -> list[dict]:
     """Amit a Meta nem exportál, de a felületén ott van, és még nincs megadva."""
     given = config.get("monthly_reach") or {}
@@ -369,10 +393,14 @@ def build(
     attól, ami az utolsó riportban van.
     """
     directory = Path(directory)
-    config = load_config(directory)
+    config = load_config(directory, variant, start_date, end_date)
     if variant:
         config.setdefault("report", {})["variant"] = variant
     client = config["client"]
+    # A kampányriport egy kiválasztott kampányról szól, a saját időszakára —
+    # lásd `campaign.py`. Ott csak a Meta Ads export kötelező.
+    is_campaign = (config.get("report") or {}).get("variant") == "campaign"
+    campaign_config = config.get("campaign") or {}
     overrides = config.get("daily_metric_overrides") or {}
     overrides = {key: tuple(value) for key, value in overrides.items()}
 
@@ -415,12 +443,20 @@ def build(
             parsed = meta_ads.parse(source.path)
             ads_payload = parsed.payload
             campaigns = parsed.payload.campaigns
-            boosts = sum(1 for c in campaigns if c.is_boost)
+            # Idő szerint bontott exportban egy kampány hetente (naponta) külön
+            # sorban jön: a sorok száma ilyenkor nem a kampányok száma. A
+            # bontást a lekérési ablak mutatja meg, nem a név — ugyanazt a
+            # posztot kétszer hirdetve két azonos nevű kampány is lehet.
+            distinct, breakdown_rows = campaign_mod.consolidate(campaigns)
+            boosts = sum(1 for c in distinct if c.is_boost)
+            rows = (
+                f" · {len(campaigns)} sor, idő szerint bontva" if breakdown_rows else ""
+            )
             inventory.append(
                 (
                     source.path.name,
                     "Meta Ads",
-                    f"{len(campaigns)} kampány ({boosts} boost), "
+                    f"{len(distinct)} kampány ({boosts} boost){rows}, "
                     f"{parsed.payload.currency}"
                     + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
                 )
@@ -508,7 +544,9 @@ def build(
         )
 
     daily_channels = {entry.channel for entry in series}
-    required_missing = _required_missing(seen, daily_channels, client)
+    required_missing = (
+        [EXPECTED["meta_ads"]] if "meta_ads" not in seen else []
+    ) if is_campaign else _required_missing(seen, daily_channels, client)
     if unknown and required_missing:
         raise UnknownSourceError(
             "nem azonosítható fájl az input mappában: "
@@ -529,7 +567,9 @@ def build(
             )
         )
 
-    previous = compare.load_previous(directory)
+    # Egy kampányt nem az előző hónaphoz mérünk: annak más a hossza és a
+    # célja. Az „előtte” összevetés a kampány saját `lift` blokkja.
+    previous = None if is_campaign else compare.load_previous(directory)
     essentials_missing = _essentials_missing(
         config, client, content_channels, series, previous=previous
     )
@@ -552,6 +592,18 @@ def build(
     guards.check_client(hints, client)
 
     report_config = config.get("report") or {}
+    breakdown: list = []
+    other_campaigns: list = []
+    if is_campaign:
+        if not campaigns:
+            raise NoSourceError(
+                "a kampányriporthoz Meta Ads export kell: abból derül ki, mennyi "
+                "ment el, kihez jutott el, és mit hozott."
+            )
+        campaigns, breakdown = campaign_mod.consolidate(campaigns)
+        campaigns, other_campaigns = campaign_mod.select(campaigns, campaign_config)
+        chosen = {campaign.name for campaign in campaigns}
+        breakdown = [row for row in breakdown if row.name in chosen]
     daily_windows = [
         window
         for kind, window in coverage.values()
@@ -570,9 +622,12 @@ def build(
         label=period,
         manager_start=start_date or report_config.get("measurement_start"),
         manager_end=end_date or report_config.get("measurement_end"),
-        daily_windows=daily_windows,
+        # A kampányriport időszaka a kampányé: kézi dátum nélkül az Ads-export
+        # lekérési ablaka, nem a napi csempéké — azok szándékosan az előtte
+        # lévő, ugyanolyan hosszú időszakot is lefedhetik, az összevetéshez.
+        daily_windows=[] if is_campaign and ads_window else daily_windows,
         ads_window=ads_window,
-        previous_end=previous_end,
+        previous_end=None if is_campaign else previous_end,
     )
 
     if resolved.source == "daily_exports" and len(set(daily_windows)) > 1:
@@ -585,6 +640,7 @@ def build(
             "Töltsd le őket újra ugyanazzal a két konkrét dátummal."
         )
 
+    raw_series = list(series)
     series = [
         periods.filter_daily(entry, resolved.start, resolved.end)
         for entry in series
@@ -596,7 +652,9 @@ def build(
     ads_period = _ads_period_quality(ads_window, resolved, campaigns)
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
-    if not ads_period or ads_period["accuracy"] == "exact":
+    # Kampányriportnál a hirdetett poszt gyakran a kampány előtt jelent meg:
+    # ott az illesztetlen boost nem hiba, hanem a kampány része.
+    if not is_campaign and (not ads_period or ads_period["accuracy"] == "exact"):
         _check_boost_matching(joined, campaigns)
 
     channels = kpi.channel_blocks(
@@ -612,13 +670,23 @@ def build(
             performance_mod.score_posts(block["posts"])
         )
     manual_values = manual.load_manual(directory)
-    follower_counts, follower_origin = followers.resolve(
-        config,
-        channels,
-        previous,
-        resolved.label,
-        measurement_start=resolved.start.isoformat(),
-    )
+    if is_campaign:
+        # A kampányriport nem havi állapotjelentés: a követőszám ott
+        # kiegészítő adat, nem feltétel.
+        follower_counts = {
+            name: value
+            for name, value in (config.get("followers") or {}).items()
+            if isinstance(value, int) and not isinstance(value, bool)
+        }
+        follower_origin = {name: "client.yaml" for name in follower_counts}
+    else:
+        follower_counts, follower_origin = followers.resolve(
+            config,
+            channels,
+            previous,
+            resolved.label,
+            measurement_start=resolved.start.isoformat(),
+        )
 
     coverage_meta = _coverage(coverage, resolved.label)
     coverage_meta.update(
@@ -657,11 +725,17 @@ def build(
         config.get("monthly_reach") or {},
         previous_audience=(previous or {}).get("audience") or {},
     )
+    # Az előző havi riport az erősebb forrás; a kézi érték csak azt a metrikát
+    # pótolja, ami abból hiányzik. Az összehasonlító oldal minden hiányzó
+    # metrikára kitölthető mezőt mutat, és annak previous.json mellett is
+    # hatnia kell — különben a mező semmit nem csinálna.
     comparison = {
         name: compare.deltas(
             block["totals"],
-            (previous or {}).get("channels", {}).get(name, {}).get("totals")
-            or compare.previous_from_manual(manual_values, name, block["totals"]),
+            {
+                **compare.previous_from_manual(manual_values, name, block["totals"]),
+                **((previous or {}).get("channels", {}).get(name, {}).get("totals") or {}),
+            },
         )
         for name, block in channels.items()
     }
@@ -682,7 +756,23 @@ def build(
             compare.deltas(now_values, before_values)
         )
 
-    return _serialise(
+    campaign_block = (
+        campaign_mod.summarise(
+            campaigns,
+            other_campaigns,
+            campaign_config,
+            resolved.start,
+            resolved.end,
+            breakdown,
+            joined.posts,
+            raw_series,
+            joined.unmatched_boosts,
+        )
+        if is_campaign
+        else None
+    )
+
+    report = _serialise(
         {
             "meta": meta,
             "content": kpi.content_summary(items),
@@ -750,7 +840,11 @@ def build(
             "manual": manual_values,
             # Ami nincs exportban, de a felületről leolvasható. Nem hiba, és nem
             # is az ügyfélre tartozik — a menedzsernek szól, hogy tudjon róla.
-            "obtainable": _obtainable(channels, config),
+            "obtainable": (
+                _campaign_obtainable(_serialise(campaign_block))
+                if is_campaign
+                else _obtainable(channels, config)
+            ),
             # A menedzser feltöltött képernyőképeket is. Ezekről a hiányzó
             # számok jó eséllyel leolvashatók — ilyenkor nem kérdezünk, hanem
             # megnézzük.
@@ -767,3 +861,8 @@ def build(
             ),
         }
     )
+    # A kampányblokk csak a kampányriportban létezik — a havi riportadat
+    # szerkezete (és a golden file) ettől nem változik.
+    if campaign_block is not None:
+        report["campaign"] = _serialise(campaign_block)
+    return report
