@@ -36,6 +36,29 @@ def test_unknown_daily_metric_is_reported_not_fatal(tmp_path):
     assert item.channel is None
 
 
+def test_generic_daily_metric_uses_an_unambiguous_channel_hint(tmp_path):
+    path = tmp_path / "Instagram-Megtekintések.csv"
+    path.write_text(
+        'sep=,\n"Megtekintések"\n"Dátum","Primary"\n"2026-07-01T00:00:00","12"\n',
+        encoding="utf-8",
+    )
+
+    item = identify(path)
+
+    assert (item.kind, item.channel, item.field) == ("meta_daily", "instagram", "views")
+
+
+def test_byte_identical_recognized_export_is_ignored(tmp_path):
+    body = (
+        "Kampány neve,Eredmény jelzése,Elérés,Megjelenések\n"
+        "Teszt,reach,10,20\n"
+    )
+    (tmp_path / "ads.csv").write_text(body, encoding="utf-8")
+    (tmp_path / "ads-masolat.csv").write_text(body, encoding="utf-8")
+
+    assert [source.kind for source in scan(tmp_path)] == ["meta_ads", "ignored_duplicate"]
+
+
 def test_malformed_duplicate_is_ignored_when_valid_export_exists(tmp_path):
     valid = tmp_path / "Hello-Event-Kampányok-2026.-júl.-1.-2026.-júl.-31. -1.csv"
     valid.write_text(
