@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ data.meta.title }} — kampányriport</title>
+<style>{{ css | safe }}
+.campaign-cover { justify-content: flex-end; }
+.campaign-cover h1 { max-width: 1160px; overflow-wrap: anywhere; }
+.campaign-subtitle { margin-top: 20px; color: var(--ink-soft); font-size: 26px; }
+.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin-top: 65px; }
+.campaign-grid .stat { font-size: 42px; }
+.campaign-grid .stat--sm { font-size: 35px; }
+.campaign-wide { grid-column: span 2; }
+.campaign-month-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 32px; }
+.campaign-month { min-height: 245px; }
+.campaign-month h3 { margin-bottom: 22px; }
+.campaign-month dl { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+.campaign-month dt, .campaign-month dd { color: var(--ink-soft); font-size: 16px; }
+.campaign-month dd { text-align: right; color: var(--ink); font-weight: 700; }
+.campaign-table { margin-top: 32px; table-layout: fixed; }
+.page > table.campaign-table { flex: none; align-content: normal; }
+.campaign-table td, .campaign-table th { overflow-wrap: anywhere; font-size: 14px; }
+.campaign-table td:first-child { width: 36%; }
+.campaign-table small { display: block; color: var(--ink-soft); font-size: 11px; }
+.campaign-post-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin-top: 28px; }
+.campaign-post-grid .panel { padding: 18px; min-width: 0; }
+.campaign-post-grid img { display: block; width: 100%; height: 250px; object-fit: contain; background: var(--rule); border-radius: 8px; }
+.campaign-post-grid p { margin-top: 13px; font-size: 14px; line-height: 1.45; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.campaign-post-grid .note { font-size: 12px; }
+.campaign-kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 32px; }
+.campaign-kpi { min-height: 165px; }
+.campaign-kpi p { margin-top: 10px; font-size: 16px; }
+.campaign-narrative { margin-top: 32px; max-width: 1000px; font-size: 23px; line-height: 1.45; white-space: pre-wrap; }
+.campaign-narrative.empty { color: var(--ink-soft); font-style: italic; }
+.campaign-footer { margin-top: auto; padding-top: 22px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.campaign-warning { padding: 11px 16px; border-left: 4px solid var(--brand-sun); background: var(--paper-alt); font-size: 14px; line-height: 1.4; color: var(--ink-soft); }
+.campaign-warning + .campaign-warning { margin-top: 7px; }
+.campaign-note { margin-top: 20px; font-size: 13px; }
+@media screen and (max-width: 1480px) {
+  .page { width: min(100% - 24px, 1440px); height: auto; min-height: 810px; padding: clamp(24px, 5vw, 72px); }
+}
+@media screen and (max-width: 760px) {
+  .page { min-height: 0; }
+  h1 { font-size: clamp(44px, 11vw, 80px); }
+  h2 { font-size: clamp(30px, 8vw, 44px); }
+  .campaign-grid, .campaign-month-grid, .campaign-post-grid, .campaign-kpi-grid { grid-template-columns: 1fr; }
+  .campaign-wide { grid-column: auto; }
+  .campaign-table { display: block; overflow-x: auto; }
+}
+@media print {
+  .page { width: 1440px; height: 810px; min-height: 810px; padding: 72px; }
+}
+</style>
+</head>
+<body>
+<button type="button" class="pdf-button no-print" onclick="window.print()">Mentés PDF-ként</button>
+
+<section class="page campaign-cover">
+  <div style="width:290px;margin-bottom:auto">{{ logo_lockup | safe }}</div>
+  <div class="eyebrow">HELLO AGENCY · KAMPÁNYRIPORT</div>
+  <h1>{{ data.meta.title }}</h1>
+  <p class="campaign-subtitle">{{ data.meta.start }} – {{ data.meta.end }}</p>
+  {% if data.meta.goal %}<p style="margin-top:24px;max-width:920px">Cél: {{ data.meta.goal }}</p>{% endif %}
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+
+<section class="page">
+  <div class="eyebrow">01 / ÖSSZKÉP</div>
+  <h2>Kampánykezdettől</h2>
+  {% if data.summary.accuracy == 'indicative' %}
+  <div class="campaign-warning" style="margin-top:24px"><strong>Tájékoztató összeg.</strong> Legalább egy Ads-export lekérési ablaka túlnyúlik a kampány dátumain. Nem arányosítottuk a számokat.</div>
+  {% endif %}
+  <div class="campaign-grid">
+    <div><div class="stat stat--sm">{{ data.summary.spend | money }}{% if data.meta.currency %} {{ data.meta.currency }}{% endif %}</div><div class="stat-label">Meta-költés</div></div>
+    <div><div class="stat">{{ data.summary.impressions | num }}</div><div class="stat-label">Hirdetési megjelenés</div></div>
+    <div><div class="stat">{{ data.summary.link_clicks | num }}</div><div class="stat-label">Linkkattintás</div></div>
+    <div><div class="stat">{{ data.summary.posts | num }}</div><div class="stat-label">Kiválasztott poszt</div></div>
+  </div>
+  <p class="campaign-note">{{ data.summary.reach_note }} Az összeg kizárólag a manager által jóváhagyott hirdetésekből és posztokból készül.</p>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+
+{% for months in monthly_pages %}
+<section class="page">
+  <div class="eyebrow">02 / IDŐVONAL</div>
+  <h2>Havi bontás{% if not loop.first %} · folytatás{% endif %}</h2>
+  <div class="campaign-month-grid">
+  {% for month in months %}
+    <article class="panel campaign-month">
+      <h3>{{ month.month }}</h3>
+      {% if month.ads_measured %}
+      <dl><dt>Meta-költés</dt><dd>{{ month.spend | money }} {{ data.meta.currency or '' }}</dd>
+          <dt>Megjelenés</dt><dd>{{ month.impressions | num }}</dd>
+          <dt>Linkkattintás</dt><dd>{{ month.link_clicks | num }}</dd>
+          <dt>Publikált poszt</dt><dd>{{ month.posts | num }}</dd></dl>
+      {% else %}
+      <p>Ehhez a hónaphoz nincs külön Meta Ads-export. A nulla nem mért eredmény.</p>
+      <p class="note" style="margin-top:14px">Kiválasztott, ekkor publikált poszt: {{ month.posts | num }}</p>
+      {% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  <p class="campaign-note">A több hónapot lefedő Ads-sorokat nem osztottuk szét önkényesen. A posztokat a publikálás hónapja szerint mutatjuk.</p>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+
+{% for unallocated in unallocated_pages %}
+<section class="page">
+  <div class="eyebrow">02 / IDŐVONAL</div>
+  <h2>Havi bontás nélkül{% if not loop.first %} · folytatás{% endif %}</h2>
+  <div class="campaign-warning" style="margin-top:26px">Ezek a hirdetési sorok benne vannak a kampány összesítésében, de egyetlen exportjuk több hónapot fed le. Havi bontáshoz külön havi export szükséges.</div>
+  <table class="campaign-table"><tr><th>Hirdetés</th><th>Export</th><th>Időablak</th></tr>
+  {% for row in unallocated %}<tr><td>{{ row.name }}</td><td>{{ row.file }}</td><td>{{ row.start }} – {{ row.end }}</td></tr>{% endfor %}</table>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+
+{% if variant == 'full' %}
+{% for rows in ad_pages %}
+<section class="page">
+  <div class="eyebrow">03 / META ADS</div>
+  <h2>A kampány hirdetései{% if not loop.first %} · folytatás{% endif %}</h2>
+  <table class="campaign-table"><tr><th>Hirdetés és lekérési ablak</th><th class="num">Költés</th><th class="num">Megjelenés</th><th class="num">Linkkattintás</th><th class="num">Elérés*</th></tr>
+  {% for row in rows %}<tr><td><strong>{{ row.name }}</strong><small>{{ row.report_start }} – {{ row.report_end }} · {{ row.file }}</small><small>Indult: {{ row.started or 'nem szerepel' }} · Vége: {{ 'folyamatban' if row.ongoing else (row.ended or 'nem szerepel') }}</small></td><td class="num">{{ row.spend | money }}</td><td class="num">{{ row.impressions | num }}</td><td class="num">{{ row.link_clicks | num }}</td><td class="num">{{ row.reach | num }}</td></tr>{% endfor %}
+  </table>
+  <p class="campaign-note">* Az egyedi elérés csak soronként értelmezhető; több hirdetés elérését nem adjuk össze.</p>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+{% else %}
+<section class="page">
+  <div class="eyebrow">03 / META ADS</div>
+  <h2>A lényeg a hirdetésekből</h2>
+  <p style="margin-top:32px">{{ data.summary.ad_rows }} kiválasztott Ads-sor. A részletes kampánylista a teljes változatban szerepel.</p>
+  {% if data.unallocated_ads %}<div class="campaign-warning" style="margin-top:25px">A többhónapos export nem ad hiteles havi bontást.</div>{% endif %}
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endif %}
+
+{% for rows in post_pages %}
+<section class="page">
+  <div class="eyebrow">04 / TARTALOM</div>
+  <h2>Kapcsolódó posztok{% if not loop.first %} · folytatás{% endif %}</h2>
+  <div class="campaign-post-grid">
+  {% for row in rows %}
+    <article class="panel"><img src="{{ row.image }}" alt="{{ row.channel }} poszt kreatívja"><p>{{ row.caption or 'A poszt szövege nincs az exportban.' }}</p>
+      <p class="note">{{ row.channel | upper }} · {{ row.published }} · {{ row.key }}</p>
+      {% if row.metrics_measured %}<p class="note">Elérés: {{ row.reach | num }} · Reakciók: {{ row.reactions | num }} · Hozzászólások: {{ row.comments | num }} · Megosztások: {{ row.shares | num }}{% if row.saves is not none %} · Mentések: {{ row.saves | num }}{% endif %}</p>
+      {% else %}<p class="note">A poszthoz nem került Meta Tartalom mérés; a teljesítmény ismeretlen.</p>{% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+
+{% for kpis in kpi_pages %}
+<section class="page">
+  <div class="eyebrow">05 / KPI</div>
+  <h2>A manager által megadott célok{% if not loop.first %} · folytatás{% endif %}</h2>
+  <div class="campaign-kpi-grid">
+  {% for kpi in kpis %}
+    <article class="panel campaign-kpi"><h3>{{ kpi.label }}</h3><p>Cél: <strong>{{ kpi.target or 'nincs megadva' }}</strong> · Tény: <strong>{{ kpi.actual or 'nincs megadva' }}</strong></p>{% if kpi.source %}<p class="note">Forrás: {{ kpi.source }}</p>{% endif %}{% if kpi.comment %}<p class="note">{{ kpi.comment }}</p>{% endif %}</article>
+  {% endfor %}
+  </div>
+  <p class="campaign-note">A KPI-értékeket a manager adta meg; a rendszer nem számolta és nem becsülte őket.</p>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+
+<section class="page">
+  <div class="eyebrow">06 / ÉRTELMEZÉS</div>
+  <h2>Vezetői összefoglaló</h2>
+  <p class="campaign-narrative{{ ' empty' if not narrative.executive_summary else '' }}" data-campaign-narrative="executive_summary">{{ narrative.executive_summary or 'A vezetői értelmezés még nincs kitöltve.' }}</p>
+  {% if variant == 'full' %}
+  <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:45px">
+    <div class="panel"><h3>Mi működött?</h3><p class="campaign-narrative{{ ' empty' if not narrative.what_worked else '' }}" style="font-size:18px" data-campaign-narrative="what_worked">{{ narrative.what_worked or 'Szerkesztői értelmezésre vár.' }}</p></div>
+    <div class="panel"><h3>Következő lépés</h3><p class="campaign-narrative{{ ' empty' if not narrative.next_steps else '' }}" style="font-size:18px" data-campaign-narrative="next_steps">{{ narrative.next_steps or 'Szerkesztői értelmezésre vár.' }}</p></div>
+  </div>
+  {% endif %}
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+
+{% for warnings in warning_pages %}
+<section class="page">
+  <div class="eyebrow">07 / MÓDSZERTAN</div>
+  <h2>Amit érdemes tudni{% if not loop.first %} · folytatás{% endif %}</h2>
+  <div style="margin-top:32px">
+  {% for warning in warnings %}<div class="campaign-warning">{{ warning }}</div>{% endfor %}
+  </div>
+  <div class="campaign-footer">HELLO AGENCY</div>
+</section>
+{% endfor %}
+</body>
+</html>
