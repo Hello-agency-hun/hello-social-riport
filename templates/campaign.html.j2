@@ -23,6 +23,7 @@
 .campaign-table td, .campaign-table th { overflow-wrap: anywhere; font-size: 14px; }
 .campaign-table td:first-child { width: 36%; }
 .campaign-table small { display: block; color: var(--ink-soft); font-size: 11px; }
+.campaign-table-hint { display: none; }
 .campaign-post-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; margin-top: 28px; }
 .campaign-post-grid .panel { padding: 18px; min-width: 0; }
 .campaign-post-grid img { display: block; width: 100%; height: 250px; object-fit: contain; background: var(--rule); border-radius: 8px; }
@@ -46,7 +47,11 @@
   h2 { font-size: clamp(30px, 8vw, 44px); }
   .campaign-grid, .campaign-month-grid, .campaign-post-grid, .campaign-kpi-grid { grid-template-columns: 1fr; }
   .campaign-wide { grid-column: auto; }
-  .campaign-table { display: block; overflow-x: auto; }
+  .campaign-table { display: block; width: 100%; overflow-x: auto; table-layout: auto; }
+  .campaign-table th, .campaign-table td { min-width: 100px; overflow-wrap: normal; }
+  .campaign-table th { white-space: nowrap; }
+  .campaign-table th:first-child, .campaign-table td:first-child { width: auto; min-width: 220px; overflow-wrap: anywhere; }
+  .campaign-table-hint { display: block; margin-top: 20px; color: var(--ink-soft); font-size: 14px; }
 }
 @media print {
   .page { width: 1440px; height: 810px; min-height: 810px; padding: 72px; }
@@ -111,7 +116,8 @@
   <div class="eyebrow">02 / IDŐVONAL</div>
   <h2>Havi bontás nélkül{% if not loop.first %} · folytatás{% endif %}</h2>
   <div class="campaign-warning" style="margin-top:26px">Ezek a hirdetési sorok benne vannak a kampány összesítésében, de egyetlen exportjuk több hónapot fed le. Havi bontáshoz külön havi export szükséges.</div>
-  <table class="campaign-table"><tr><th>Hirdetés</th><th>Export</th><th>Időablak</th></tr>
+  <p class="campaign-table-hint no-print">A teljes táblázathoz húzd oldalra. A PDF-ben minden oszlop látszik.</p>
+  <table class="campaign-table" tabindex="0" aria-label="Havi bontás nélküli hirdetések, oldalra görgethető táblázat"><tr><th>Hirdetés</th><th>Export</th><th>Időablak</th></tr>
   {% for row in unallocated %}<tr><td>{{ row.name }}</td><td>{{ row.file }}</td><td>{{ row.start }} – {{ row.end }}</td></tr>{% endfor %}</table>
   <div class="campaign-footer">HELLO AGENCY</div>
 </section>
@@ -122,7 +128,8 @@
 <section class="page">
   <div class="eyebrow">03 / META ADS</div>
   <h2>A kampány hirdetései{% if not loop.first %} · folytatás{% endif %}</h2>
-  <table class="campaign-table"><tr><th>Hirdetés és lekérési ablak</th><th class="num">Költés</th><th class="num">Megjelenés</th><th class="num">Linkkattintás</th><th class="num">Elérés*</th></tr>
+  <p class="campaign-table-hint no-print">A teljes táblázathoz húzd oldalra. A PDF-ben minden oszlop látszik.</p>
+  <table class="campaign-table" tabindex="0" aria-label="Kampány hirdetései, oldalra görgethető táblázat"><tr><th>Hirdetés és lekérési ablak</th><th class="num">Költés</th><th class="num">Megjelenés</th><th class="num">Linkkattintás</th><th class="num">Elérés*</th></tr>
   {% for row in rows %}<tr><td><strong>{{ row.name }}</strong><small>{{ row.report_start }} – {{ row.report_end }} · {{ row.file }}</small><small>Indult: {{ row.started or 'nem szerepel' }} · Vége: {{ 'folyamatban' if row.ongoing else (row.ended or 'nem szerepel') }}</small></td><td class="num">{{ row.spend | money }}</td><td class="num">{{ row.impressions | num }}</td><td class="num">{{ row.link_clicks | num }}</td><td class="num">{{ row.reach | num }}</td></tr>{% endfor %}
   </table>
   <p class="campaign-note">* Az egyedi elérés csak soronként értelmezhető; több hirdetés elérését nem adjuk össze.</p>
@@ -145,7 +152,7 @@
   <h2>Kapcsolódó posztok{% if not loop.first %} · folytatás{% endif %}</h2>
   <div class="campaign-post-grid">
   {% for row in rows %}
-    <article class="panel"><img src="{{ row.image }}" alt="{{ row.channel }} poszt kreatívja"><p>{{ row.caption or 'A poszt szövege nincs az exportban.' }}</p>
+    <article class="panel"><img data-campaign-post="{{ row.key }}" src="{{ row.image }}" alt="{{ row.channel }} poszt kreatívja"><p>{{ row.caption or 'A poszt szövege nincs az exportban.' }}</p>
       <p class="note">{{ row.channel | upper }} · {{ row.published }} · {{ row.key }}</p>
       {% if row.metrics_measured %}<p class="note">Elérés: {{ row.reach | num }} · Reakciók: {{ row.reactions | num }} · Hozzászólások: {{ row.comments | num }} · Megosztások: {{ row.shares | num }}{% if row.saves is not none %} · Mentések: {{ row.saves | num }}{% endif %}</p>
       {% else %}<p class="note">A poszthoz nem került Meta Tartalom mérés; a teljesítmény ismeretlen.</p>{% endif %}

@@ -49,12 +49,9 @@ def render_campaign(data, narrative=None, cache_dir=None, fetcher=images.fetch, 
     rendered_posts = []
     for post in posts:
         row = dict(post)
-        urls = list(row.get("creatives") or [])
-        if not urls and row.get("permalink"):
-            image_url, _reason = images.creative_from_permalink(row["permalink"], fetcher)
-            if image_url:
-                urls = [image_url]
-        row["image"] = images.embed(urls[:1], cache, fetcher)[0] if urls else images.PLACEHOLDER
+        row["image"], row["creative_recovery"] = images.thumbnail(
+            row.get("creatives"), row.get("permalink", ""), cache, fetcher
+        )
         rendered_posts.append(row)
     ad_rows = data["ads"] if selected_variant == "full" else data["ads"][:5]
     monthly = [{"month": month, **values} for month, values in data["monthly"].items()]

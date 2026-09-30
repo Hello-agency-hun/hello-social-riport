@@ -103,7 +103,8 @@ def identify(path: Path) -> Source:
         return Source(path, "import_bundle")
     if actual_format == "csv":
         lines = read_lines(path)
-        if lines and lines[0].lower().startswith("sep="):
+        if (len(lines) >= 3 and lines[0].lower().startswith("sep=")
+                and "Primary" in lines[2] and "Dátum" in lines[2]):
             metric = lines[1].strip().strip('"') if len(lines) > 1 else ""
             channel, field = DAILY_METRICS.get(metric, (None, None))
             if field is None and metric in GENERIC_DAILY_METRICS:
@@ -163,12 +164,16 @@ def scan(directory: Path) -> list[Source]:
         for p in sorted(Path(directory).iterdir())
         if p.is_file() and table_format(p) != "archive"
     ]
-    seen_hashes: dict[tuple[str, str], str] = {}
+    seen_hashes: dict[tuple, str] = {}
     for source in sources:
         if source.kind == "unknown":
             continue
         digest = hashlib.sha256(source.path.read_bytes()).hexdigest()
         key = source.kind, digest
+        if source.kind == "meta_daily":
+            # Equal daily values can be measured independently on FB and IG.
+            # An unassigned tile must survive until the manager assigns it.
+            key = source.kind, source.channel or source.path.name, source.field, digest
         if key in seen_hashes:
             source.kind = "ignored_duplicate"
         else:

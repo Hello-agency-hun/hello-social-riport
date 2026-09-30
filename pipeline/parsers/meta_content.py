@@ -1,18 +1,9 @@
-from datetime import datetime
-
 from pipeline.errors import MissingColumnError
 from pipeline.schema import ParsedSource, Post
 from pipeline.tabular import read_table_rows
+from pipeline.values import number, export_day
 
 REQUIRED = ["Bejegyzésazonosító", "Elérés", "Megtekintések", "Állandó hivatkozás"]
-
-
-def _number(value: str) -> int:
-    value = (value or "").strip()
-    try:
-        return int(float(value))
-    except ValueError:
-        return 0
 
 
 def _channel(permalink: str) -> str:
@@ -33,11 +24,11 @@ def parse(path) -> ParsedSource:
     posts: list[Post] = []
     hints: dict[str, str] = {}
 
-    for row in rows:
+    for index, row in enumerate(rows, 2):
+        def numeric(column):
+            return number(row.get(column, ""), integer=True, label=f"{path.name}, {index}. sor, {column}")
         permalink = row.get("Állandó hivatkozás", "").strip()
-        published = datetime.strptime(
-            row["Közzététel időpontja"].strip(), "%m/%d/%Y %H:%M"
-        ).date()
+        published = export_day(row.get("Közzététel időpontja"), label=f"{path.name}, {index}. sor: Közzététel időpontja")
         hints.setdefault("page_id", row.get("Oldalazonosító", "").strip())
         hints.setdefault("page_name", row.get("Oldal neve", "").strip())
 
@@ -54,21 +45,21 @@ def parse(path) -> ParsedSource:
                 caption=(row.get("Cím") or row.get("Leírás") or "").strip(),
                 permalink=permalink,
                 post_type=row.get("Bejegyzés típusa", "").strip(),
-                reach=_number(row.get("Elérés", "")),
-                views=_number(row.get("Megtekintések", "")),
+                reach=numeric("Elérés"),
+                views=numeric("Megtekintések"),
                 # A Facebook exportjában `Reakciók`, az Instagraméban
                 # `Kedvelések` — utóbbiban `Reakciók` oszlop nincs is. Amíg
                 # csak az elsőt olvastuk, minden Instagram-poszt nulla
                 # reakcióval jött be, a rezonanciája nullára esett, és a
                 # riportban a mezőny mediánja is nulla lett.
-                reactions=_number(row.get("Reakciók") or row.get("Kedvelések") or ""),
-                comments=_number(row.get("Hozzászólások", "")),
-                shares=_number(row.get("Megosztások", "")),
+                reactions=numeric("Reakciók" if row.get("Reakciók") else "Kedvelések"),
+                comments=numeric("Hozzászólások"),
+                shares=numeric("Megosztások"),
                 # `Mentések` csak az Instagram exportjában van. Ha az oszlop
                 # hiányzik, nem nullát írunk, hanem semmit.
-                saves=_number(row["Mentések"]) if "Mentések" in row else None,
-                clicks=_number(row.get("Összes kattintás", "")),
-                link_clicks=_number(row.get("Hivatkozáskattintások", "")),
+                saves=numeric("Mentések") if "Mentések" in row else None,
+                clicks=numeric("Összes kattintás"),
+                link_clicks=numeric("Hivatkozáskattintások"),
                 organic_measured=True,
             )
         )

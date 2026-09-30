@@ -313,23 +313,9 @@ def render(
             # mert azokról van mért fizetett adatunk.
             selected = [post for post in ranked if post.get("paid")][:6]
         for post in selected:
-            sources = post["creatives"][:1]
-            # Ha a ZoomSphere nem tud a posztról (közvetlenül a felületen ment
-            # ki), a kreatív hiányzik, de a Facebook `og:image`-e megvan.
-            # Kiegészítés, nem forrás: ha nem jön össze, marad a helyőrző, és a
-            # `--validate` akkor is felsorolja a posztot.
-            if not sources and post.get("permalink"):
-                fallback, why = images.creative_from_permalink(
-                    post["permalink"], fetcher=fetcher
-                )
-                # Az indoklást akkor is eltesszük, ha sikerült: a menedzser
-                # csak így tudja eldönteni, érdemes-e kézzel pótolni a képet.
-                post["creative_recovery"] = why
-                if fallback:
-                    sources = [fallback]
-
-            uris = images.embed(sources, cache_dir=cache_dir, fetcher=fetcher)
-            post["thumb"] = uris[0] if uris else images.PLACEHOLDER
+            post["thumb"], post["creative_recovery"] = images.thumbnail(
+                post["creatives"], post.get("permalink", ""), cache_dir, fetcher
+            )
         channel_posts[name] = _balanced_chunks(selected)
         # Az elérés szerinti rangsor egy pillantással megmutatja a sorrendet,
         # amit a kártyák oldalanként háromra bontva nem tudnak.

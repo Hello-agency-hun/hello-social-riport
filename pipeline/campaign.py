@@ -130,7 +130,7 @@ def build(directory):
                     if f"{channel}:{post_id}" in posts_selected:
                         posts.append((item, channel, post_id, source.path.name))
         elif source.kind == "meta_content":
-            content.extend(meta_content.parse(source.path).payload)
+            content.extend((post, source.path.name) for post in meta_content.parse(source.path).payload)
 
     # One Ads source may legitimately contain several rows with the same name.
     # Two files covering the same days for the same campaign would double-count.
@@ -188,14 +188,30 @@ def build(directory):
     if missing_months:
         warnings.append("Ezekhez a hónapokhoz nincs önálló, egy hónapra eső Meta Ads-sor: " + ", ".join(missing_months) + ". A nulla itt nem mért nullás teljesítmény.")
 
-    measured = {(post.channel, post.post_id): post for post in content}
+    measured = {}
+    content_sources = {}
+    for post, filename in content:
+        key = (post.channel, post.post_id)
+        if f"{post.channel}:{post.post_id}" not in posts_selected:
+            continue
+        if key in measured and measured[key] != post:
+            raise PipelineError(
+                f"{post.channel}:{post.post_id}: eltérő Meta Tartalom pillanatkép szerepel "
+                f"a(z) {content_sources[key]} és {filename} fájlokban. "
+                "Tartsd meg a használni kívánt mérési exportot; a pillanatképek nem összeadhatók."
+            )
+        measured[key] = post
+        content_sources[key] = filename
     post_detail = []
-    seen_posts = set()
+    seen_posts = {}
     for item, channel, post_id, filename in posts:
         key = f"{channel}:{post_id}"
         if key in seen_posts:
+            if seen_posts[key] == item:
+                warnings.append(f"{key}: azonos ZoomSphere-poszt ismétlődött; egyszer számoltuk.")
+                continue
             raise PipelineError(f"A(z) {key} poszt több ZoomSphere-exportban szerepel. Egyet tarts meg, hogy ne duplázzunk.")
-        seen_posts.add(key)
+        seen_posts[key] = item
         if not config["start"] <= item.published <= config["end"]:
             warnings.append(f"{key}: a poszt publikálási dátuma a kampány időszakán kívül esik.")
         bucket = item.published.strftime("%Y-%m")

@@ -1,16 +1,17 @@
 import csv
-from datetime import datetime
 from pathlib import Path
 
-from pipeline.detect import DAILY_METRICS, DAILY_REACH_TILES
+from pipeline.detect import DAILY_METRICS, DAILY_REACH_TILES, GENERIC_DAILY_METRICS, _infer_daily_channel
 from pipeline.errors import (
     DailyReachNotUsable,
     MissingColumnError,
     UnknownSourceError,
+    PipelineError,
 )
 from pipeline.labels import PAGE_FIELDS
 from pipeline.schema import DailySeries, ParsedSource
 from pipeline.textio import read_lines
+from pipeline.values import number, export_day
 
 
 def _unknown_metric_help(path, metric: str) -> str:
@@ -76,6 +77,10 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
     # csendben a másik alá kerülne. Ezért a fájlnév erősebb kulcs, mint a
     # csempenév: az különbözteti meg a két letöltést.
     resolved = lookup.get(Path(path).name) or lookup.get(metric)
+    if resolved is None and metric in GENERIC_DAILY_METRICS:
+        channel = _infer_daily_channel(Path(path), lines)
+        if channel is not None:
+            resolved = (channel, GENERIC_DAILY_METRICS[metric])
     if resolved is None:
         if metric in DAILY_REACH_TILES:
             # Nem hiba, hanem fölösleg — és ezt meg kell mondani, nem
@@ -92,14 +97,15 @@ def parse(path, overrides: dict[str, tuple[str, str]] | None = None) -> ParsedSo
     channel, field = resolved
 
     points = []
-    for row in csv.reader(lines[2:]):
+    delimiter = lines[0].strip()[-1] if lines[0].lower().startswith("sep=") else ","
+    for row in csv.reader(lines[2:], delimiter=delimiter):
         if len(row) < 2 or row[0].strip().strip('"') in ("", "Dátum"):
             continue
         raw_day = row[0].strip().strip('"')
         try:
-            day = datetime.strptime(raw_day, "%Y-%m-%dT%H:%M:%S").date()
-            value = int(float(row[1].strip().strip('"') or 0))
-        except ValueError as error:
+            day = export_day(raw_day, label=f"{path.name}: Dátum")
+            value = number(row[1], integer=True, label=f"{path.name}, {raw_day}: {metric}")
+        except (ValueError, PipelineError) as error:
             raise MissingColumnError(
                 f"{path}: értelmezhetetlen sor a(z) {metric!r} csempénél — "
                 f"{row!r} ({error})"

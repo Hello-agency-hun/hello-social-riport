@@ -1,5 +1,6 @@
 import json
 import io
+import shutil
 
 import pytest
 from PIL import Image
@@ -127,3 +128,35 @@ def test_selected_post_creative_is_embedded_in_standalone_html(tmp_path):
     html = render_campaign(build(path), cache_dir=tmp_path / "image-cache", fetcher=lambda url: buffer.getvalue())
     assert "data:image/jpeg;base64," in html
     assert "data:image/svg+xml;base64," not in html
+
+
+def test_identical_scheduler_copy_does_not_duplicate_selected_post(tmp_path):
+    path = _project(tmp_path, [("2026-08-01", "2026-08-31", 100)])
+    shutil.copyfile(path / 'input/scheduler.csv', path / 'input/another-name.csv')
+    result = build(path)
+    assert result['summary']['posts'] == 1
+
+
+def test_conflicting_content_snapshots_cannot_silently_overwrite(tmp_path):
+    path = _project(tmp_path, [("2026-08-01", "2026-08-31", 100)])
+    header = 'Bejegyzésazonosító,Elérés,Megtekintések,Állandó hivatkozás,Közzététel időpontja,Reakciók\n'
+    for name, reach in [('first.csv', 100), ('second.csv', 200)]:
+        (path / 'input' / name).write_text(header + f'200,{reach},300,https://facebook.com/200,08/15/2026 11:00,10\n', encoding='utf-8')
+    with pytest.raises(PipelineError, match='eltérő.*pillanatkép'):
+        build(path)
+
+
+def test_broken_first_creative_recovers_second_or_permalink(tmp_path):
+    from pipeline.images import thumbnail, PLACEHOLDER
+    buffer = io.BytesIO()
+    Image.new('RGB', (32, 24), 'blue').save(buffer, format='PNG')
+    def fetch(url):
+        if url.endswith('/broken.jpg'):
+            return b'not an image'
+        if 'instagram.com/p/' in url:
+            return b"<meta content='https://example.test/good.jpg' property='og:image'>"
+        return buffer.getvalue()
+    image, _ = thumbnail(['https://example.test/broken.jpg', 'https://example.test/good.jpg'], '', tmp_path, fetch)
+    assert image != PLACEHOLDER
+    image, reason = thumbnail(['https://example.test/broken.jpg'], 'https://instagram.com/p/test/', tmp_path, fetch)
+    assert image != PLACEHOLDER and 'pótolva' in reason

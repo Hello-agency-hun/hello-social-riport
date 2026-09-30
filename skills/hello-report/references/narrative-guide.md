@@ -208,6 +208,11 @@ a menedzser is ezen a nyelven beszél az ügyféllel:
 
 ## Amire érdemes figyelni ennél az adatnál
 
+- A **`content.total` publikált tartalmak darabszáma**, nem megjelenés vagy
+  megtekintés. Írd: „{content.total|num} tartalmat publikáltunk”; ne írd:
+  „{content.total|num} megjelenést értünk el”. A nézői megtekintések a
+  `channels.<csatorna>.totals.views` mezőből jönnek; a metrika nevét mindig
+  a tényleges mező jelentéséhez igazítsd.
 - Az **„oldal összes" nem organikus** — a fizetett aktivitás eredménye is benne
   van. Ha erről írsz, ne nevezd organikusnak.
 - Az **eredménytípusok nem összeadhatók** (`Elérés` és `Poszt-interakció` mást

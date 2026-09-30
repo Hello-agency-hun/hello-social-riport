@@ -72,7 +72,7 @@ def test_truncated_file_raises_a_pipeline_error(tmp_path):
 def test_malformed_date_row_names_the_row(tmp_path):
     bad = _write(
         tmp_path / "Rossz.csv",
-        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n"2026-07-01","3"\n',
+        'sep=,\n"Facebook-felkeresések"\n"Dátum","Primary"\n"2026-02-30","3"\n',
     )
     with pytest.raises(PipelineError, match="értelmezhetetlen sor"):
         parse(bad)

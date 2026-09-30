@@ -2,9 +2,10 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 
-from pipeline.errors import MissingColumnError
+from pipeline.errors import MissingColumnError, PipelineError
 from pipeline.schema import Campaign, ParsedSource
 from pipeline.tabular import read_table_rows
+from pipeline.values import number, export_day
 
 BOOST_PREFIXES = {"Instagram-bejegyzés:": "instagram", "Bejegyzés:": "facebook"}
 REQUIRED = ["Eredmény jelzése", "Elérés", "Megjelenések"]
@@ -29,14 +30,6 @@ def detect_currency(header: list[str]) -> str:
         if match:
             return match.group(1)
     return "EUR"
-
-
-def _number(value: str) -> float:
-    value = (value or "").strip()
-    try:
-        return float(value)
-    except ValueError:
-        return 0.0
 
 
 def _date(value: str) -> date | None:
@@ -97,14 +90,18 @@ def parse(path) -> ParsedSource:
     payload = AdsPayload(currency=currency, source_level=NAME_COLUMNS[name_column])
     starts, ends = [], []
 
-    for row in rows:
-        report_start = datetime.strptime(row["Jelentés kezdete"], "%Y-%m-%d").date()
-        report_end = datetime.strptime(row["Jelentés vége"], "%Y-%m-%d").date()
+    for index, row in enumerate(rows, 2):
+        def numeric(column, integer=False):
+            return number(row.get(column, ""), integer=integer, label=f"{path.name}, {index}. sor, {column}")
+        report_start = export_day(row.get("Jelentés kezdete"), label=f"{path.name}: Jelentés kezdete")
+        report_end = export_day(row.get("Jelentés vége"), label=f"{path.name}: Jelentés vége")
+        if report_end < report_start:
+            raise PipelineError(f"{path.name}: a Jelentés vége a kezdet előtt van.")
         starts.append(report_start)
         ends.append(report_end)
 
-        spend = _number(row.get(spend_column, ""))
-        impressions = int(_number(row.get("Megjelenések", "")))
+        spend = numeric(spend_column)
+        impressions = numeric("Megjelenések", True)
         if spend == 0 and impressions == 0:
             payload.dropped_zero_rows += 1
             continue
@@ -120,13 +117,13 @@ def parse(path) -> ParsedSource:
                 name=name,
                 spend=spend,
                 currency=currency,
-                reach=int(_number(row.get("Elérés", ""))),
+                reach=numeric("Elérés", True),
                 impressions=impressions,
-                frequency=_number(row.get("Gyakoriság", "")),
-                link_clicks=int(_number(row.get("Hivatkozáskattintások", ""))),
-                results=int(_number(row.get("Eredmények", ""))),
+                frequency=numeric("Gyakoriság"),
+                link_clicks=numeric("Hivatkozáskattintások", True),
+                results=numeric("Eredmények", True),
                 result_type=row.get("Eredmény jelzése", "").strip(),
-                cost_per_result=_number(row.get("Eredményenkénti költség", "")),
+                cost_per_result=numeric("Eredményenkénti költség"),
                 status=row.get("Kampány teljesítése", "").strip(),
                 channel=channel,
                 is_boost=channel is not None,

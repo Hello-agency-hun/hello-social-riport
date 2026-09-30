@@ -11,10 +11,11 @@ nem tölt le újra semmit.
 import base64
 import hashlib
 import io
-import re
 from html import unescape
 from pathlib import Path
 from typing import Callable
+from urllib.parse import urlparse
+from html.parser import HTMLParser
 
 from PIL import Image
 
@@ -43,9 +44,6 @@ def fetch(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": "hello-reporting"})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
         return response.read()
-
-
-OG_IMAGE = re.compile(r'og:image"?\s+content="([^"]+)"')
 
 
 def creative_from_permalink(
@@ -80,7 +78,8 @@ def creative_from_permalink(
     """
     if not permalink:
         return None, "nincs permalink a poszthoz"
-    if not any(host in permalink for host in ("facebook.com", "instagram.com")):
+    parts = urlparse(permalink)
+    if parts.scheme != "https" or parts.hostname not in ("facebook.com", "www.facebook.com", "instagram.com", "www.instagram.com"):
         return None, "nem Facebook- vagy Instagram-link"
     try:
         page = fetcher(permalink).decode("utf-8", errors="replace")
@@ -88,10 +87,31 @@ def creative_from_permalink(
         return None, f"az oldal nem érhető el ({type(error).__name__})"
     if not page.strip():
         return None, "üres válasz (offline mód?)"
-    found = OG_IMAGE.search(page)
-    if not found:
+    class Preview(HTMLParser):
+        url = None
+        def handle_starttag(self, tag, attrs):
+            attributes = dict(attrs)
+            if tag == "meta" and attributes.get("property") == "og:image":
+                self.url = attributes.get("content")
+    preview = Preview()
+    preview.feed(page)
+    if not preview.url:
         return None, "nincs og:image a lapon (nem nyilvános oldal?)"
-    return unescape(found.group(1)), "megvan"
+    return unescape(preview.url), "megvan"
+
+
+def thumbnail(urls, permalink, cache_dir, fetcher=fetch):
+    """Try every exported creative before recovering the public post preview."""
+    for url in dict.fromkeys(urls or []):
+        uri = embed([url], cache_dir, fetcher)[0]
+        if uri != PLACEHOLDER:
+            return uri, "exportált kreatív"
+    fallback, reason = creative_from_permalink(permalink, fetcher)
+    if fallback:
+        uri = embed([fallback], cache_dir, fetcher)[0]
+        if uri != PLACEHOLDER:
+            return uri, "permalink előnézetből pótolva"
+    return PLACEHOLDER, reason
 
 
 def to_data_uri(raw: bytes, max_width: int = MAX_WIDTH) -> str:
