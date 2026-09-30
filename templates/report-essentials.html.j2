@@ -3,10 +3,11 @@
 <html lang="{{ data.meta.language }}">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ data.meta.client }} — {{ period_name }}</title>
 <style>{{ css | safe }}</style>
 </head>
-<body>
+<body class="essentials-report">
 
 <button class="pdf-button no-print" onclick="window.print()">{{ t.download_pdf }}</button>
 
@@ -159,36 +160,24 @@
 </section>
 
 {% for chunk in channel_posts[name] %}
-<section class="page">
+<section class="page post-details-page">
   <div class="eyebrow">{{ name | channel }} · {{ t.highlighted_content }}</div>
   <h2 style="margin-bottom:8px">{{ t.best_performing_posts }}</h2>
-  <p class="note" style="margin-bottom:20px">{{ t.interactions_ranked }}</p>
+  <p class="note" style="margin-bottom:12px">{{ t.interactions_ranked }}</p>
   <div class="grid" style="grid-template-columns:repeat(3,1fr)">
     {% for post in chunk %}
     <div class="panel">
       <img class="thumb" src="{{ post.thumb }}" data-post-id="{{ post.post_id }}" alt="">
       {% if name != "facebook" %}
-      <p class="clamp2" style="margin-top:12px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
+      <p class="clamp2" style="margin-top:8px;color:var(--ink);font-size:15px">{{ post.caption | short(80) }}</p>
       {% endif %}
-      <div class="rule" style="margin:12px 0"></div>
-      <table style="font-size:14px">
-        <tr><td>{{ t.reactions }}</td><td class="num">{{ post.reactions | num }}</td></tr>
-        <tr><td>{{ t.comments }}</td><td class="num">{{ post.comments | num }}</td></tr>
-        {% if post.saves is not none %}
-        <tr><td>{{ t.saves }}</td><td class="num">{{ post.saves | num }}</td></tr>
-        {% endif %}
-        <tr><td>{{ t.shares }}</td><td class="num">{{ post.shares | num }}</td></tr>
-        <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
-        {% if post.paid %}
-        <tr><td class="accent">{{ t.paid_label }}</td>
-            <td class="num accent">{{ post.paid.spend | money(currency) }}</td></tr>
-        {% else %}
-        <tr><td>{{ t.organic_label }}</td><td class="num">—</td></tr>
-        {% endif %}
-      </table>
+      <div class="rule" style="margin:8px 0"></div>
+      {% set card = post.detail_card %}
+      {% include "sections/post-metrics.html.j2" %}
     </div>
     {% endfor %}
   </div>
+  <p class="post-details-help">{{ t.post_details_help }}</p>
 </section>
 {% endfor %}
 {% endfor %}
@@ -245,6 +234,7 @@
   <p class="note" style="margin-top:12px">{{ data.meta.contact_email }}</p>
 </section>
 
+<script>{{ post_metrics_js | safe }}</script>
 <script>{{ review_js | safe }}</script>
 </body>
 </html>

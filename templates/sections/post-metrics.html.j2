@@ -1,0 +1,11 @@
+{% macro metric_cell(cell) -%}
+<span class="post-metric-input" data-post-key="{{ cell.key }}" data-post-field="{{ cell.field }}" data-post-kind="{{ 'money' if cell.money else 'count' }}" data-post-locale="{{ data.meta.language | default('hu') }}" data-post-value="{{ cell.value if cell.value is not none else '' }}" data-post-source="{{ cell.source }}"{% if cell.editable %} data-post-manual="{{ cell.key }}" contenteditable="true" role="textbox" aria-label="{{ card.identity }} · {{ cell.field }}" title="{{ t.post_manual_hint }}"{% endif %}>{{ (cell.value | num(2 if cell.money else 0)) if cell.value is not none else '' }}</span>
+{%- endmacro %}
+<div class="post-followers"><span>{{ t.post_followers }}</span><strong>{{ metric_cell(card.followers) }}</strong></div>
+<table class="post-metrics-table" aria-label="{{ t.post_breakdown }}">
+  <thead><tr><th>{{ t.post_metric }}</th><th class="num post-all">{{ t.post_all }}</th><th class="num post-organic">{{ t.post_organic }}</th></tr></thead>
+  <tbody>{% for row in card.rows %}<tr><td>{{ t[row.field] }}</td><td class="num post-all">{{ metric_cell(row.all) }}</td><td class="num post-organic">{{ metric_cell(row.organic) }}</td></tr>{% endfor %}</tbody>
+</table>
+<div class="post-paid-row"><span>{{ t.paid_reach }}</span><strong>{{ metric_cell(card.paid_reach) }}</strong></div>
+<div class="post-paid-row"><span>{{ t.spend }}{% if card.currency %} · {{ card.currency }}{% endif %}</span><strong>{{ metric_cell(card.spend) }}</strong></div>
+{% if card.paid_scope %}<div class="post-source-note">{{ t.post_ads_scope }}{% for window in card.paid_windows %}<br>{{ window }}{% endfor %}{% if card.more_windows %}<br>+{{ card.more_windows }} · {{ t.post_other_windows }}{% endif %}</div>{% endif %}

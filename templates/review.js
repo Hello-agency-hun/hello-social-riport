@@ -42,6 +42,8 @@
       else delete manual[field.dataset.manual];
     });
 
+    if (window.__helloPostMetrics) manual = window.__helloPostMetrics.collect(manual);
+
     var edits = {};
     document.querySelectorAll("[data-narrative]").forEach(function (block) {
       var text = asTemplate(block);
@@ -88,13 +90,16 @@
   }
 
   function remember() {
-    localStorage.setItem(KEY, JSON.stringify(collect()));
+    try { localStorage.setItem(KEY, JSON.stringify(collect())); }
+    catch (error) { /* Invalid cells stay visible and block explicit save. */ }
   }
+
+  if (window.__helloPostMetrics) window.__helloPostMetrics.listen(remember);
 
   document.querySelectorAll("[data-manual]").forEach(function (field) {
     var input = field.querySelector(".manual-input");
     var saved = (stored.manual || {})[field.dataset.manual];
-    if (saved) input.textContent = saved;
+    if (saved !== undefined && saved !== null) input.textContent = saved;
     input.addEventListener("input", remember);
   });
 

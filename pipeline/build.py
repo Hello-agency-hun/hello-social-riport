@@ -54,9 +54,10 @@ CONVERTIBLE = {
 
 def _serialise(value):
     if is_dataclass(value):
-        return {key: _serialise(item) for key, item in asdict(value).items()}
+        return _serialise(asdict(value))
     if isinstance(value, dict):
-        return {key: _serialise(item) for key, item in value.items()}
+        return {key: _serialise(item) for key, item in value.items()
+                if key != 'details' or item}
     if isinstance(value, (list, tuple)):
         return [_serialise(item) for item in value]
     if isinstance(value, date):

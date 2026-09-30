@@ -67,6 +67,23 @@ def test_multimonth_campaign_has_cumulative_and_monthly_metrics_without_summing_
     json.dumps(result, ensure_ascii=False)
 
 
+def test_campaign_post_links_only_selected_boost_spend_and_keeps_reach_windows(tmp_path):
+    path = _project(tmp_path, [('2026-08-01', '2026-08-31', 100),
+                              ('2026-09-01', '2026-09-30', 300)])
+    for file in [path / 'campaign.yaml', *list((path / 'input').glob('ads-*.csv'))]:
+        file.write_text(file.read_text(encoding='utf-8').replace('BTS Meta', 'Bejegyzés: Iskolakezdés'), encoding='utf-8')
+    config = path / 'campaign.yaml'
+    config.write_text(config.read_text(encoding='utf-8').replace('[Bejegyzés: Iskolakezdés]', "['Bejegyzés: Iskolakezdés']"), encoding='utf-8')
+    data = build(path)
+    paid = data['posts'][0].get('paid') or {}
+    assert paid.get('spend') == 400
+    assert paid.get('reach') is None  # Unique reach is NOT 100 + 100.
+    assert paid.get('windows') == ['2026-08-01 – 2026-08-31', '2026-09-01 – 2026-09-30']
+    html = render_campaign(data, cache_dir=path / '.images', fetcher=lambda url: b'')
+    assert 'post-metrics-table' in html
+    assert 'Követőszerzés' in html
+
+
 def test_cross_month_ads_go_to_unallocated_not_an_arbitrary_month(tmp_path):
     path = _project(tmp_path, [("2026-08-20", "2026-09-10", 240)])
     result = build(path)

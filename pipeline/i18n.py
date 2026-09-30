@@ -30,6 +30,12 @@ MONTHS = {
 
 STRINGS = {
     "hu": {
+        "post_followers": "Követőszerzés", "post_metric": "Mutató", "post_all": "Összes",
+        "post_organic": "Organikus", "post_breakdown": "Posztonkénti teljes és organikus teljesítmény",
+        "post_manual_hint": "Kézi adat: a poszt statisztikájából, azonos mérési időablakban. Üres = nem ismert, nem nulla.",
+        "post_ads_scope": "Kapcsolt Ads-export; az időablak és a közönség eltérhet a poszt pillanatképétől.",
+        "post_other_windows": "további lekérési ablak a teljes hirdetéslistában",
+        "post_details_help": "A – nem ismert adat. A pontozott mező a poszt statisztikájából tölthető ki; * = kézi adat. Az organikus bontás nem kivonással készült.",
         # gombok, felület
         "save_to_folder": "Mentés a mappába",
         "save": "Mentés",
@@ -206,6 +212,12 @@ STRINGS = {
         "total": "összesen",
     },
     "en": {
+        "post_followers": "Followers gained", "post_metric": "Metric", "post_all": "All",
+        "post_organic": "Organic", "post_breakdown": "Total and organic post performance",
+        "post_manual_hint": "Manual value: use post insights for the same measurement window. Empty = unknown, not zero.",
+        "post_ads_scope": "Linked Ads export; its window and audience may differ from the post snapshot.",
+        "post_other_windows": "additional export windows in the full ads list",
+        "post_details_help": "– means unknown. Dotted cells can be filled from post insights; * = manual value. Organic metrics were not calculated by subtraction.",
         "save_to_folder": "Save to folder",
         "save": "Save",
         "download_pdf": "Download as PDF",

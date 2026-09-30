@@ -2,6 +2,7 @@ from pipeline.errors import MissingColumnError
 from pipeline.schema import ParsedSource, Post
 from pipeline.tabular import read_table_rows
 from pipeline.values import number, export_day
+from pipeline.post_details import import_details
 
 REQUIRED = ["Bejegyzésazonosító", "Elérés", "Megtekintések", "Állandó hivatkozás"]
 
@@ -61,6 +62,7 @@ def parse(path) -> ParsedSource:
                 clicks=numeric("Összes kattintás"),
                 link_clicks=numeric("Hivatkozáskattintások"),
                 organic_measured=True,
+                details=import_details(row, f'{path.name}, {index}. sor'),
             )
         )
 

@@ -139,7 +139,10 @@ def test_audience_growth_can_use_previous_follower_total():
     assert result["facebook"]["growth"] == 0.1
 
 
-def test_essentials_template_keeps_zero_saves_visible():
+def test_essentials_template_keeps_zero_saves_visible(tmp_path):
+    import json
+    import re
+    from pipeline.render import render
     source = (Path(__file__).parents[1] / "templates" / "report-essentials.html.j2").read_text(
         encoding="utf-8"
     )
@@ -150,7 +153,16 @@ def test_essentials_template_keeps_zero_saves_visible():
     assert "{% if block.engagement.saves %}" not in source
     # A NEM mért mentést viszont el kell hagyni: a Facebook exportjában nincs is
     # ilyen oszlop, ott a nulla olyat állítana, amit sosem mértünk.
-    assert "{% if post.saves is not none %}" in source
+    data = json.loads((Path(__file__).parent / 'fixtures/larus-2026-07/report_data.golden.json').read_text(encoding='utf-8'))
+    data['meta']['variant'] = 'essentials'
+    for channel in data['channels'].values():
+        for post in channel['posts']:
+            post['saves'] = 0 if post['channel'] == 'instagram' else None
+            post['organic_measured'] = True
+    html = render(data, tmp_path, fetcher=lambda url: b'')
+    cells = re.findall(r'<span[^>]*data-post-field="all.saves"[^>]*>(.*?)</span>', html)
+    assert '0' in cells  # Measured zero is visible, not hidden by truthiness.
+    assert '' in cells  # Unknown saves remains blank, never a fabricated zero.
     assert "{% if block.engagement.saves_measured %}" in source
     assert "t.essentials_impressions" in source
 

@@ -72,6 +72,9 @@ class Post:
     # és nem szerepelhetnek átlagszámításban.
     organic_measured: bool = False
 
+    # Optional, explicitly exported organic metrics and per-post follows/spend.
+    details: dict = field(default_factory=dict)
+
     @property
     def is_boosted(self) -> bool:
         return self.paid is not None

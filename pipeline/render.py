@@ -11,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pipeline import charts, i18n, images, kpi, labels
 from pipeline import manual as manual_module
 from pipeline import performance
+from pipeline.post_details import card as post_card
 from pipeline import narrative as narrative_module
 from pipeline.assets import TEMPLATES, logo, stylesheet
 
@@ -313,6 +314,8 @@ def render(
             # mert azokról van mért fizetett adatunk.
             selected = [post for post in ranked if post.get("paid")][:6]
         for post in selected:
+            if essentials:
+                post['detail_card'] = post_card(post, manual or data.get('manual'), data['paid']['currency'])
             post["thumb"], post["creative_recovery"] = images.thumbnail(
                 post["creatives"], post.get("permalink", ""), cache_dir, fetcher
             )
@@ -404,4 +407,5 @@ def render(
         manual=manual or {},
         manual_slots=manual_module.SLOTS,
         review_js=(TEMPLATES / "review.js").read_text(encoding="utf-8"),
+        post_metrics_js=(TEMPLATES / "post-metrics.js").read_text(encoding="utf-8"),
     )

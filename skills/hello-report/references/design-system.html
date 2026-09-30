@@ -92,7 +92,13 @@ strong { color: var(--ink); font-weight: 700; }
 
 /* A poszt-kártya tartalma nem nőhet túl az oldalon: a kép fix, a szöveg két
    sorra fogott, a metrikatábla pedig tömör. */
-.panel table td { padding: 6px 8px 6px 0; font-size: 14px; }
+/* A kártya metrikatáblája sűrűbb lett, mint amire a 16:9-es oldal készült:
+   az Instagram-posztok most `Reakció` és `Mentés` sort is kapnak, mert a lájk
+   és a mentés végre bekerül a pontozásba. Hét sornál a korábbi 6 pixeles
+   függőleges térköz 28 pixellel kitolta az oldalt. Négy pixel pontosan ennyit nyer
+   vissza. Hét sornál több nem lehet: rezonancia, interakciós arány, elérés,
+   ebből fizetett, költés, reakció, mentés — ez a teljes metrikakészlet. */
+.panel table td { padding: 4px 8px 4px 0; font-size: 14px; }
 
 /* A poszt-szöveg két sorra fogva: enélkül a hosszabb caption kitolná a
    kártya alját a 16:9-es oldalról, és a metrikák levágódnának. */
@@ -200,6 +206,47 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .manual-input:focus { border-bottom: 2px solid var(--accent); }
 .manual-mark { font-weight: 500; color: var(--accent); letter-spacing: 0; }
 
+/* Shared, compact post breakdown for Essentials and campaign reports. */
+.essentials-report .post-details-page .thumb { height:140px; }
+.post-followers, .post-paid-row { display:flex; justify-content:space-between; gap:8px;
+  align-items:baseline; color:var(--ink-soft); font-size:12px; margin:8px 0; }
+.post-followers { border-bottom:1px solid var(--rule); padding-bottom:8px; }
+.post-metrics-table { table-layout:fixed; }
+.post-metrics-table th, .panel .post-metrics-table td { padding:4px 5px; font-size:12px; }
+.post-metrics-table th { font-size:10px; letter-spacing:0; }
+.post-metrics-table th:first-child { width:40%; }
+.post-metrics-table th.post-all { border-top:3px solid var(--accent); }
+.post-metrics-table th.post-organic { border-top:3px solid var(--brand-sun); }
+.post-metric-input { font-variant-numeric:tabular-nums; white-space:nowrap; display:inline-block; min-width:24px; }
+.post-metric-input:empty::before { content:'–'; color:var(--ink-soft); }
+.post-metric-input[data-post-manual] { border-bottom:1px dotted var(--ink-soft); outline:none; }
+.post-metric-input[data-post-manual]:focus { outline:2px solid var(--accent); }
+.post-metric-input[aria-invalid="true"] { outline:2px solid var(--brand-red); }
+.post-metric-input[data-post-source="manual"]::after { content:'*'; color:var(--ink-soft); font-size:9px; }
+.post-source-note { color:var(--ink-soft); font-size:9px; line-height:1.3; margin-top:7px; }
+.post-details-help { color:var(--ink-soft); font-size:11px; line-height:1.4; margin-top:14px; }
+@media print {
+  .post-metric-input[data-post-manual] { border:0; }
+  .post-metric-input, .post-metric-input[data-post-manual]:focus { outline:none!important; }
+}
+
+/* Screen-only reading/editing layout; the PDF keeps the original 16:9 pages. */
+@media screen and (max-width:800px) {
+  body.essentials-report { --pad:24px; }
+  .essentials-report .page { width:100%; height:auto; min-height:520px;
+    padding:76px 24px 60px; margin:12px 0; overflow:visible; gap:12px; }
+  .essentials-report .page > .grid { grid-template-columns:minmax(0,1fr)!important; flex:0 0 auto; }
+  .essentials-report .panel { min-width:0; padding:20px; }
+  .essentials-report h1 { font-size:42px; overflow-wrap:anywhere; }
+  .essentials-report h2 { font-size:30px; overflow-wrap:anywhere; }
+  .essentials-report .stat { font-size:38px; min-height:40px; }
+  .essentials-report .stat--sm { font-size:32px; }
+  .essentials-report .page > div { max-width:100%; }
+  .essentials-report td, .essentials-report th { overflow-wrap:anywhere; }
+  .essentials-report .post-metric-input { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+  .essentials-report .post-details-page .thumb { height:212px; }
+}
+
 /* Review-kör: a menedzser a böngészőben írja át, amit másképp mondana. */
 .editable:focus { outline: 2px solid var(--accent); outline-offset: 6px; }
 /* Az értékek szerkeszthetetlen szigetek. Szerkesztés közben látszik, mi az
@@ -240,9 +287,14 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     break-after: page;
     box-shadow: none;
   }
-  .page:last-child { page-break-after: auto; break-after: auto; }
+  /* A riportoldalak utan szerkesztoi script tagek is allhatnak, ezert a
+     :last-child nem feltetlenul az utolso oldalra illeszkedik. */
+  .page:last-of-type { page-break-after: auto; break-after: auto; }
   .no-print { display: none !important; }
   .manual-slot { display: none !important; }
+  /* A szerkeszthető HTML-ben maradjanak meg a még kitölthető előző havi
+     mezők, de az ügyfél PDF-jébe ne kerüljön üres összehasonlító oldal. */
+  .manual-only-page { display: none !important; }
   .comment-button { display: none !important; }
   .campaign-row { break-inside: avoid; page-break-inside: avoid; }
   a { text-decoration: none; color: inherit; }

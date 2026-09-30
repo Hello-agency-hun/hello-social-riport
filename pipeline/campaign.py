@@ -14,6 +14,8 @@ import yaml
 from pipeline.detect import scan
 from pipeline.errors import PipelineError
 from pipeline.parsers import meta_ads, meta_content, zoomsphere
+from pipeline.join import normalize_caption, MATCH_LENGTH
+from pipeline.manual import load_manual
 
 
 def _day(value, label):
@@ -227,13 +229,34 @@ def build(directory):
             "comments": metric.comments if metric else None,
             "shares": metric.shares if metric else None,
             "saves": metric.saves if metric else None,
+            "details": metric.details if metric else {},
         })
+    # Attach only selected, uniquely matched boosts. Spend is additive across
+    # disjoint export windows; unique reach is not.
+    linked = defaultdict(list)
+    for ad, _ in ads:
+        caption = normalize_caption(ad.name)[:MATCH_LENGTH]
+        matches = [post for post in post_detail if ad.is_boost and caption
+                   and post['channel'] == ad.channel
+                   and caption in normalize_caption(post['caption'])]
+        if len(matches) == 1:
+            linked[matches[0]['key']].append(ad)
+        elif len(matches) > 1:
+            warnings.append(f'{ad.name}: több poszthoz illeszthető; a posztköltést nem találjuk ki.')
+    for post in post_detail:
+        rows = linked.get(post['key'], [])
+        if rows:
+            post['paid'] = {'spend': round(sum(ad.spend for ad in rows), 2),
+                            'currency': rows[0].currency,
+                            'reach': rows[0].reach if len(rows) == 1 else None,
+                            'windows': [f'{ad.report_start} – {ad.report_end}' for ad in rows]}
     if any(not post["metrics_measured"] for post in post_detail):
         warnings.append("Egyes posztokhoz nincs Meta Tartalom export; a teljesítményük ismeretlen, nem nulla.")
     if any(post["metrics_measured"] for post in post_detail):
         warnings.append("A posztok a publikálás hónapjához vannak sorolva; a Meta Tartalom export teljesítménye lekéréskori pillanatkép, nem havi interakcióösszeg.")
 
     return {
+        "manual": load_manual(directory),
         "meta": {"type": "campaign", "title": config["title"], "goal": config["goal"],
                  "start": config["start"].isoformat(), "end": config["end"].isoformat(),
                  "variant": config["variant"], "currency": next(iter(currencies), None)},

@@ -5,6 +5,8 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pipeline import images
+from pipeline import i18n
+from pipeline.post_details import card as post_card
 from pipeline.assets import TEMPLATES, logo, stylesheet
 from pipeline.errors import NarrativeError
 from pipeline.render import _number
@@ -49,6 +51,7 @@ def render_campaign(data, narrative=None, cache_dir=None, fetcher=images.fetch, 
     rendered_posts = []
     for post in posts:
         row = dict(post)
+        row['detail_card'] = post_card(row, data.get('manual'), data['meta'].get('currency'))
         row["image"], row["creative_recovery"] = images.thumbnail(
             row.get("creatives"), row.get("permalink", ""), cache, fetcher
         )
@@ -59,7 +62,7 @@ def render_campaign(data, narrative=None, cache_dir=None, fetcher=images.fetch, 
         loader=FileSystemLoader(str(TEMPLATES)),
         autoescape=select_autoescape(["html", "j2"]),
     )
-    environment.filters["num"] = lambda value: _number(value)
+    environment.filters["num"] = lambda value, digits=0: _number(value, digits)
     environment.filters["money"] = lambda value: _number(value, 2)
     return environment.get_template("campaign.html.j2").render(
         data=data,
@@ -73,4 +76,6 @@ def render_campaign(data, narrative=None, cache_dir=None, fetcher=images.fetch, 
         warning_pages=_chunks(data["warnings"], 7),
         css=stylesheet(),
         logo_lockup=logo("hello-lockup"),
+        t=i18n.strings('hu'),
+        post_metrics_js=(TEMPLATES / "post-metrics.js").read_text(encoding="utf-8"),
     )
