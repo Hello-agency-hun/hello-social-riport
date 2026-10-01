@@ -67,6 +67,20 @@ def test_multimonth_campaign_has_cumulative_and_monthly_metrics_without_summing_
     json.dumps(result, ensure_ascii=False)
 
 
+def test_performance_supplement_populates_campaign_card_without_replacing_meta(tmp_path):
+    path = _project(tmp_path, [('2026-08-01', '2026-08-31', 100)])
+    (path / 'input' / 'performance.csv').write_text(
+        'postId,network,postType,datePublished,Reach,Views,Likes,Comments,Shares,Post Saves,Followers Gained,Organic Views,Views From Ads,thumbnail\n'
+        '100_200,FACEBOOK,image,2026-08-15,100,120,10,2,1,,3,90,30,https://example.com/image.jpg\n', encoding='utf-8')
+    result = build(path)
+    assert result['posts'][0]['details']['followers'] == 3
+    assert result['posts'][0]['views'] == 120
+    assert result['posts'][0]['creatives'] == ['https://example.com/image.jpg']
+    html = render_campaign(result, cache_dir=path / '.images', fetcher=lambda url: b'')
+    assert 'ZoomSphere Performance' in html
+    assert 'Megtekintések hirdetésből' in html
+
+
 def test_campaign_post_links_only_selected_boost_spend_and_keeps_reach_windows(tmp_path):
     path = _project(tmp_path, [('2026-08-01', '2026-08-31', 100),
                               ('2026-09-01', '2026-09-30', 300)])

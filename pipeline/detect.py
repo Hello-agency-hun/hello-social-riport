@@ -127,6 +127,9 @@ def identify(path: Path) -> Source:
     from pipeline.parsers.zoomsphere import REQUIRED_HEADERS as ZOOMSPHERE_REQUIRED
 
     adaptation = None if actual_format == "csv" else actual_format.upper()
+    from pipeline.parsers.zoomsphere_performance import REQUIRED as PERFORMANCE_REQUIRED
+    if PERFORMANCE_REQUIRED.issubset(header):
+        return Source(path, "zoomsphere_performance", adaptation=adaptation)
     if ZOOMSPHERE_REQUIRED.issubset(header):
         return Source(
             path,

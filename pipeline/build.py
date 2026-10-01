@@ -20,7 +20,7 @@ from pipeline.errors import (
     UnknownSourceError,
 )
 from pipeline.join import join_posts
-from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere
+from pipeline.parsers import meta_ads, meta_content, meta_daily, zoomsphere, zoomsphere_performance
 
 
 # Ezekből pontosan egy tartozik egy hónaphoz. A `meta_daily` szándékosan nincs
@@ -378,6 +378,7 @@ def build(
     overrides = {key: tuple(value) for key, value in overrides.items()}
 
     items, content, campaigns, series = [], [], [], []
+    performance_snapshots, performance_warnings = [], []
     ads_payload = None
     hints: dict[str, str] = {}
     unknown: list[str] = []
@@ -412,6 +413,10 @@ def build(
                     + (f" · automatikusan beolvasva: {source.adaptation}" if source.adaptation else ""),
                 )
             )
+        elif source.kind == "zoomsphere_performance":
+            parsed = zoomsphere_performance.parse(source.path)
+            performance_snapshots.extend(parsed.payload)
+            inventory.append((source.path.name, "ZoomSphere Performance", f"{len(parsed.payload)} posztpillanatkép; nem napi mérési ablak"))
         elif source.kind == "meta_ads":
             parsed = meta_ads.parse(source.path)
             ads_payload = parsed.payload
@@ -530,6 +535,9 @@ def build(
             )
         )
 
+    if performance_snapshots:
+        content = zoomsphere_performance.enrich(content, performance_snapshots, performance_warnings)
+        performance_warnings.append("ZoomSphere Performance: a publikálási dátum nem mérési időablak; a posztpillanatképek elérése nem összegezhető havi egyedi elérésként.")
     previous = compare.load_previous(directory)
     essentials_missing = _essentials_missing(
         config, client, content_channels, series, previous=previous
@@ -712,6 +720,7 @@ def build(
             ),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
+                **({"performance_warnings": performance_warnings} if performance_warnings else {}),
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),
                 # Amelyik posztnak nincs kreatívja, az a riportban helyőrzővel
                 # jelenik meg. Ez majdnem mindig azt jelenti, hogy a poszt nem a

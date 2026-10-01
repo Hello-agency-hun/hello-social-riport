@@ -13,7 +13,7 @@ import yaml
 
 from pipeline.detect import scan
 from pipeline.errors import PipelineError
-from pipeline.parsers import meta_ads, meta_content, zoomsphere
+from pipeline.parsers import meta_ads, meta_content, zoomsphere, zoomsphere_performance
 from pipeline.join import normalize_caption, MATCH_LENGTH
 from pipeline.manual import load_manual
 
@@ -93,8 +93,8 @@ def discover(directory):
                             "channel": channel, "caption": item.caption(channel)[:160],
                             "file": source.path.name,
                         })
-        elif source.kind == "meta_content":
-            parsed = meta_content.parse(source.path)
+        elif source.kind in ("meta_content", "zoomsphere_performance"):
+            parsed = (meta_content if source.kind == "meta_content" else zoomsphere_performance).parse(source.path)
             candidates["sources"].append({"file": source.path.name, "kind": source.kind})
         elif source.kind not in ("meta_daily", "pdf", "screenshot", "ignored_duplicate"):
             candidates["warnings"].append(f"Nem használt forrás: {source.path.name}")
@@ -121,6 +121,7 @@ def build(directory):
     ads = []
     posts = []
     content = []
+    snapshots = []
     for source in scan(directory / "input"):
         if source.kind == "meta_ads":
             for row in meta_ads.parse(source.path).payload.campaigns:
@@ -133,6 +134,8 @@ def build(directory):
                         posts.append((item, channel, post_id, source.path.name))
         elif source.kind == "meta_content":
             content.extend((post, source.path.name) for post in meta_content.parse(source.path).payload)
+        elif source.kind == "zoomsphere_performance":
+            snapshots.extend(zoomsphere_performance.parse(source.path).payload)
 
     # One Ads source may legitimately contain several rows with the same name.
     # Two files covering the same days for the same campaign would double-count.
@@ -204,6 +207,10 @@ def build(directory):
             )
         measured[key] = post
         content_sources[key] = filename
+    if snapshots:
+        enriched = zoomsphere_performance.enrich(list(measured.values()), snapshots, warnings)
+        measured = {(post.channel, post.post_id): post for post in enriched}
+        warnings.append("ZoomSphere Performance: a posztpillanatkép nem havi mérési ablak; az elérések nem összegezhetők.")
     post_detail = []
     seen_posts = {}
     for item, channel, post_id, filename in posts:
@@ -222,9 +229,10 @@ def build(directory):
         post_detail.append({
             "key": key, "channel": channel, "published": item.published.isoformat(),
             "caption": item.caption(channel), "permalink": item.permalinks.get(channel, ""),
-            "creatives": item.creatives.get(channel, []), "file": filename,
+            "creatives": item.creatives.get(channel) or (metric.creatives if metric else []), "file": filename,
             "metrics_measured": metric is not None,
             "reach": metric.reach if metric else None,
+            "views": metric.views if metric else None,
             "reactions": metric.reactions if metric else None,
             "comments": metric.comments if metric else None,
             "shares": metric.shares if metric else None,

@@ -65,7 +65,7 @@ def join_posts(
         if item is None:
             result.unmatched_content.append(post)
             continue
-        post.creatives = item.creatives.get(post.channel, [])
+        post.creatives = item.creatives.get(post.channel) or post.creatives
         post.post_type = post.post_type or item.post_type
         post.permalink = post.permalink or item.permalinks.get(post.channel, "")
 

@@ -9,3 +9,4 @@
 <div class="post-paid-row"><span>{{ t.paid_reach }}</span><strong>{{ metric_cell(card.paid_reach) }}</strong></div>
 <div class="post-paid-row"><span>{{ t.spend }}{% if card.currency %} · {{ card.currency }}{% endif %}</span><strong>{{ metric_cell(card.spend) }}</strong></div>
 {% if card.paid_scope %}<div class="post-source-note">{{ t.post_ads_scope }}{% for window in card.paid_windows %}<br>{{ window }}{% endfor %}{% if card.more_windows %}<br>+{{ card.more_windows }} · {{ t.post_other_windows }}{% endif %}</div>{% endif %}
+{% if card.performance_source %}<div class="post-source-note">ZoomSphere Performance · {{ card.performance_source }}{% if card.paid_views is not none %}<br>{{ 'Megtekintések hirdetésből' if data.meta.language | default('hu') == 'hu' else 'Views from ads' }}: {{ card.paid_views | num }}{% endif %}</div>{% endif %}

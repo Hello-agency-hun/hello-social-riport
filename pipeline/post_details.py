@@ -78,6 +78,9 @@ def card(post, manual=None, currency=None):
                 'editable': editable and source != 'export', 'money': money}
 
     rows = []
+    if 'organic_views' in details:
+        rows.append({'field': 'views', 'all': cell('all.views', post.get('views') if measured else None),
+                     'organic': cell('organic.views', details['organic_views'])})
     for field in FIELDS:
         total = cell('all.' + field, post.get(field)
                      if measured and field not in details.get('missing_totals', []) else None)
@@ -93,4 +96,6 @@ def card(post, manual=None, currency=None):
             'spend': cell('spend', details.get('spend', paid.get('spend')), money=True, editable=bool(currency)),
             'currency': currency, 'paid_windows': windows if len(windows) <= 2 else [windows[0], windows[-1]],
             'more_windows': max(0, len(windows) - 2),
-            'paid_scope': bool(paid) and 'paid_reach' not in details}
+            'paid_scope': bool(paid) and 'paid_reach' not in details,
+            'performance_source': details.get('performance_source'),
+            'paid_views': details.get('paid_views')}
