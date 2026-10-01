@@ -9,6 +9,44 @@
   var stored = JSON.parse(localStorage.getItem(KEY) || "{}");
   var comments = stored.comments || [];
 
+  function normaliseCommand(text) {
+    return String(text || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/[ \t\r\n]+/g, " ");
+  }
+
+  function isDeleteCommand(text) {
+    return [
+      "delete this page", "delte this page", "remove this page",
+      "this page can be deleted", "torolheto", "ez torolheto",
+      "ez az oldal torolheto", "ez az oldal nem kell nekem",
+      "torold ezt az oldalt", "ezt az oldalt torold",
+      "torold ezt az oldalt a vegleges riportbol", "oldal torlese"
+    ].indexOf(normaliseCommand(text)) !== -1;
+  }
+
+  function pageMeta(page, index) {
+    var kickerNode = page.querySelector(".eyebrow, .kicker");
+    var headingNode = page.querySelector("h1, h2");
+    var kicker = kickerNode ? kickerNode.textContent.trim() : "";
+    var heading = headingNode ? headingNode.textContent.trim() : "";
+    var signature = normaliseCommand(kicker) + "|" + normaliseCommand(heading);
+    var occurrence = 0;
+    document.querySelectorAll(".page").forEach(function (candidate, candidateIndex) {
+      if (candidateIndex > index) return;
+      var candidateKicker = candidate.querySelector(".eyebrow, .kicker");
+      var candidateHeading = candidate.querySelector("h1, h2");
+      var candidateSignature = normaliseCommand(candidateKicker ? candidateKicker.textContent : "")
+        + "|" + normaliseCommand(candidateHeading ? candidateHeading.textContent : "");
+      if (candidateSignature === signature) occurrence += 1;
+    });
+    return { page: index + 1, page_key: signature + ":" + occurrence, kicker: kicker, heading: heading };
+  }
+
   // A beírt szám kiolvasása. Régebben `replace(/[^0-9]/g, "")` volt, ami
   // LETÖRÖLTE a mínuszjelet: aki „-87"-et írt be, 87-et kapott, néma
   // előjelváltással. Egy csökkenés növekedésként került volna az ügyfélhez.
@@ -117,15 +155,31 @@
   });
 
   document.querySelectorAll(".page").forEach(function (page, index) {
+    var meta = pageMeta(page, index);
     var button = document.createElement("button");
     button.className = "comment-button no-print";
     button.textContent = LABELS.comment;
+    var savedDelete = comments.some(function (comment) {
+      return isDeleteCommand(comment.text)
+        && (comment.page_key === meta.page_key || (!comment.page_key && comment.page === meta.page));
+    });
+    if (savedDelete) {
+      page.classList.add("page-delete-marked");
+      page.dataset.deleteLabel = document.documentElement.lang === "hu" ? "Törlésre jelölve" : "Marked for deletion";
+      button.textContent = page.dataset.deleteLabel;
+    }
     button.onclick = function () {
       var text = prompt(LABELS.comment_prompt);
       if (!text) return;
-      comments.push({ page: index + 1, text: text });
+      comments.push(Object.assign({ text: text }, meta));
       remember();
-      button.textContent = LABELS.comment_done;
+      if (isDeleteCommand(text)) {
+        page.classList.add("page-delete-marked");
+        page.dataset.deleteLabel = document.documentElement.lang === "hu" ? "Törlésre jelölve" : "Marked for deletion";
+        button.textContent = page.dataset.deleteLabel;
+      } else {
+        button.textContent = LABELS.comment_done;
+      }
     };
     page.appendChild(button);
   });

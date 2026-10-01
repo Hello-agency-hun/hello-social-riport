@@ -256,3 +256,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
                   padding: 7px 12px; border-radius: 999px; cursor: pointer;
                   color: var(--ink-soft); background: var(--paper-alt);
                   border: 1px solid var(--rule); }
+.page-delete-marked { outline: 3px dashed var(--accent); outline-offset: -8px; }
+.page-delete-marked::after { content: attr(data-delete-label); position: absolute; top: 18px; right: 18px;
+  padding: 6px 10px; border-radius: 999px; background: var(--accent); color: #fff;
+  font: 700 11px/1 var(--font); letter-spacing: .04em; text-transform: uppercase; }
+@media print {
+  .page-delete-marked { outline: 0; }
+  .page-delete-marked::after { display: none; }
+}
