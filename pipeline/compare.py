@@ -98,3 +98,51 @@ def previous_from_manual(manual: dict, channel: str, fields) -> dict:
         for field in fields
         if f"prev_{channel}_{field}" in manual
     }
+
+
+def validated_manual_baseline(manual: dict, channels: dict) -> tuple[dict, str | None]:
+    """Return manual previous values unless the current month was copied in.
+
+    A Rejuran review exposed a characteristic form error: almost every
+    ``prev_*`` value exactly equalled the current channel, while one Instagram
+    value equalled Facebook's current total. Those values produce plausible
+    percentages, but are not a previous period. We therefore suppress the
+    complete manual baseline when several independent exact copies prove that
+    the form was populated from the current report.
+    """
+    resolved = {}
+    self_copies = 0
+    self_copy_channels = set()
+    cross_copies = 0
+    current_by_field = {}
+    for channel, block in channels.items():
+        for field, value in (block.get("totals") or {}).items():
+            if isinstance(value, (int, float)):
+                current_by_field.setdefault(field, {})[channel] = value
+
+    for channel, block in channels.items():
+        totals = block.get("totals") or {}
+        for field in totals:
+            key = f"prev_{channel}_{field}"
+            if key not in manual:
+                continue
+            value = manual[key]
+            resolved.setdefault(channel, {})[field] = value
+            if value == totals.get(field):
+                self_copies += 1
+                self_copy_channels.add(channel)
+            elif any(
+                other != channel and value == other_value
+                for other, other_value in current_by_field.get(field, {}).items()
+            ):
+                cross_copies += 1
+
+    if (
+        (self_copies >= 3 and len(self_copy_channels) >= 2)
+        or (self_copies >= 2 and cross_copies >= 1)
+    ):
+        return {}, (
+            "A kézzel megadott előző havi alap gyanúsan a mostani riport "
+            "értékeit ismétli, ezért nem számoltunk belőle változást."
+        )
+    return resolved, None

@@ -605,7 +605,14 @@ def build(
     ads_period = _ads_period_quality(ads_window, resolved, campaigns)
 
     joined = join_posts(content=content, items=items, campaigns=campaigns)
-    if not ads_period or ads_period["accuracy"] == "exact":
+    report_config = config.get("report", {})
+    paid_organic_analysis = (
+        report_config.get("variant", "full") == "full"
+        and bool(report_config.get("paid_organic_analysis", False))
+    )
+    if paid_organic_analysis and (
+        not ads_period or ads_period["accuracy"] == "exact"
+    ):
         _check_boost_matching(joined, campaigns)
 
     channels = kpi.channel_blocks(
@@ -618,7 +625,9 @@ def build(
     performance = {}
     for name, block in channels.items():
         performance[name] = performance_mod.findings(
-            performance_mod.score_posts(block["posts"])
+            performance_mod.score_posts(
+                block["posts"], split_by_paid=paid_organic_analysis
+            )
         )
     manual_values = manual.load_manual(directory)
     follower_counts, follower_origin = followers.resolve(
@@ -650,6 +659,7 @@ def build(
         # Essentialst. A számolás mindkettőnél ugyanaz — csak kevesebb kerül
         # belőle a riportba.
         "variant": config.get("report", {}).get("variant", "full"),
+        "paid_organic_analysis": paid_organic_analysis,
         "comparison_headline": config.get("report", {}).get(
             "comparison_headline", "value"
         ),
@@ -666,11 +676,14 @@ def build(
         config.get("monthly_reach") or {},
         previous_audience=(previous or {}).get("audience") or {},
     )
+    manual_baseline, manual_baseline_warning = compare.validated_manual_baseline(
+        manual_values, channels
+    )
     comparison = {
         name: compare.deltas(
             block["totals"],
             (previous or {}).get("channels", {}).get(name, {}).get("totals")
-            or compare.previous_from_manual(manual_values, name, block["totals"]),
+            or manual_baseline.get(name, {}),
         )
         for name, block in channels.items()
     }
@@ -715,12 +728,15 @@ def build(
             "paid": paid,
             # Illeszkedik-e az előző havi adat a mostanihoz? Rés, átfedés vagy
             # ismeretlen időszak esetén a „változás" nem változás.
-            "comparison_health": compare.coverage_check(
-                previous, meta
+            "comparison_health": (
+                {"status": "suspicious", "message": manual_baseline_warning}
+                if not previous and manual_baseline_warning
+                else compare.coverage_check(previous, meta)
             ),
             "cross": kpi.cross_channel(joined.posts),
             "quality": {
                 **({"performance_warnings": performance_warnings} if performance_warnings else {}),
+                **({"comparison_warnings": [manual_baseline_warning]} if manual_baseline_warning else {}),
                 "posts_with_creative": sum(1 for p in joined.posts if p.creatives),
                 # Amelyik posztnak nincs kreatívja, az a riportban helyőrzővel
                 # jelenik meg. Ez majdnem mindig azt jelenti, hogy a poszt nem a

@@ -9,6 +9,7 @@
     "currency": "EUR",
     "language": "hu",
     "variant": "full",
+    "paid_organic_analysis": true,
     "comparison_headline": "value",
     "contact_email": "fixtures@helloagency.hu",
     "contact_email_is_guess": true,

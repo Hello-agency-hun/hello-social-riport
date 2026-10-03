@@ -117,6 +117,23 @@ def test_the_best_unboosted_post_is_surfaced_for_the_narrative():
     assert data["performance"]["facebook"]["best_unboosted_beats_typical"] is True
 
 
+def test_unified_mode_uses_one_channel_baseline_and_no_paid_quota():
+    organic = post(reach=100, reactions=10, paid=None)
+    paid = post(reach=1000, reactions=20, paid={"spend": 30})
+    another = post(reach=100, reactions=5, paid=None)
+
+    scored = performance.score_posts(
+        [organic, paid, another], split_by_paid=False
+    )
+
+    assert all(item["score"]["baseline"] == "channel" for item in scored)
+    assert organic["score"]["vs_typical"] > paid["score"]["vs_typical"]
+    assert performance.balanced(scored, limit=2, split_by_paid=False) == [
+        organic,
+        another,
+    ]
+
+
 def test_saves_sit_between_comments_and_shares_on_the_effort_ladder():
     """A mentés szándékosabb, mint egy hozzászólás, de nem adja hozzá a nevét.
 

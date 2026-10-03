@@ -70,6 +70,40 @@ def test_other_clients_are_not_matched_by_caption(tmp_path):
     assert next(p for p in posts if p.post_id == '20').details == {}
 
 
+def test_performance_snapshot_can_join_by_canonical_permalink_when_ids_differ(tmp_path):
+    path = source(tmp_path, '999,Dummy,INSTAGRAM,reel,2026-09-01,Hello,https://www.instagram.com/p/ABC123/?utm_source=x,,100,120,1,0,0,0,4,,\n')
+    meta = Post('instagram', 'different-id', date(2026, 9, 1), caption='Hello',
+                permalink='https://instagram.com/p/ABC123/', reach=100,
+                organic_measured=True)
+
+    posts = performance.enrich([meta], performance.parse(path).payload, [])
+
+    assert len(posts) == 1
+    assert posts[0].details['followers'] == 4
+
+
+def test_performance_snapshot_can_join_by_unique_caption_and_day(tmp_path):
+    path = source(tmp_path, '999,Dummy,INSTAGRAM,reel,2026-09-01,Hello Rejuran launch,,,100,120,1,0,0,0,3,,\n')
+    meta = Post('instagram', 'different-id', date(2026, 9, 1),
+                caption='Hello Rejuran launch', reach=100, organic_measured=True)
+
+    posts = performance.enrich([meta], performance.parse(path).payload, [])
+
+    assert posts[0].details['followers'] == 3
+
+
+def test_ambiguous_caption_and_day_is_not_guessed(tmp_path):
+    path = source(tmp_path, '999,Dummy,INSTAGRAM,reel,2026-09-01,Same caption,,,100,120,1,0,0,0,3,,\n')
+    content = [
+        Post('instagram', 'one', date(2026, 9, 1), caption='Same caption', reach=100, organic_measured=True),
+        Post('instagram', 'two', date(2026, 9, 1), caption='Same caption', reach=90, organic_measured=True),
+    ]
+
+    posts = performance.enrich(content, performance.parse(path).payload, [])
+
+    assert all('followers' not in post.details for post in posts)
+
+
 def test_non_integer_or_negative_statistics_fail_with_file_context(tmp_path):
     path = source(tmp_path, '20,Dummy,INSTAGRAM,reel,2026-09-01,Hello,,,-1,120,1,0,0,0,0,,\n')
     with pytest.raises(PipelineError, match='random.csv'):

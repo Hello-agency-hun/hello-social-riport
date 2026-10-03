@@ -259,6 +259,9 @@ def render(
 
     organic = data["cross"]["organic_reach"]
     boosted = data["cross"]["boosted_reach"]
+    paid_organic_analysis = bool(
+        data.get("meta", {}).get("paid_organic_analysis", False)
+    )
 
     # Egy oldalon négy görbe fut; ha mind zöld, összemosódnak. A ciklus a
     # márkapaletta hangosabb színeit is behozza, nem csak az akcentust.
@@ -299,7 +302,9 @@ def render(
         # annyi volna, mint költés szerint: amelyik posztra a legtöbb pénz ment,
         # az lenne elöl — ez tautológia, nem megállapítás. Lásd `performance.py`.
         essentials = data.get("meta", {}).get("variant") == "essentials"
-        ranked = performance.balanced(block["posts"], limit=6)
+        ranked = performance.balanced(
+            block["posts"], limit=6, split_by_paid=paid_organic_analysis
+        )
         if not ranked:
             # Nincs mért elérés ezen a csatornán — marad a régi sorrend, hogy
             # a boostolt posztok legalább megjelenjenek.
@@ -351,6 +356,7 @@ def render(
     )
     return template.render(
         data=data,
+        paid_organic_analysis=paid_organic_analysis,
         trends=trends,
         channel_posts=channel_posts,
         ranking=ranking,

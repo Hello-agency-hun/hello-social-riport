@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass, field
+from urllib.parse import urlsplit
 
 from pipeline.errors import UnmatchedBoostError
 from pipeline.schema import Campaign, ContentItem, Post
@@ -14,6 +15,20 @@ BOOST_PREFIX = re.compile(
     r"^(?:[^\s:]{1,40}[_\-—:/])?(?:Instagram-bejegyzés|Bejegyzés):\s*"
 )
 MATCH_LENGTH = 30
+
+
+def canonical_permalink(value: str) -> str:
+    """Stable social URL identity without tracking or cosmetic variants."""
+    value = (value or "").strip()
+    if not value:
+        return ""
+    try:
+        parsed = urlsplit(value if "://" in value else "https://" + value)
+    except ValueError:
+        return ""
+    host = parsed.netloc.casefold().removeprefix("www.").removeprefix("m.")
+    path = re.sub(r"/+", "/", parsed.path).rstrip("/")
+    return f"{host}{path}" if host and path else ""
 
 
 @dataclass

@@ -13,6 +13,7 @@ followers:
 report:
   language: hu
   currency: EUR
+  paid_organic_analysis: true
 
 # A `Megtekintések` csempe neve nem hordoz csatorna-információt, ezért kézzel
 # rendeljük hozzá. A referencia-készletben csak az IG változat lett letöltve.

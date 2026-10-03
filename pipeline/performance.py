@@ -109,7 +109,7 @@ def _cohort_medians(posts: list[dict]) -> dict[bool, float]:
     return out
 
 
-def score_posts(posts: list[dict]) -> list[dict]:
+def score_posts(posts: list[dict], split_by_paid: bool = True) -> list[dict]:
     """Minden posztra rátesz egy `score` blokkot. A listát nem rendezi át.
 
     A `score` `None` marad ott, ahol nincs mért elérés — az Instagram-posztok
@@ -117,6 +117,8 @@ def score_posts(posts: list[dict]) -> list[dict]:
     rossz volt", pedig nem mértük.
     """
     medians = _cohort_medians(posts)
+    overall_values = [r for r in (_resonance(p) for p in posts) if r is not None]
+    overall = median(overall_values) if overall_values else 0.0
 
     for post in posts:
         resonance = _resonance(post)
@@ -124,8 +126,8 @@ def score_posts(posts: list[dict]) -> list[dict]:
             post["score"] = None
             continue
         boosted = bool(post.get("paid"))
-        typical = medians[boosted]
-        post["score"] = {
+        typical = medians[boosted] if split_by_paid else overall
+        score = {
             "resonance": round(resonance, 5),
             "engagement_rate": round(_engagement_rate(post) or 0, 4),
             "weighted_interactions": weighted_interactions(post),
@@ -133,6 +135,9 @@ def score_posts(posts: list[dict]) -> list[dict]:
             "vs_typical": round(resonance / typical, 2) if typical else None,
             "boosted": boosted,
         }
+        if not split_by_paid:
+            score["baseline"] = "channel"
+        post["score"] = score
     return posts
 
 
@@ -147,7 +152,9 @@ def ranked(posts: list[dict]) -> list[dict]:
     return sorted(scored, key=lambda p: -(p["score"]["vs_typical"] or 0))
 
 
-def balanced(posts: list[dict], limit: int = 6) -> list[dict]:
+def balanced(
+    posts: list[dict], limit: int = 6, split_by_paid: bool = True
+) -> list[dict]:
     """A riportba kerülő posztok — mindkét mezőnyből.
 
     A `ranked` önmagában monokultúrát adhat, és a Mammut-próbán adott is:
@@ -167,6 +174,8 @@ def balanced(posts: list[dict], limit: int = 6) -> list[dict]:
     order = ranked(posts)
     if not order:
         return []
+    if not split_by_paid:
+        return order[:limit]
 
     boosted = [p for p in order if p["score"]["boosted"]]
     organic = [p for p in order if not p["score"]["boosted"]]

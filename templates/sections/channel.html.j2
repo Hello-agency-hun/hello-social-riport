@@ -29,7 +29,7 @@
   <p class="note" style="margin-bottom:28px;max-width:900px">
     {{ t.methodology_lead }}
   </p>
-  <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="grid" style="grid-template-columns:repeat({{ 3 if paid_organic_analysis else 2 }},1fr)">
     <div class="panel">
       <div class="stat stat--sm accent">1</div>
       <h3 style="margin:10px 0 8px">{{ t.methodology_1_title }}</h3>
@@ -44,17 +44,17 @@
         <strong>{{ t.resonance }}:</strong> {{ t.methodology_2_body }}
       </p>
     </div>
-    <div class="panel">
+    {% if paid_organic_analysis %}<div class="panel">
       <div class="stat stat--sm accent">3</div>
       <h3 style="margin:10px 0 8px">{{ t.methodology_3_title }}</h3>
       <p class="note">
         {{ t.methodology_3_body }}
       </p>
-    </div>
+    </div>{% endif %}
   </div>
-  <p class="note" style="margin-top:28px;max-width:900px">
+  {% if paid_organic_analysis %}<p class="note" style="margin-top:28px;max-width:900px">
     <strong>{{ t.twofold | capitalize }}</strong> {{ t.methodology_close }}
-  </p>
+  </p>{% endif %}
 </section>
 {% endif %}
 
@@ -80,8 +80,8 @@
         {# A szorzó mezőnyfüggő: a boostolt posztot a boostoltakhoz mérjük.
            Enélkül két különböző jelentésű szám állna ugyanazon a néven. #}
         <tr><td>{{ t.resonance }}<br>
-            <span class="note">{{ t.among_boosted if post.score.boosted
-                                  else t.among_organic }}</span></td>
+            <span class="note">{% if paid_organic_analysis %}{{ t.among_boosted if post.score.boosted
+                                  else t.among_organic }}{% else %}{{ t.among_channel }}{% endif %}</span></td>
             <td class="num"><strong>{% if post.score.vs_typical is not none %}{{ post.score.vs_typical | num(1) }}×{% else %}{{ t.no_stable_baseline }}{% endif %}</strong></td></tr>
         <tr><td>{{ t.engagement_rate }}</td>
             <td class="num">{{ (post.score.engagement_rate * 100) | num(2) }}%</td></tr>
@@ -89,7 +89,7 @@
         {% if post.reach %}
         <tr><td>{{ t.reach }}</td><td class="num"><strong>{{ post.reach | num }}</strong></td></tr>
         {% endif %}
-        {% if post.paid %}
+        {% if paid_organic_analysis and post.paid %}
         <tr><td class="accent">{{ t.of_which_paid if post.reach else t.paid_reach }}</td>
             <td class="num accent"><strong>{{ post.paid.reach | num }}</strong></td></tr>
         <tr><td class="accent">{{ t.spend }}</td>

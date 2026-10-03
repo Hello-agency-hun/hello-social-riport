@@ -17,6 +17,9 @@
 <section class="page{% if not block %} manual-only-page{% endif %}">
   <div class="eyebrow">{{ name | channel }}</div>
   <h2 style="margin-bottom:40px">{{ t.change_vs_previous }}</h2>
+  {% if data.comparison_health.message %}
+  <div class="period-warning" style="margin-bottom:22px">{{ data.comparison_health.message }}</div>
+  {% endif %}
   <div class="grid" style="grid-template-columns:repeat(2,1fr)">
     {% for key, d in block.items() %}
     <div class="panel">

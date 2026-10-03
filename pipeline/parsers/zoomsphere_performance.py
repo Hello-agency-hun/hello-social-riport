@@ -7,6 +7,7 @@ from pipeline.errors import PipelineError
 from pipeline.schema import ContentItem, ParsedSource, Post
 from pipeline.tabular import read_table_rows
 from pipeline.values import export_day, number
+from pipeline.join import canonical_permalink, normalize_caption
 
 REQUIRED = {'postId', 'network', 'postType', 'datePublished', 'Reach', 'Views'}
 METRICS = {'reach': 'Reach', 'views': 'Views', 'reactions': 'Likes',
@@ -85,9 +86,30 @@ def enrich(content, snapshots, warnings):
             unique[key] = post
     result = deepcopy(content)
     existing = {(p.channel, p.post_id): p for p in result}
+    by_permalink = {}
+    by_caption_day = {}
+    for post in result:
+        permalink = canonical_permalink(post.permalink)
+        if permalink:
+            by_permalink.setdefault((post.channel, permalink), []).append(post)
+        caption = normalize_caption(post.caption)
+        if len(caption) >= 20:
+            by_caption_day.setdefault((post.channel, post.published, caption), []).append(post)
     existing_channels = {p.channel for p in result}
     for key, supplement in unique.items():
         target = existing.get(key)
+        if target is None:
+            permalink = canonical_permalink(supplement.permalink)
+            candidates = by_permalink.get((supplement.channel, permalink), []) if permalink else []
+            if len(candidates) == 1:
+                target = candidates[0]
+        if target is None:
+            caption = normalize_caption(supplement.caption)
+            candidates = by_caption_day.get(
+                (supplement.channel, supplement.published, caption), []
+            ) if len(caption) >= 20 else []
+            if len(candidates) == 1:
+                target = candidates[0]
         if target is None:
             # Supplementary exports must not extend a Meta channel's measured
             # cohort with a different lifetime snapshot or story population.

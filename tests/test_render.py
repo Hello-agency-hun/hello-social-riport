@@ -13,7 +13,9 @@ GOLDEN = (
 
 @pytest.fixture
 def data():
-    return json.loads(GOLDEN.read_text(encoding="utf-8"))
+    loaded = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    loaded.setdefault("meta", {})["paid_organic_analysis"] = True
+    return loaded
 
 
 @pytest.fixture
@@ -193,6 +195,28 @@ def test_post_metrics_show_measured_numbers_not_a_subtraction(html):
     """Összes elérés és fizetett kampány-elérés — organikus becslés nélkül."""
     assert "ebből fizetett" in html
     assert "becsült" not in html.lower()
+
+
+def test_paid_organic_story_is_absent_by_default(data, tmp_path):
+    data.setdefault("meta", {}).pop("paid_organic_analysis", None)
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "Mennyit ér a boost" not in out
+    assert "boostolt / organikus elérés" not in out
+    assert '<td class="accent">ebből fizetett' not in out
+    assert "a csatorna összes mért posztja közt" in out
+    assert "Fizetett hirdetés" in out
+
+
+def test_paid_organic_story_can_be_enabled_explicitly(data, tmp_path):
+    data.setdefault("meta", {})["paid_organic_analysis"] = True
+
+    out = render(data, cache_dir=tmp_path, fetcher=lambda url: b"")
+
+    assert "Mennyit ér a boost" in out
+    assert "boostolt / organikus elérés" in out
+    assert '<td class="accent">ebből fizetett' in out
 
 
 def test_page_count_stays_within_the_agreed_limit(html):

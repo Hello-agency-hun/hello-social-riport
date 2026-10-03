@@ -36,7 +36,7 @@
 <section class="page">
   <div class="eyebrow">{{ t.overview }}</div>
   <h2 style="margin-bottom:44px">{{ t.month_in_numbers }}</h2>
-  <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="grid" style="grid-template-columns:repeat({{ 4 if paid_organic_analysis else 3 }},1fr)">
     <div>
       <div class="stat">{{ data.content.total }}</div>
       <div class="stat-label">{{ t.content_published }}</div>
@@ -49,10 +49,10 @@
       <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
       <div class="stat-label">{{ t.ad_spend }}</div>
     </div>
-    <div>
+    {% if paid_organic_analysis %}<div>
       <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
       <div class="stat-label">{{ t.boosted_vs_organic }}</div>
-    </div>
+    </div>{% endif %}
   </div>
   <p class="note" style="margin-top:auto">
     {{ t.post_reach_note }}
@@ -170,7 +170,7 @@
 </section>
 {% endfor %}
 
-<section class="page">
+{% if paid_organic_analysis and data.cross.posts_boosted and data.cross.posts_organic %}<section class="page">
   <div class="eyebrow">{{ t.organic_and_paid }}</div>
   <h2 style="margin-bottom:24px">{{ t.what_boost_is_worth }}</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr;align-items:center">
@@ -187,7 +187,7 @@
       </p>
     </div>
   </div>
-</section>
+</section>{% endif %}
 
 {% include "sections/narrative.html.j2" %}
 
@@ -209,7 +209,7 @@
       <div class="stat stat--sm">{{ data.paid.spend | money(currency) }}</div>
       <div class="stat-label">{{ t.ad_spend }}</div>
     </div>
-    <div>
+    {% if paid_organic_analysis %}<div>
       <div class="stat accent">{{ data.cross.avg_reach_boosted_post | num }}</div>
       <div class="stat-label">{{ t.avg_boosted_reach }}</div>
     </div>
@@ -220,7 +220,7 @@
     <div>
       <div class="stat accent">{{ data.cross.reach_multiplier | num(1) }}×</div>
       <div class="stat-label">{{ t.boost_multiplier }}</div>
-    </div>
+    </div>{% endif %}
   </div>
   {# Itt korábban négy üres, szaggatott doboz állt olyan adatokra, amiket a Meta
      nem exportál. Az ügyfél ebből azt olvasta ki, hogy elfelejtettünk valamit.
