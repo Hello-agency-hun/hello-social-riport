@@ -1,0 +1,14 @@
+/* Keep the complete post breakdown inside the fixed landscape PDF page. */
+.campaign-post-grid { margin-top:18px; gap:18px; flex:none; align-items:start; }
+.campaign-post-grid .panel { padding:12px; }
+.campaign-post-grid img { height:120px; }
+.campaign-post-grid p { margin-top:8px; line-height:1.35; -webkit-line-clamp:2; max-height:2.7em; }
+.campaign-post-grid .note { font-size:10px; line-height:1.3; overflow-wrap:anywhere; }
+.campaign-post-grid .post-followers, .campaign-post-grid .post-paid-row { font-size:11px; margin:5px 0; }
+.campaign-post-grid .post-followers { padding-bottom:5px; }
+.campaign-post-grid .post-metrics-table th, .campaign-post-grid .post-metrics-table td { padding:3px 4px; font-size:11px; }
+.campaign-post-grid .post-metrics-table th { font-size:9px; }
+.campaign-post-grid + .post-details-help { margin-top:10px; font-size:10px; }
+@media screen and (max-width:760px) {
+  .campaign-post-grid img { height:212px; }
+}
